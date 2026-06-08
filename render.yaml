@@ -1,0 +1,61 @@
+services:
+  # Backend API Server
+  - type: web
+    name: grim-store-api
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm --prefix server install && npm --prefix server run build
+    startCommand: npm --prefix server run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: SUPABASE_URL
+        fromDatabase:
+          name: grim-store-db
+          property: host
+      - key: SUPABASE_DB_USER
+        sync: false
+      - key: SUPABASE_DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: CLIENT_URL
+        value: https://grim-store-client.onrender.com
+      - key: ADMIN_URL
+        value: https://grim-store-admin.onrender.com
+
+  # Client Storefront
+  - type: web
+    name: grim-store-client
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm --prefix client install && npm --prefix client run build
+    startCommand: npm --prefix client run start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://grim-store-api.onrender.com
+
+  # Admin Dashboard
+  - type: web
+    name: grim-store-admin
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm --prefix admin install && npm --prefix admin run build
+    startCommand: npm --prefix admin run start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://grim-store-api.onrender.com
+
+databases:
+  - name: grim-store-db
+    databaseName: postgres
+    plan: free
+    region: oregon
+    previewPlan: free
