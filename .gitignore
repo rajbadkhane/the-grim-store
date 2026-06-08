@@ -1,0 +1,75 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production
+.env.production.local
+.env.test.local
+.env.development.local
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json.bak
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+.nuxt/
+.cache/
+
+# IDE & Editor
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.sublime-workspace
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+e2e-storefront-smoke-store-*/
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Uploads
+uploads/
+
+# Temporary/cache
+.eslintcache
+.prettierignore
+*.tmp
+tmp/
+temp/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Scripts output
+npm-test.err
+start-test.txt
+.logs/

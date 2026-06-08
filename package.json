@@ -1,0 +1,21 @@
+{
+  "name": "the-grim-store-platform",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Enterprise premium ecommerce platform with customer storefront, admin dashboard, and Express API.",
+  "scripts": {
+    "dev": "concurrently \"npm --prefix server run dev\" \"npm --prefix client run dev\" \"npm --prefix admin run dev\"",
+    "dev:client": "npm --prefix client run dev",
+    "dev:admin": "npm --prefix admin run dev",
+    "dev:server": "npm --prefix server run dev",
+    "build": "npm --prefix server run build && npm --prefix client run build && npm --prefix admin run build",
+    "lint": "npm --prefix client run lint && npm --prefix admin run lint",
+    "typecheck": "npm --prefix server run typecheck && npm --prefix client run typecheck && npm --prefix admin run typecheck"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
