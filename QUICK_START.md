@@ -48,15 +48,19 @@ In Render dashboard, add these under "Environment":
 ```
 PORT=5000
 NODE_ENV=production
-SUPABASE_URL=https://msziifhbqyukwvawzacs.supabase.co
+DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.<project-ref>.supabase.co:5432/postgres
+SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_DB_USER=postgres
-SUPABASE_DB_PASSWORD=DBBQAtr3MMkbIOb6
+SUPABASE_DB_PASSWORD=<your-supabase-db-password>
 SQL_DATABASE=postgres
 JWT_SECRET=your-super-secret-key-change-this-32-chars-min
 JWT_REFRESH_SECRET=your-super-secret-refresh-key-32-chars-min
-CLIENT_URL=https://grim-store-client.onrender.com
-ADMIN_URL=https://grim-store-admin.onrender.com
+CLIENT_URL=https://client-psi-ashy.vercel.app
+ADMIN_URL=https://admin-lac-eight-88.vercel.app
+CORS_ORIGINS=https://grim-store-client.onrender.com,https://grim-store-admin.onrender.com,https://client-psi-ashy.vercel.app,https://admin-lac-eight-88.vercel.app
 ```
+
+For Render, prefer the Supabase Session pooler `DATABASE_URL` if the direct database host is unreachable over IPv6.
 
 ### Step 5: Deploy
 - Click "Create Web Service"
@@ -73,13 +77,13 @@ Create two more services:
 - **Name:** `grim-store-client`
 - **Build:** `npm --prefix client install && npm --prefix client run build`
 - **Start:** `npm --prefix client run start`
-- **Env:** `NEXT_PUBLIC_API_URL=https://grim-store-api.onrender.com`
+- **Env:** `NEXT_PUBLIC_API_URL=https://grim-store-api.onrender.com/api/v1`
 
 ### Admin Dashboard
 - **Name:** `grim-store-admin`
 - **Build:** `npm --prefix admin install && npm --prefix admin run build`
 - **Start:** `npm --prefix admin run start`
-- **Env:** `NEXT_PUBLIC_API_URL=https://grim-store-api.onrender.com`
+- **Env:** `NEXT_PUBLIC_API_URL=https://grim-store-api.onrender.com/api/v1`
 
 ---
 
@@ -128,7 +132,7 @@ Test these URLs:
 
 2. **Update Supabase Credentials** (Already set ✅)
    - User: postgres
-   - Password: DBBQAtr3MMkbIOb6 (change in Supabase dashboard)
+   - Password: use the database password from your Supabase dashboard
 
 3. **Enable HTTPS** (Automatic on Render ✅)
 

@@ -71,8 +71,8 @@ function convertNamedParamsToPositional(sqlStr: string, params: Record<string, u
 export async function rows<T = any>(sqlStr: string, params: Record<string, unknown> = {}) {
   try {
     const { sql: convertedSql, values } = convertNamedParamsToPositional(sqlStr, params);
-    const result = await sqlClient.unsafe(convertedSql, values);
-    return result as T[];
+    const result = await sqlClient.unsafe(convertedSql, values as any);
+    return result as unknown as T[];
   } catch (error) {
     console.error("[sql] Query error:", error, { sqlStr, params });
     throw error;
@@ -87,7 +87,7 @@ export async function row<T = any>(sqlStr: string, params: Record<string, unknow
 export async function execute(sqlStr: string, params: Record<string, unknown> = {}) {
   try {
     const { sql: convertedSql, values } = convertNamedParamsToPositional(sqlStr, params);
-    const result = await sqlClient.unsafe(convertedSql, values);
+    const result = await sqlClient.unsafe(convertedSql, values as any);
     return { affectedRows: result.length > 0 ? 1 : 0 };
   } catch (error) {
     console.error("[sql] Execute error:", error, { sqlStr, params });

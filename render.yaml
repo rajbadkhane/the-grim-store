@@ -12,22 +12,30 @@ services:
         value: production
       - key: PORT
         value: 5000
+      - key: DATABASE_URL
+        sync: false
       - key: SUPABASE_URL
-        fromDatabase:
-          name: grim-store-db
-          property: host
+        sync: false
       - key: SUPABASE_DB_USER
         sync: false
       - key: SUPABASE_DB_PASSWORD
+        sync: false
+      - key: SQL_DATABASE
+        value: postgres
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: JWT_SECRET
         sync: false
       - key: JWT_REFRESH_SECRET
         sync: false
       - key: CLIENT_URL
-        value: https://grim-store-client.onrender.com
+        value: https://client-psi-ashy.vercel.app
       - key: ADMIN_URL
-        value: https://grim-store-admin.onrender.com
+        value: https://admin-lac-eight-88.vercel.app
+      - key: CORS_ORIGINS
+        value: https://grim-store-client.onrender.com,https://grim-store-admin.onrender.com,https://client-psi-ashy.vercel.app,https://admin-lac-eight-88.vercel.app
 
   # Client Storefront
   - type: web
@@ -39,7 +47,7 @@ services:
     startCommand: npm --prefix client run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: https://grim-store-api.onrender.com
+        value: https://grim-store-api.onrender.com/api/v1
 
   # Admin Dashboard
   - type: web
@@ -51,11 +59,4 @@ services:
     startCommand: npm --prefix admin run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: https://grim-store-api.onrender.com
-
-databases:
-  - name: grim-store-db
-    databaseName: postgres
-    plan: free
-    region: oregon
-    previewPlan: free
+        value: https://grim-store-api.onrender.com/api/v1

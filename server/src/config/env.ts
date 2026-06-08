@@ -18,7 +18,7 @@ const extractSupabaseDb = (url: string) => {
     // Supabase DB URL format: https://project.supabase.co
     const projectId = url.replace("https://", "").split(".")[0];
     return {
-      host: `${projectId}.db.supabase.co`,
+      host: `db.${projectId}.supabase.co`,
       port: 5432,
       user: process.env.SUPABASE_DB_USER || "postgres",
       password: process.env.SUPABASE_DB_PASSWORD || ""
@@ -33,6 +33,7 @@ const supabaseDb = process.env.SUPABASE_URL ? extractSupabaseDb(process.env.SUPA
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   port: Number(process.env.PORT ?? 5000),
+  databaseUrl: process.env.DATABASE_URL ?? "",
   sqlHost: supabaseDb?.host || process.env.SQL_HOST || "127.0.0.1",
   sqlPort: supabaseDb?.port || Number(process.env.SQL_PORT ?? 5432),
   sqlUser: supabaseDb?.user || process.env.SQL_USER || "postgres",
@@ -40,6 +41,10 @@ export const env = {
   sqlDatabase: process.env.SQL_DATABASE ?? "postgres",
   clientUrl: process.env.CLIENT_URL ?? "http://localhost:3000",
   adminUrl: process.env.ADMIN_URL ?? "http://localhost:3001",
+  corsOrigins: (process.env.CORS_ORIGINS ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
   jwtSecret: process.env.JWT_SECRET ?? "dev_access_secret_change_me",
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET ?? "dev_refresh_secret_change_me",
   emailUser: process.env.EMAIL_USER ?? "",

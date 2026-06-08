@@ -34,11 +34,14 @@ Choose one database option in `server/.env`:
 
 **Option 1: Supabase (Recommended for Production)**
 ```env
+DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.<project-ref>.supabase.co:5432/postgres
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 SUPABASE_DB_USER=postgres
 SUPABASE_DB_PASSWORD=your_db_password
 ```
+
+Use the Supabase Session pooler connection string for IPv4-only hosts.
 
 **Option 2: Local PostgreSQL**
 ```env

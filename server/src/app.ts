@@ -13,11 +13,23 @@ import { sanitizeInput } from "./middlewares/sanitize.js";
 
 export const app = express();
 
+const allowedOrigins = Array.from(
+  new Set([
+    env.clientUrl,
+    env.adminUrl,
+    ...env.corsOrigins,
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001"
+  ])
+);
+
 app.set("trust proxy", 1);
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(
   cors({
-    origin: [env.clientUrl, env.adminUrl, "http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"],
+    origin: allowedOrigins,
     credentials: true
   })
 );

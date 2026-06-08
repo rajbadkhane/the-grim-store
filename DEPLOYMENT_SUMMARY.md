@@ -3,7 +3,7 @@
 ## ✅ Completed Setup
 
 ### 1. Supabase PostgreSQL Database
-- **Host:** db.msziifhbqyukwvawzacs.supabase.co
+- **Host:** db.<your-project-ref>.supabase.co
 - **Port:** 5432
 - **User:** postgres
 - **Database:** postgres
@@ -41,9 +41,9 @@
 #### Updated Files:
 - **server/.env** - Supabase credentials (NOT committed for security)
   ```
-  SUPABASE_URL=https://msziifhbqyukwvawzacs.supabase.co
+  SUPABASE_URL=https://your-project.supabase.co
   SUPABASE_DB_USER=postgres
-  SUPABASE_DB_PASSWORD=DBBQAtr3MMkbIOb6
+  SUPABASE_DB_PASSWORD=<your-supabase-db-password>
   ```
 
 ### 5. Git Commits
@@ -110,7 +110,7 @@ The application is now ready for deployment to Render.com:
 
 - ✅ .env file excluded from Git (in .gitignore)
 - ⚠️ Change default JWT secrets before production
-- ⚠️ Update CLIENT_URL and ADMIN_URL to actual domains
+- ⚠️ Keep CLIENT_URL, ADMIN_URL, and CORS_ORIGINS aligned with deployed frontend domains
 - ⚠️ Enable Supabase Row Level Security (RLS)
 - ⚠️ Set up database backups
 

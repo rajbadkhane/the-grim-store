@@ -32,14 +32,16 @@ Add these in Render dashboard (Settings → Environment):
 ```
 NODE_ENV=production
 PORT=5000
-SUPABASE_URL=https://msziifhbqyukwvawzacs.supabase.co
+DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.<project-ref>.supabase.co:5432/postgres
+SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_DB_USER=postgres
-SUPABASE_DB_PASSWORD=DBBQAtr3MMkbIOb6
+SUPABASE_DB_PASSWORD=<your-supabase-db-password>
 SQL_DATABASE=postgres
 JWT_SECRET=<your-strong-secret-32-chars-min>
 JWT_REFRESH_SECRET=<your-strong-secret-32-chars-min>
-CLIENT_URL=https://<your-client-url>.onrender.com
-ADMIN_URL=https://<your-admin-url>.onrender.com
+CLIENT_URL=https://client-psi-ashy.vercel.app
+ADMIN_URL=https://admin-lac-eight-88.vercel.app
+CORS_ORIGINS=https://grim-store-client.onrender.com,https://grim-store-admin.onrender.com,https://client-psi-ashy.vercel.app,https://admin-lac-eight-88.vercel.app
 CLOUDINARY_NAME=<optional>
 CLOUDINARY_API_KEY=<optional>
 CLOUDINARY_SECRET=<optional>
@@ -48,6 +50,8 @@ RAZORPAY_SECRET=<optional>
 EMAIL_USER=<optional>
 EMAIL_PASS=<optional>
 ```
+
+If Render cannot reach the direct Supabase database host, use the Supabase Session pooler connection string for `DATABASE_URL`.
 
 ### Deploy
 - Click "Create Web Service"
@@ -66,7 +70,7 @@ EMAIL_PASS=<optional>
 
 ### Environment Variables
 ```
-NEXT_PUBLIC_API_URL=https://grim-store-api.onrender.com
+NEXT_PUBLIC_API_URL=https://grim-store-api.onrender.com/api/v1
 NEXT_PUBLIC_SITE_URL=https://<your-client-url>.onrender.com
 ```
 
@@ -86,7 +90,7 @@ NEXT_PUBLIC_SITE_URL=https://<your-client-url>.onrender.com
 
 ### Environment Variables
 ```
-NEXT_PUBLIC_API_URL=https://grim-store-api.onrender.com
+NEXT_PUBLIC_API_URL=https://grim-store-api.onrender.com/api/v1
 ```
 
 ### Deploy
@@ -109,13 +113,13 @@ Update your frontend .env files with deployed URLs:
 
 **client/.env.local**
 ```
-NEXT_PUBLIC_API_URL=https://grim-store-api.onrender.com
+NEXT_PUBLIC_API_URL=https://grim-store-api.onrender.com/api/v1
 NEXT_PUBLIC_SITE_URL=https://<client-domain>.onrender.com
 ```
 
 **admin/.env.local**
 ```
-NEXT_PUBLIC_API_URL=https://grim-store-api.onrender.com
+NEXT_PUBLIC_API_URL=https://grim-store-api.onrender.com/api/v1
 ```
 
 ## Monitoring & Maintenance
