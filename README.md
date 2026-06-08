@@ -4,16 +4,16 @@ Enterprise-grade premium ecommerce platform with three independent TypeScript ap
 
 - `client` - Next.js 15 customer storefront on port `3000`
 - `admin` - independent Next.js 15 admin dashboard on port `3001`
-- `server` - Express + XAMPP MySQL/MariaDB REST API on port `5000`
+- `server` - Express + PostgreSQL REST API on port `5000` (Supabase or local PostgreSQL)
 
 ## Core Features
 
 - Email OTP signup/login, resend OTP, refresh-token sessions, logout, forgot/reset password architecture
-- SQL primary database on XAMPP MySQL/MariaDB with tables for users, addresses, products, categories, subcategories, orders, coupons, reviews, OTPs, and CMS pages
+- SQL primary database with PostgreSQL backend (Supabase or local) with tables for users, addresses, products, categories, subcategories, orders, coupons, reviews, OTPs, and CMS pages
 - HTTP-only cookie JWT auth, Helmet, rate limiting, sanitization, validation, protected routes, admin guard
 - Cart, wishlist, multi-address management, checkout, COD and Razorpay-ready payment service, webhook-ready verification utility
 - Verified-buyer review/rating system with duplicate prevention, moderation hook, helpful/report actions, rating distribution recalculation
-- Cloudinary-ready upload middleware and Supabase event architecture for future realtime notifications/analytics
+- Cloudinary-ready upload middleware and Supabase integration for realtime notifications/analytics
 - Premium black/red responsive storefront with hero, PLP, PDP, cart, checkout, account, reviews UI, sticky header, mega menu, mobile nav, animations
 - Independent responsive admin with collapsible sidebar, dashboard analytics, charts, products, orders, users, coupons, categories, CMS settings
 - SEO foundations: metadata, canonical URLs, robots, sitemap, Product JSON-LD, semantic HTML, ISR-ready product pages, optimized `next/image`
@@ -28,6 +28,29 @@ cp client/.env.example client/.env.local
 cp admin/.env.example admin/.env.local
 ```
 
+### Database Configuration
+
+Choose one database option in `server/.env`:
+
+**Option 1: Supabase (Recommended for Production)**
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+SUPABASE_DB_USER=postgres
+SUPABASE_DB_PASSWORD=your_db_password
+```
+
+**Option 2: Local PostgreSQL**
+```env
+SQL_HOST=127.0.0.1
+SQL_PORT=5432
+SQL_USER=postgres
+SQL_PASSWORD=your_password
+SQL_DATABASE=premium_ecommerce
+```
+
+The application automatically detects Supabase configuration and uses it if available.
+
 Install dependencies:
 
 ```bash
@@ -36,8 +59,6 @@ npm --prefix server install
 npm --prefix client install
 npm --prefix admin install
 ```
-
-Start XAMPP MySQL from the XAMPP control panel. The API will automatically create the `premium_ecommerce` database and tables.
 
 Seed demo data:
 

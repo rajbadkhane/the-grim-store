@@ -1,6 +1,5 @@
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { randomUUID } from "node:crypto";
-import { pool } from "../config/db.js";
+import { sql as sqlClient } from "../config/db.js";
 
 export type SqlUser = {
   id: string;
@@ -39,19 +38,61 @@ export function json(value: unknown) {
   return JSON.stringify(value ?? null);
 }
 
-export async function rows<T = any>(sql: string, params: Record<string, unknown> = {}) {
-  const [result] = await pool.query<RowDataPacket[]>(sql, params as any);
-  return result as T[];
+// Convert named parameters (:paramName) to positional ($1, $2, ...)
+function convertNamedParamsToPositional(sqlStr: string, params: Record<string, unknown>) {
+  let paramIndex = 1;
+  const paramValues: unknown[] = [];
+  const paramMap: Record<string, number> = {};
+
+  // Find all named parameters in order of appearance
+  const paramRegex = /:(\w+)/g;
+  let match;
+  const paramNames = new Set<string>();
+  
+  while ((match = paramRegex.exec(sqlStr)) !== null) {
+    const paramName = match[1];
+    if (!paramNames.has(paramName)) {
+      paramNames.add(paramName);
+      paramMap[paramName] = paramIndex;
+      paramValues.push(params[paramName]);
+      paramIndex++;
+    }
+  }
+
+  // Replace named parameters with positional ones
+  let convertedSql = sqlStr;
+  for (const [paramName, index] of Object.entries(paramMap)) {
+    convertedSql = convertedSql.replace(new RegExp(`:${paramName}\\b`, "g"), `$${index}`);
+  }
+
+  return { sql: convertedSql, values: paramValues };
 }
 
-export async function row<T = any>(sql: string, params: Record<string, unknown> = {}) {
-  const result = await rows<T>(sql, params);
+export async function rows<T = any>(sqlStr: string, params: Record<string, unknown> = {}) {
+  try {
+    const { sql: convertedSql, values } = convertNamedParamsToPositional(sqlStr, params);
+    const result = await sqlClient.unsafe(convertedSql, values);
+    return result as T[];
+  } catch (error) {
+    console.error("[sql] Query error:", error, { sqlStr, params });
+    throw error;
+  }
+}
+
+export async function row<T = any>(sqlStr: string, params: Record<string, unknown> = {}) {
+  const result = await rows<T>(sqlStr, params);
   return result[0] ?? null;
 }
 
-export async function execute(sql: string, params: Record<string, unknown> = {}) {
-  const [result] = await pool.execute<ResultSetHeader>(sql, params as any);
-  return result;
+export async function execute(sqlStr: string, params: Record<string, unknown> = {}) {
+  try {
+    const { sql: convertedSql, values } = convertNamedParamsToPositional(sqlStr, params);
+    const result = await sqlClient.unsafe(convertedSql, values);
+    return { affectedRows: result.length > 0 ? 1 : 0 };
+  } catch (error) {
+    console.error("[sql] Execute error:", error, { sqlStr, params });
+    throw error;
+  }
 }
 
 export function mapUser(db: any): SqlUser | null {
