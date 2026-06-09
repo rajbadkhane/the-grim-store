@@ -10,7 +10,14 @@ export const validate =
     }
     const data = parsed.data as any;
     if ("body" in data) req.body = data.body;
-    if ("query" in data) req.query = data.query;
+    if ("query" in data) {
+      Object.defineProperty(req, "query", {
+        value: data.query,
+        configurable: true,
+        enumerable: true,
+        writable: true
+      });
+    }
     if ("params" in data) Object.assign(req.params, data.params);
     next();
   };
