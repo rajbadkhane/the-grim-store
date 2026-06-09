@@ -1,13 +1,19 @@
 import nodemailer from "nodemailer";
+import type SMTPTransport from "nodemailer/lib/smtp-transport/index.js";
 import { env } from "../config/env.js";
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
+const mailOptions = {
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  family: 4,
   auth: env.emailUser && env.emailPass ? { user: env.emailUser, pass: env.emailPass } : undefined,
   connectionTimeout: 10000,
   greetingTimeout: 10000,
   socketTimeout: 15000
-});
+} as SMTPTransport.Options & { family: 4 };
+
+const transporter = nodemailer.createTransport(mailOptions);
 
 async function sendMail(to: string, subject: string, html: string) {
   if (!env.emailUser || !env.emailPass) {
