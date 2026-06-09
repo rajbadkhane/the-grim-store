@@ -36,6 +36,10 @@ services:
         value: https://admin-lac-eight-88.vercel.app
       - key: CORS_ORIGINS
         value: https://grim-store-client.onrender.com,https://grim-store-admin.onrender.com,https://client-psi-ashy.vercel.app,https://admin-lac-eight-88.vercel.app
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
 
   # Client Storefront
   - type: web
@@ -48,6 +52,8 @@ services:
     envVars:
       - key: NEXT_PUBLIC_API_URL
         value: https://grim-store-api.onrender.com/api/v1
+      - key: NEXT_PUBLIC_RAZORPAY_KEY_ID
+        sync: false
 
   # Admin Dashboard
   - type: web

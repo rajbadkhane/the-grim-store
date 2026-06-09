@@ -375,7 +375,7 @@ export default function CheckoutPage() {
 
       if (res.data?.success) {
         const order = res.data.order;
-        const rzpKeyId = res.data.razorpayKeyId;
+        const rzpKeyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? res.data.razorpayKeyId;
 
         if (paymentMethod === "razorpay") {
           const razorpayOrderId = order.paymentInfo?.razorpayOrderId;
@@ -385,12 +385,8 @@ export default function CheckoutPage() {
             return;
           }
 
-          if (!rzpKeyId || razorpayOrderId.startsWith("rzp_dev_")) {
-            setShowSandboxModal({
-              orderId: order.orderId,
-              total: Number(order.totalAmount),
-              razorpayOrderId
-            });
+          if (!rzpKeyId) {
+            toast.error("Razorpay public key is not configured.");
             setPlacing(false);
             return;
           }
@@ -404,8 +400,8 @@ export default function CheckoutPage() {
 
           const options = {
             key: rzpKeyId,
-            amount: Number(order.totalAmount) * 100,
-            currency: "INR",
+            amount: Number(order.paymentInfo?.razorpayAmount ?? Math.round(Number(order.totalAmount) * 100)),
+            currency: order.paymentInfo?.razorpayCurrency ?? "INR",
             name: "The Grim Store",
             description: `${selectedPaymentOption.title} payment for ${order.orderId}`,
             order_id: razorpayOrderId,
@@ -454,6 +450,11 @@ export default function CheckoutPage() {
             }
           };
           const rzp = new (window as any).Razorpay(options);
+          rzp.on("payment.failed", function (response: any) {
+            const description = response?.error?.description ?? "Payment failed. Please try again.";
+            toast.error(description);
+            setPlacing(false);
+          });
           rzp.open();
           return;
         }

@@ -82,8 +82,18 @@ export const checkout = asyncHandler(async (req, res) => {
   const orderDbId = id();
   const paymentInfo: any = { method: paymentMethod, channel: paymentChannel, label: paymentLabel, couponCode: quote?.coupon.code ?? null };
   if (paymentMethod === "razorpay") {
-    const razorpayOrder = await createRazorpayOrder(totalAmount, orderId);
-    paymentInfo.razorpayOrderId = razorpayOrder.id;
+    const amountPaise = Math.round(totalAmount * 100);
+    if (amountPaise < 100) throw new ApiError(400, "Razorpay minimum amount is 100 paise");
+
+    try {
+      const razorpayOrder = await createRazorpayOrder(amountPaise, orderId);
+      paymentInfo.razorpayOrderId = razorpayOrder.id;
+      paymentInfo.razorpayAmount = razorpayOrder.amount;
+      paymentInfo.razorpayCurrency = razorpayOrder.currency;
+    } catch (error: any) {
+      const status = error?.statusCode ?? error?.status;
+      throw new ApiError(status === 401 ? 401 : 500, status === 401 ? "Razorpay authentication failed" : "Unable to create Razorpay order");
+    }
   }
   await execute(`INSERT INTO orders (
       id, order_id, user_id, products, payment_info, shipping_address, total_amount,
@@ -143,6 +153,28 @@ export const checkout = asyncHandler(async (req, res) => {
   await emailService.sendOrderConfirmation(req.user!.email, order.orderId);
   await publishEvent("order.created", { orderId: order.orderId, totalAmount });
   res.status(201).json({ success: true, order, razorpayKeyId: env.razorpayKeyId || null });
+});
+
+export const createPaymentOrder = asyncHandler(async (req, res) => {
+  const amount = Number(req.body.amount);
+  const currency = String(req.body.currency ?? "INR").trim().toUpperCase() || "INR";
+  const receipt = String(req.body.receipt ?? `GRIM-${nanoid(10).toUpperCase()}`).trim();
+
+  if (!Number.isInteger(amount) || amount < 100) throw new ApiError(400, "Amount must be at least 100 paise");
+  if (!receipt) throw new ApiError(400, "Receipt is required");
+
+  try {
+    const razorpayOrder = await createRazorpayOrder(amount, receipt, currency);
+    res.status(201).json({
+      success: true,
+      order_id: razorpayOrder.id,
+      amount: razorpayOrder.amount,
+      currency: razorpayOrder.currency
+    });
+  } catch (error: any) {
+    const status = error?.statusCode ?? error?.status;
+    throw new ApiError(status === 401 ? 401 : 500, status === 401 ? "Razorpay authentication failed" : "Unable to create Razorpay order");
+  }
 });
 
 export const applyCoupon = asyncHandler(async (req, res) => {
@@ -291,9 +323,15 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
 });
 
 export const verifyPayment = asyncHandler(async (req, res) => {
-  const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
+  const razorpayOrderId = String(req.body.razorpayOrderId ?? req.body.razorpay_order_id ?? "").trim();
+  const razorpayPaymentId = String(req.body.razorpayPaymentId ?? req.body.razorpay_payment_id ?? "").trim();
+  const razorpaySignature = String(req.body.razorpaySignature ?? req.body.razorpay_signature ?? "").trim();
+
+  if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+    throw new ApiError(400, "Razorpay order id, payment id, and signature are required");
+  }
   if (!verifyRazorpaySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature)) throw new ApiError(400, "Payment verification failed");
-  const orderRow = await row("SELECT * FROM orders WHERE JSON_UNQUOTE(JSON_EXTRACT(payment_info, '$.razorpayOrderId')) = :razorpayOrderId", { razorpayOrderId });
+  const orderRow = await row("SELECT * FROM orders WHERE payment_info ->> 'razorpayOrderId' = :razorpayOrderId", { razorpayOrderId });
   if (!orderRow) throw new ApiError(404, "Order not found");
   const paymentInfo = { ...JSON.parse(orderRow.payment_info || "{}"), razorpayPaymentId, razorpaySignature };
   await execute("UPDATE orders SET payment_status = 'paid', payment_info = :paymentInfo WHERE id = :id", { id: orderRow.id, paymentInfo: json(paymentInfo) });

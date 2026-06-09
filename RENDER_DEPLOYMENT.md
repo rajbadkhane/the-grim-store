@@ -46,7 +46,7 @@ CLOUDINARY_NAME=<optional>
 CLOUDINARY_API_KEY=<optional>
 CLOUDINARY_SECRET=<optional>
 RAZORPAY_KEY_ID=<optional>
-RAZORPAY_SECRET=<optional>
+RAZORPAY_KEY_SECRET=<optional>
 EMAIL_USER=<optional>
 EMAIL_PASS=<optional>
 ```
@@ -72,6 +72,7 @@ If Render cannot reach the direct Supabase database host, use the Supabase Sessi
 ```
 NEXT_PUBLIC_API_URL=https://grim-store-api.onrender.com/api/v1
 NEXT_PUBLIC_SITE_URL=https://<your-client-url>.onrender.com
+NEXT_PUBLIC_RAZORPAY_KEY_ID=<your-razorpay-key-id>
 ```
 
 ### Deploy

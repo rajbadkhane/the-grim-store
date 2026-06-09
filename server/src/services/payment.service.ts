@@ -7,13 +7,21 @@ export const razorpay =
     ? new Razorpay({ key_id: env.razorpayKeyId, key_secret: env.razorpaySecret })
     : null;
 
-export async function createRazorpayOrder(amount: number, receipt: string) {
-  if (!razorpay) return { id: `rzp_dev_${receipt}`, amount: amount * 100, currency: "INR", receipt };
-  return razorpay.orders.create({ amount: amount * 100, currency: "INR", receipt });
+export async function createRazorpayOrder(amountPaise: number, receipt: string, currency = "INR") {
+  if (!Number.isInteger(amountPaise) || amountPaise < 100) {
+    throw new Error("Razorpay order amount must be at least 100 paise");
+  }
+  if (!razorpay) {
+    throw new Error("Razorpay credentials are not configured");
+  }
+
+  return razorpay.orders.create({ amount: amountPaise, currency, receipt });
 }
 
 export function verifyRazorpaySignature(orderId: string, paymentId: string, signature: string) {
-  if (!razorpay || orderId.startsWith("rzp_dev_")) return true;
+  if (!env.razorpaySecret || !orderId || !paymentId || !signature) return false;
   const expected = crypto.createHmac("sha256", env.razorpaySecret ?? "").update(`${orderId}|${paymentId}`).digest("hex");
-  return expected === signature;
+  const expectedBuffer = Buffer.from(expected);
+  const signatureBuffer = Buffer.from(signature);
+  return expectedBuffer.length === signatureBuffer.length && crypto.timingSafeEqual(expectedBuffer, signatureBuffer);
 }

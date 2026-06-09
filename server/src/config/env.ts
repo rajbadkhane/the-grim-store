@@ -61,7 +61,7 @@ export const env = {
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? "",
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
   razorpayKeyId: process.env.RAZORPAY_KEY_ID ?? "",
-  razorpaySecret: process.env.RAZORPAY_SECRET ?? "",
+  razorpaySecret: process.env.RAZORPAY_KEY_SECRET ?? process.env.RAZORPAY_SECRET ?? "",
   shiprocketEmail: process.env.SHIPROCKET_EMAIL ?? "",
   shiprocketPassword: process.env.SHIPROCKET_PASSWORD ?? ""
 };
