@@ -24,12 +24,20 @@ const allowedOrigins = Array.from(
     "http://127.0.0.1:3001"
   ])
 );
+const allowedVercelPattern = /^https:\/\/(?:client|admin)-[a-z0-9-]+-raj-badkhane-s-projects\.vercel\.app$/;
+
+function isAllowedOrigin(origin?: string) {
+  if (!origin) return true;
+  return allowedOrigins.includes(origin) || allowedVercelPattern.test(origin);
+}
 
 app.set("trust proxy", 1);
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin(origin, callback) {
+      callback(null, isAllowedOrigin(origin));
+    },
     credentials: true
   })
 );
