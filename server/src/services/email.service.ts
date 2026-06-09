@@ -3,9 +3,9 @@ import type SMTPTransport from "nodemailer/lib/smtp-transport/index.js";
 import { env } from "../config/env.js";
 
 const mailOptions = {
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
+  host: env.smtpHost,
+  port: env.smtpPort,
+  secure: env.smtpSecure,
   family: 4,
   auth: env.emailUser && env.emailPass ? { user: env.emailUser, pass: env.emailPass } : undefined,
   connectionTimeout: 10000,
