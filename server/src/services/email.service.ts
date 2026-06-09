@@ -1,25 +1,42 @@
 import nodemailer from "nodemailer";
 import type SMTPTransport from "nodemailer/lib/smtp-transport/index.js";
+import dns from "node:dns/promises";
 import { env } from "../config/env.js";
 
-const mailOptions = {
-  host: env.smtpHost,
+async function resolveSmtpHost() {
+  if (env.smtpHost !== "smtp.gmail.com") return env.smtpHost;
+  try {
+    const addresses = await dns.resolve4(env.smtpHost);
+    return addresses[0] ?? env.smtpHost;
+  } catch {
+    return env.smtpHost;
+  }
+}
+
+const mailOptions = async (): Promise<SMTPTransport.Options> => ({
+  host: await resolveSmtpHost(),
   port: env.smtpPort,
   secure: env.smtpSecure,
-  family: 4,
   auth: env.emailUser && env.emailPass ? { user: env.emailUser, pass: env.emailPass } : undefined,
+  tls: { servername: env.smtpHost },
   connectionTimeout: 10000,
   greetingTimeout: 10000,
   socketTimeout: 15000
-} as SMTPTransport.Options & { family: 4 };
+});
 
-const transporter = nodemailer.createTransport(mailOptions);
+let transporterPromise: Promise<nodemailer.Transporter> | null = null;
+
+async function getTransporter() {
+  transporterPromise ??= mailOptions().then((options) => nodemailer.createTransport(options));
+  return transporterPromise;
+}
 
 async function sendMail(to: string, subject: string, html: string) {
   if (!env.emailUser || !env.emailPass) {
     console.log(`[email:dev] ${subject} -> ${to}\n${html}`);
     return;
   }
+  const transporter = await getTransporter();
   await transporter.sendMail({ from: `"The Grim Store" <${env.emailUser}>`, to, subject, html });
 }
 
