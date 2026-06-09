@@ -5,7 +5,7 @@ services:
     env: node
     region: oregon
     plan: free
-    buildCommand: npm install && npm --prefix server install && npm --prefix server run build
+    buildCommand: npm install --include=dev && npm --prefix server install --include=dev && npm --prefix server run build
     startCommand: npm --prefix server run start
     envVars:
       - key: NODE_ENV
@@ -43,7 +43,7 @@ services:
     env: node
     region: oregon
     plan: free
-    buildCommand: npm --prefix client install && npm --prefix client run build
+    buildCommand: npm --prefix client install --include=dev && npm --prefix client run build
     startCommand: npm --prefix client run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
@@ -55,7 +55,7 @@ services:
     env: node
     region: oregon
     plan: free
-    buildCommand: npm --prefix admin install && npm --prefix admin run build
+    buildCommand: npm --prefix admin install --include=dev && npm --prefix admin run build
     startCommand: npm --prefix admin run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
