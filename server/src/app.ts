@@ -18,6 +18,8 @@ const allowedOrigins = Array.from(
     env.clientUrl,
     env.adminUrl,
     ...env.corsOrigins,
+    "https://thegrimstore.com",
+    "https://www.thegrimstore.com",
     "http://localhost:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3000",

@@ -3,7 +3,10 @@ import { env } from "../config/env.js";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
-  auth: env.emailUser && env.emailPass ? { user: env.emailUser, pass: env.emailPass } : undefined
+  auth: env.emailUser && env.emailPass ? { user: env.emailUser, pass: env.emailPass } : undefined,
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 15000
 });
 
 async function sendMail(to: string, subject: string, html: string) {
