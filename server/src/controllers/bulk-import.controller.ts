@@ -161,6 +161,7 @@ export const bulkImportProducts = asyncHandler(async (req, res) => {
 
   let successCount = 0;
   let errorCount = 0;
+  let autoSkuCounter = 1;
 
   for (let i = 0; i < rawRows.length; i++) {
     const rawRow = rawRows[i];
@@ -182,11 +183,14 @@ export const bulkImportProducts = asyncHandler(async (req, res) => {
         continue;
       }
 
-      const sku = String(mapped.sku ?? "").trim();
+      let sku = String(mapped.sku ?? "").trim();
+      const skuMatch = sku.match(/^GRM-OVR-(\d+)$/i);
+      if (skuMatch) autoSkuCounter = Math.max(autoSkuCounter, Number(skuMatch[1]) + 1);
+
       if (!sku) {
-        results.push({ row: rowNum, title, status: "error", message: "SKU is required." });
-        errorCount++;
-        continue;
+        do {
+          sku = `GRM-OVR-${String(autoSkuCounter++).padStart(3, "0")}`;
+        } while (await row("SELECT id FROM products WHERE sku = :sku", { sku }));
       }
 
       /* Check duplicate SKU */
@@ -243,7 +247,7 @@ export const bulkImportProducts = asyncHandler(async (req, res) => {
       const pattern = String(mapped.pattern ?? "").trim();
 
       const slug = mapped.slug ? makeSlug(String(mapped.slug)) : makeSlug(title);
-      const brand = String(mapped.brand ?? "Grim Originals").trim();
+      const brand = String(mapped.brand ?? "").trim() || "Grim Originals";
       const gender = (["men", "women", "unisex", "kids"].includes(String(mapped.gender ?? "").toLowerCase()) ? String(mapped.gender).toLowerCase() : "unisex");
       const description = String(mapped.description ?? title).trim();
       const shortDescription = String(mapped.shortDescription ?? "").trim();

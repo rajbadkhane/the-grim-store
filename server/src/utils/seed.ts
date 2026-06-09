@@ -610,7 +610,7 @@ async function seed() {
   console.log("[seed] Reviews with Indian names seeded successfully.");
 
   // Ensure admin user exists
-  const adminEmail = "badkhaneraj@gmail.com";
+  const adminEmail = "thegrimstoreindia@gmail.com";
   const admin = await row("SELECT * FROM users WHERE email = :adminEmail", { adminEmail });
   if (!admin) {
     await execute(
