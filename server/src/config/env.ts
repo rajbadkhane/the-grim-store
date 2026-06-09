@@ -49,6 +49,8 @@ export const env = {
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET ?? "dev_refresh_secret_change_me",
   emailUser: process.env.EMAIL_USER ?? "",
   emailPass: process.env.EMAIL_PASS ?? "",
+  emailFrom: process.env.EMAIL_FROM ?? "",
+  resendApiKey: process.env.RESEND_API_KEY ?? "",
   smtpHost: process.env.SMTP_HOST ?? "smtp.gmail.com",
   smtpPort: Number(process.env.SMTP_PORT ?? 587),
   smtpSecure: process.env.SMTP_SECURE === "true",

@@ -32,12 +32,30 @@ async function getTransporter() {
 }
 
 async function sendMail(to: string, subject: string, html: string) {
+  if (env.resendApiKey) {
+    const from = env.emailFrom || (env.emailUser ? `"The Grim Store" <${env.emailUser}>` : "The Grim Store <onboarding@resend.dev>");
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.resendApiKey}`,
+        "Content-Type": "application/json",
+        "User-Agent": "the-grim-store-api"
+      },
+      body: JSON.stringify({ from, to, subject, html })
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Email API failed: ${response.status} ${errorText}`);
+    }
+    return;
+  }
+
   if (!env.emailUser || !env.emailPass) {
     console.log(`[email:dev] ${subject} -> ${to}\n${html}`);
     return;
   }
   const transporter = await getTransporter();
-  await transporter.sendMail({ from: `"The Grim Store" <${env.emailUser}>`, to, subject, html });
+  await transporter.sendMail({ from: env.emailFrom || `"The Grim Store" <${env.emailUser}>`, to, subject, html });
 }
 
 export const emailService = {
