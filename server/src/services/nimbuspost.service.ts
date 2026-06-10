@@ -149,9 +149,31 @@ function buildNimbuspostPayload(order: any) {
   };
 }
 
+async function getServiceableCourierIds(payload: any, token: string) {
+  const response = await nimbuspostRequest<{ status: boolean; data: any[] }>("/courier/serviceability", {
+    method: "POST",
+    body: JSON.stringify({
+      origin: payload.pickup.pincode,
+      destination: payload.consignee.pincode,
+      payment_type: payload.payment_type,
+      order_amount: String(payload.order_amount),
+      weight: String(payload.package_weight),
+      length: String(payload.package_length),
+      breadth: String(payload.package_breadth),
+      height: String(payload.package_height)
+    })
+  }, token);
+
+  const options = Array.isArray(response.data) ? response.data : [];
+  return options
+    .filter((option) => option?.id)
+    .sort((a, b) => Number(a.total_charges ?? Number.MAX_SAFE_INTEGER) - Number(b.total_charges ?? Number.MAX_SAFE_INTEGER))
+    .map((option) => String(option.id));
+}
+
 export const nimbuspostService = {
   async createShipment(order: any): Promise<NimbuspostShipmentResult> {
-    const payload = buildNimbuspostPayload(order);
+    const payload: any = buildNimbuspostPayload(order);
 
     if (!hasNimbuspostCredentials()) {
       console.log(`[nimbuspost:skip] Credentials missing for order ${order.orderId}`);
@@ -167,23 +189,39 @@ export const nimbuspostService = {
     if (!token) return { success: false, error: "Nimbuspost authorization failed", payload };
 
     try {
-      const response = await nimbuspostRequest<{ status: boolean; data: any }>("/shipments", {
-        method: "POST",
-        body: JSON.stringify(payload)
-      }, token);
-      const data = response.data ?? {};
+      const courierIds = payload.courier_id ? [String(payload.courier_id)] : await getServiceableCourierIds(payload, token);
+      if (!courierIds.length) {
+        return { success: false, error: "No Nimbuspost courier serviceable for this pickup and delivery pincode", payload };
+      }
 
-      return {
-        success: true,
-        isMock: false,
-        shipmentId: data.shipment_id ?? null,
-        awbNumber: data.awb_number ?? null,
-        courierId: data.courier_id ?? null,
-        courierName: data.courier_name ?? null,
-        label: data.label ?? null,
-        manifest: data.manifest ?? null,
-        status: data.status ?? "booked"
-      };
+      let lastError = "";
+      for (const courierId of courierIds) {
+        try {
+          payload.courier_id = courierId;
+          const response = await nimbuspostRequest<{ status: boolean; data: any }>("/shipments", {
+            method: "POST",
+            body: JSON.stringify(payload)
+          }, token);
+          const data = response.data ?? {};
+
+          return {
+            success: true,
+            isMock: false,
+            shipmentId: data.shipment_id ?? null,
+            awbNumber: data.awb_number ?? null,
+            courierId: data.courier_id ?? null,
+            courierName: data.courier_name ?? null,
+            label: data.label ?? null,
+            manifest: data.manifest ?? null,
+            status: data.status ?? "booked"
+          };
+        } catch (error: any) {
+          lastError = error?.message ?? String(error);
+          console.error(`[nimbuspost] Shipment creation failed for courier ${courierId}:`, error);
+        }
+      }
+
+      return { success: false, error: lastError || "Nimbuspost shipment booking failed for all serviceable couriers", payload };
     } catch (error: any) {
       console.error("[nimbuspost] Shipment creation failed:", error);
       return { success: false, error: error?.message ?? String(error), payload };
