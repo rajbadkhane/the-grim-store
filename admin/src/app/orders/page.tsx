@@ -258,6 +258,7 @@ function OrderTableRows({
   const courierName = order.paymentInfo?.nimbuspostCourierName ?? "Nimbuspost";
   const labelUrl = order.paymentInfo?.nimbuspostLabel;
   const manifestUrl = order.paymentInfo?.nimbuspostManifest;
+  const nimbuspostError = order.paymentInfo?.nimbuspostError;
 
   return (
     <>
@@ -372,6 +373,7 @@ function OrderTableRows({
                 <DetailBox title="Nimbuspost shipment">
                   <p>Courier: <strong>{courierName}</strong></p>
                   <p>AWB: <strong>{awbNumber || "Not booked yet"}</strong></p>
+                  {nimbuspostError && <p className="text-red-600">Nimbuspost error: <strong>{nimbuspostError}</strong></p>}
                   {labelUrl && <p><a className="font-black text-indigo-600" href={labelUrl} target="_blank" rel="noreferrer">Open shipping label</a></p>}
                   {manifestUrl && <p><a className="font-black text-indigo-600" href={manifestUrl} target="_blank" rel="noreferrer">Open manifest</a></p>}
                 </DetailBox>

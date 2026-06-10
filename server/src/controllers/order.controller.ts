@@ -148,9 +148,28 @@ export const checkout = asyncHandler(async (req, res) => {
           }
         );
         order.trackingStatus = "Packed & Registered with delivery partner";
+      } else {
+        order.paymentInfo = {
+          ...order.paymentInfo,
+          nimbuspostError: shipmentResult.error ?? "Nimbuspost shipment booking failed",
+          nimbuspostAttemptedAt: new Date().toISOString()
+        };
+        await execute("UPDATE orders SET payment_info = :paymentInfo WHERE id = :id", {
+          id: order.id,
+          paymentInfo: json(order.paymentInfo)
+        });
       }
     } catch (err) {
       console.error("[nimbuspost:checkout] Error registering shipment:", err);
+      order.paymentInfo = {
+        ...order.paymentInfo,
+        nimbuspostError: err instanceof Error ? err.message : "Nimbuspost shipment booking failed",
+        nimbuspostAttemptedAt: new Date().toISOString()
+      };
+      await execute("UPDATE orders SET payment_info = :paymentInfo WHERE id = :id", {
+        id: order.id,
+        paymentInfo: json(order.paymentInfo)
+      });
     }
   }
 
@@ -442,9 +461,30 @@ export const verifyPayment = asyncHandler(async (req, res) => {
       );
       order.paymentInfo = updatedPaymentInfo;
       order.trackingStatus = "Packed & Registered with delivery partner";
+    } else {
+      const updatedPaymentInfo = {
+        ...paymentInfo,
+        nimbuspostError: shipmentResult.error ?? "Nimbuspost shipment booking failed",
+        nimbuspostAttemptedAt: new Date().toISOString()
+      };
+      await execute("UPDATE orders SET payment_info = :paymentInfo WHERE id = :id", {
+        id: order.id,
+        paymentInfo: json(updatedPaymentInfo)
+      });
+      order.paymentInfo = updatedPaymentInfo;
     }
   } catch (err) {
     console.error("[nimbuspost:verifyPayment] Error registering shipment:", err);
+    const updatedPaymentInfo = {
+      ...paymentInfo,
+      nimbuspostError: err instanceof Error ? err.message : "Nimbuspost shipment booking failed",
+      nimbuspostAttemptedAt: new Date().toISOString()
+    };
+    await execute("UPDATE orders SET payment_info = :paymentInfo WHERE id = :id", {
+      id: order.id,
+      paymentInfo: json(updatedPaymentInfo)
+    });
+    order.paymentInfo = updatedPaymentInfo;
   }
 
   res.json({ success: true, order });
