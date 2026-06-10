@@ -4,9 +4,9 @@ import { ApiError } from "../utils/ApiError.js";
 import { createRazorpayOrder, verifyRazorpaySignature } from "../services/payment.service.js";
 import { emailService } from "../services/email.service.js";
 import { publishEvent } from "../services/supabaseEvents.service.js";
-import { execute, id, json, mapOrder, mapProduct, row, rows, saveUserState } from "../lib/sql.js";
+import { execute, getUserById, id, json, mapOrder, mapProduct, row, rows, saveUserState } from "../lib/sql.js";
 import { env } from "../config/env.js";
-import { shiprocketService } from "../services/shiprocket.service.js";
+import { nimbuspostService } from "../services/nimbuspost.service.js";
 
 type CouponRow = {
   id: string;
@@ -116,7 +116,7 @@ export const checkout = asyncHandler(async (req, res) => {
   if (quote) {
     await execute("UPDATE coupons SET used_count = used_count + 1 WHERE id = :id AND used_count < usage_limit", { id: quote.coupon.id });
   }
-  if (!req.body.isDirectBuyNow) {
+  if (paymentMethod !== "razorpay" && !req.body.isDirectBuyNow) {
     req.user!.cart = [];
     await saveUserState(req.user!);
   }
@@ -124,16 +124,20 @@ export const checkout = asyncHandler(async (req, res) => {
 
   if (paymentMethod !== "razorpay") {
     try {
-      const srResult = await shiprocketService.createShiprocketOrder({
+      const shipmentResult = await nimbuspostService.createShipment({
         ...order,
         paymentMethod,
         user_email: req.user!.email
       });
-      if (srResult.success) {
+      if (shipmentResult.success) {
         order.paymentInfo = {
           ...order.paymentInfo,
-          shiprocketShipmentId: srResult.shipmentId,
-          shiprocketAwbCode: srResult.awbCode
+          nimbuspostShipmentId: shipmentResult.shipmentId,
+          nimbuspostAwbNumber: shipmentResult.awbNumber,
+          nimbuspostCourierId: shipmentResult.courierId,
+          nimbuspostCourierName: shipmentResult.courierName,
+          nimbuspostLabel: shipmentResult.label,
+          nimbuspostManifest: shipmentResult.manifest
         };
         await execute(
           "UPDATE orders SET payment_info = :paymentInfo, tracking_status = :trackingStatus WHERE id = :id",
@@ -146,7 +150,7 @@ export const checkout = asyncHandler(async (req, res) => {
         order.trackingStatus = "Packed & Registered with delivery partner";
       }
     } catch (err) {
-      console.error("[shiprocket:checkout] Error registering shipment:", err);
+      console.error("[nimbuspost:checkout] Error registering shipment:", err);
     }
   }
 
@@ -311,6 +315,72 @@ export const listOrders = asyncHandler(async (_req, res) => {
   res.json({ success: true, orders: mapped });
 });
 
+export const trackOrder = asyncHandler(async (req, res) => {
+  const orderRow = await row("SELECT * FROM orders WHERE id = :id", { id: req.params.id });
+  if (!orderRow) throw new ApiError(404, "Order not found");
+  if (req.user?.role !== "admin" && orderRow.user_id !== req.user?.id) throw new ApiError(403, "Order access denied");
+
+  const order = mapOrder(orderRow)!;
+  const paymentInfo = order.paymentInfo ?? {};
+  const awbNumber = paymentInfo.nimbuspostAwbNumber ?? paymentInfo.shiprocketAwbCode ?? "";
+
+  if (!awbNumber) {
+    return res.json({
+      success: true,
+      tracking: {
+        provider: "Nimbuspost",
+        booked: false,
+        status: order.trackingStatus || "Order placed",
+        awbNumber: null,
+        courierName: paymentInfo.nimbuspostCourierName ?? null,
+        label: paymentInfo.nimbuspostLabel ?? null,
+        manifest: paymentInfo.nimbuspostManifest ?? null,
+        history: []
+      }
+    });
+  }
+
+  const tracking = await nimbuspostService.trackShipment(String(awbNumber));
+  if (!tracking.success) {
+    return res.json({
+      success: true,
+      tracking: {
+        provider: "Nimbuspost",
+        booked: true,
+        awbNumber,
+        courierName: paymentInfo.nimbuspostCourierName ?? null,
+        label: paymentInfo.nimbuspostLabel ?? null,
+        manifest: paymentInfo.nimbuspostManifest ?? null,
+        status: order.trackingStatus || "Shipment booked",
+        history: [],
+        error: tracking.error
+      }
+    });
+  }
+
+  const latestStatus = tracking.status ?? order.trackingStatus;
+  if (latestStatus && latestStatus !== order.trackingStatus) {
+    await execute("UPDATE orders SET tracking_status = :trackingStatus WHERE id = :id", {
+      id: order.id,
+      trackingStatus: latestStatus
+    });
+  }
+
+  res.json({
+    success: true,
+    tracking: {
+      provider: "Nimbuspost",
+      booked: true,
+      awbNumber,
+      courierName: paymentInfo.nimbuspostCourierName ?? null,
+      label: paymentInfo.nimbuspostLabel ?? null,
+      manifest: paymentInfo.nimbuspostManifest ?? null,
+      status: latestStatus,
+      history: tracking.activity ?? []
+    }
+  });
+});
+
 export const updateOrderStatus = asyncHandler(async (req, res) => {
   await execute("UPDATE orders SET order_status = :orderStatus, tracking_status = :trackingStatus WHERE id = :id", {
     id: req.params.id,
@@ -333,24 +403,34 @@ export const verifyPayment = asyncHandler(async (req, res) => {
   if (!verifyRazorpaySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature)) throw new ApiError(400, "Payment verification failed");
   const orderRow = await row("SELECT * FROM orders WHERE payment_info ->> 'razorpayOrderId' = :razorpayOrderId", { razorpayOrderId });
   if (!orderRow) throw new ApiError(404, "Order not found");
-  const paymentInfo = { ...JSON.parse(orderRow.payment_info || "{}"), razorpayPaymentId, razorpaySignature };
+  const existingPaymentInfo = typeof orderRow.payment_info === "string" ? JSON.parse(orderRow.payment_info || "{}") : orderRow.payment_info ?? {};
+  const paymentInfo = { ...existingPaymentInfo, razorpayPaymentId, razorpaySignature };
   await execute("UPDATE orders SET payment_status = 'paid', payment_info = :paymentInfo WHERE id = :id", { id: orderRow.id, paymentInfo: json(paymentInfo) });
   const order = mapOrder(await row("SELECT * FROM orders WHERE id = :id", { id: orderRow.id }))!;
 
   const userRow = await row("SELECT email FROM users WHERE id = :userId", { userId: order.user });
   const userEmail = userRow?.email || "customer@grimstore.com";
+  const paidUser = await getUserById(order.user);
+  if (paidUser) {
+    paidUser.cart = [];
+    await saveUserState(paidUser);
+  }
 
   try {
-    const srResult = await shiprocketService.createShiprocketOrder({
+    const shipmentResult = await nimbuspostService.createShipment({
       ...order,
       paymentMethod: "razorpay",
       user_email: userEmail
     });
-    if (srResult.success) {
+    if (shipmentResult.success) {
       const updatedPaymentInfo = {
         ...paymentInfo,
-        shiprocketShipmentId: srResult.shipmentId,
-        shiprocketAwbCode: srResult.awbCode
+        nimbuspostShipmentId: shipmentResult.shipmentId,
+        nimbuspostAwbNumber: shipmentResult.awbNumber,
+        nimbuspostCourierId: shipmentResult.courierId,
+        nimbuspostCourierName: shipmentResult.courierName,
+        nimbuspostLabel: shipmentResult.label,
+        nimbuspostManifest: shipmentResult.manifest
       };
       await execute(
         "UPDATE orders SET payment_info = :paymentInfo, tracking_status = :trackingStatus WHERE id = :id",
@@ -364,7 +444,7 @@ export const verifyPayment = asyncHandler(async (req, res) => {
       order.trackingStatus = "Packed & Registered with delivery partner";
     }
   } catch (err) {
-    console.error("[shiprocket:verifyPayment] Error registering shipment:", err);
+    console.error("[nimbuspost:verifyPayment] Error registering shipment:", err);
   }
 
   res.json({ success: true, order });

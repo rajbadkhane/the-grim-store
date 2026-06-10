@@ -62,6 +62,18 @@ export const env = {
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
   razorpayKeyId: process.env.RAZORPAY_KEY_ID ?? "",
   razorpaySecret: process.env.RAZORPAY_KEY_SECRET ?? process.env.RAZORPAY_SECRET ?? "",
+  nimbuspostEmail: process.env.NIMBUSPOST_EMAIL ?? "",
+  nimbuspostPassword: process.env.NIMBUSPOST_PASSWORD ?? "",
+  nimbuspostPickupWarehouse: process.env.NIMBUSPOST_PICKUP_WAREHOUSE ?? "The Grim Store",
+  nimbuspostPickupName: process.env.NIMBUSPOST_PICKUP_NAME ?? "The Grim Store",
+  nimbuspostPickupAddress: process.env.NIMBUSPOST_PICKUP_ADDRESS ?? "",
+  nimbuspostPickupAddress2: process.env.NIMBUSPOST_PICKUP_ADDRESS_2 ?? "",
+  nimbuspostPickupCity: process.env.NIMBUSPOST_PICKUP_CITY ?? "",
+  nimbuspostPickupState: process.env.NIMBUSPOST_PICKUP_STATE ?? "",
+  nimbuspostPickupPincode: process.env.NIMBUSPOST_PICKUP_PINCODE ?? "",
+  nimbuspostPickupPhone: process.env.NIMBUSPOST_PICKUP_PHONE ?? "",
+  nimbuspostCourierId: process.env.NIMBUSPOST_COURIER_ID ?? "",
+  nimbuspostAutoPickup: process.env.NIMBUSPOST_AUTO_PICKUP ?? "yes",
   shiprocketEmail: process.env.SHIPROCKET_EMAIL ?? "",
   shiprocketPassword: process.env.SHIPROCKET_PASSWORD ?? ""
 };

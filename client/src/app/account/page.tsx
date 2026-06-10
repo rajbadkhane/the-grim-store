@@ -48,7 +48,20 @@ type Order = {
   totalAmount: number;
   deliveryDate?: string;
   paymentStatus: string;
+  paymentInfo?: Record<string, any>;
   createdAt?: string;
+};
+
+type LiveTracking = {
+  provider: string;
+  booked: boolean;
+  awbNumber?: string | null;
+  courierName?: string | null;
+  label?: string | null;
+  manifest?: string | null;
+  status?: string | null;
+  error?: string;
+  history?: Array<{ status_code?: string; location?: string; event_time?: string; message?: string; status?: string; date?: string }>;
 };
 
 type WishlistProduct = {
@@ -470,6 +483,28 @@ function OrderCard({ order }: { order: Order }) {
   const delivery = order.deliveryDate
     ? new Date(order.deliveryDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
     : "Pending";
+  const [tracking, setTracking] = useState<LiveTracking | null>(null);
+  const [trackingLoading, setTrackingLoading] = useState(false);
+  const awbNumber = order.paymentInfo?.nimbuspostAwbNumber ?? order.paymentInfo?.shiprocketAwbCode ?? null;
+  const courierName = order.paymentInfo?.nimbuspostCourierName ?? (awbNumber ? "Nimbuspost" : null);
+  const labelUrl = order.paymentInfo?.nimbuspostLabel ?? null;
+  const paymentMethod = String(order.paymentInfo?.method ?? "online").toUpperCase();
+
+  async function loadTracking() {
+    if (trackingLoading) return;
+    setTrackingLoading(true);
+    try {
+      const res = await api.get(`/orders/${order.id}/track`);
+      const nextTracking = (res.data?.tracking ?? null) as LiveTracking | null;
+      setTracking(nextTracking);
+      if (nextTracking?.error) toast.error(nextTracking.error);
+      else toast.success("Tracking updated");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message ?? "Unable to fetch tracking");
+    } finally {
+      setTrackingLoading(false);
+    }
+  }
 
   return (
     <article className="rounded-md border border-neutral-200 dark:border-white/10 bg-white dark:bg-black/10 hover:shadow-md transition-all duration-200 p-5">
@@ -478,6 +513,11 @@ function OrderCard({ order }: { order: Order }) {
         <div>
           <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-white/35">Order ID</span>
           <p className="text-sm font-black text-neutral-900 dark:text-white font-mono">{order.orderId}</p>
+          <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-wider">
+            <span className="rounded bg-neutral-100 px-2 py-1 text-neutral-600 dark:bg-white/5 dark:text-white/60">Payment {paymentMethod}</span>
+            {courierName && <span className="rounded bg-blue-50 px-2 py-1 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">{courierName}</span>}
+            {awbNumber && <span className="rounded bg-emerald-50 px-2 py-1 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">AWB {awbNumber}</span>}
+          </div>
         </div>
         <div className="flex flex-wrap gap-2.5 items-center">
           {order.createdAt && (
@@ -541,10 +581,27 @@ function OrderCard({ order }: { order: Order }) {
               <span>Expected Delivery:</span>
               <span className="text-neutral-800 dark:text-white font-black">{delivery}</span>
             </div>
+            {awbNumber && (
+              <div className="mt-2 flex justify-between gap-2 text-xs font-bold text-neutral-500 dark:text-white/50">
+                <span>AWB:</span>
+                <span className="text-right font-black text-neutral-800 dark:text-white">{awbNumber}</span>
+              </div>
+            )}
           </div>
           <div className="mt-4 border-t border-neutral-200 dark:border-white/5 pt-3.5 flex items-center justify-between text-sm font-black text-neutral-900 dark:text-white">
             <span>Total Paid</span>
             <span className="text-red-600 dark:text-red-300 text-base">{formatMoney(order.totalAmount)}</span>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {labelUrl && (
+              <a href={labelUrl} target="_blank" rel="noreferrer" className="rounded-md border border-neutral-200 px-3 py-2 text-center text-[11px] font-black text-neutral-700 hover:border-red-500 hover:text-red-500 dark:border-white/10 dark:text-white/70">
+                Label
+              </a>
+            )}
+            <button onClick={loadTracking} disabled={trackingLoading} className="inline-flex items-center justify-center gap-2 rounded-md bg-red-600 px-3 py-2 text-[11px] font-black text-white disabled:opacity-60">
+              {trackingLoading ? <Loader2 size={13} className="animate-spin" /> : <Truck size={13} />}
+              Live
+            </button>
           </div>
         </div>
 
@@ -554,6 +611,30 @@ function OrderCard({ order }: { order: Order }) {
             Track Shipment
           </span>
           <TrackingTimeline order={order} />
+          {tracking && (
+            <div className="mt-5 rounded-md border border-neutral-200 bg-white p-4 dark:border-white/10 dark:bg-black/20">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wider text-neutral-400 dark:text-white/35">Carrier tracking</p>
+                  <p className="mt-1 text-sm font-black text-neutral-900 dark:text-white">{tracking.status || order.trackingStatus}</p>
+                </div>
+                {tracking.awbNumber && <span className="rounded bg-emerald-500/10 px-2 py-1 text-[10px] font-black text-emerald-700 dark:text-emerald-300">AWB {tracking.awbNumber}</span>}
+              </div>
+              {tracking.error && <p className="mt-3 text-xs font-bold text-amber-600 dark:text-amber-300">{tracking.error}</p>}
+              {!tracking.error && tracking.history?.length ? (
+                <div className="mt-4 max-h-56 space-y-3 overflow-y-auto pr-1">
+                  {tracking.history.slice(0, 8).map((event, index) => (
+                    <div key={`${event.event_time ?? event.date ?? index}-${index}`} className="border-l-2 border-emerald-500/40 pl-3">
+                      <p className="text-xs font-black text-neutral-900 dark:text-white">{event.message ?? event.status ?? "Shipment update"}</p>
+                      <p className="mt-0.5 text-[10px] font-bold text-neutral-500 dark:text-white/45">{[event.location, event.event_time ?? event.date].filter(Boolean).join(" | ")}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                !tracking.error && <p className="mt-3 text-xs font-bold text-neutral-500 dark:text-white/45">Live carrier scans will appear after pickup.</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </article>

@@ -40,6 +40,30 @@ services:
         sync: false
       - key: RAZORPAY_KEY_SECRET
         sync: false
+      - key: NIMBUSPOST_EMAIL
+        sync: false
+      - key: NIMBUSPOST_PASSWORD
+        sync: false
+      - key: NIMBUSPOST_PICKUP_WAREHOUSE
+        value: The Grim Store
+      - key: NIMBUSPOST_PICKUP_NAME
+        value: The Grim Store
+      - key: NIMBUSPOST_PICKUP_ADDRESS
+        value: A-3 Maruti Vihar Colony, Infront Shri Ram Janki Sidh Hanuman Temple, Near SBI ATM, Ayodhya Bypass
+      - key: NIMBUSPOST_PICKUP_ADDRESS_2
+        value: ""
+      - key: NIMBUSPOST_PICKUP_CITY
+        value: Bhopal
+      - key: NIMBUSPOST_PICKUP_STATE
+        value: Madhya Pradesh
+      - key: NIMBUSPOST_PICKUP_PINCODE
+        value: 462041
+      - key: NIMBUSPOST_PICKUP_PHONE
+        sync: false
+      - key: NIMBUSPOST_COURIER_ID
+        sync: false
+      - key: NIMBUSPOST_AUTO_PICKUP
+        value: yes
 
   # Client Storefront
   - type: web

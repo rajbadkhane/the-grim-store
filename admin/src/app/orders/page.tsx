@@ -254,6 +254,10 @@ function OrderTableRows({
   const orderDate = order.createdAt ? formatDateTime(order.createdAt) : "Unknown";
   const delivery = order.deliveryDate ? formatDate(order.deliveryDate) : "Pending";
   const paymentMethod = String(order.paymentInfo?.method ?? "unknown").toUpperCase();
+  const awbNumber = order.paymentInfo?.nimbuspostAwbNumber ?? order.paymentInfo?.shiprocketAwbCode;
+  const courierName = order.paymentInfo?.nimbuspostCourierName ?? "Nimbuspost";
+  const labelUrl = order.paymentInfo?.nimbuspostLabel;
+  const manifestUrl = order.paymentInfo?.nimbuspostManifest;
 
   return (
     <>
@@ -364,6 +368,12 @@ function OrderTableRows({
                   <p>Shipping: <strong>{money(order.shippingFee ?? 0)}</strong></p>
                   <p>Discount: <strong>{money(order.discountAmount ?? 0)}</strong></p>
                   <p>Total: <strong>{money(order.totalAmount)}</strong></p>
+                </DetailBox>
+                <DetailBox title="Nimbuspost shipment">
+                  <p>Courier: <strong>{courierName}</strong></p>
+                  <p>AWB: <strong>{awbNumber || "Not booked yet"}</strong></p>
+                  {labelUrl && <p><a className="font-black text-indigo-600" href={labelUrl} target="_blank" rel="noreferrer">Open shipping label</a></p>}
+                  {manifestUrl && <p><a className="font-black text-indigo-600" href={manifestUrl} target="_blank" rel="noreferrer">Open manifest</a></p>}
                 </DetailBox>
               </div>
             </div>
