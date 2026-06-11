@@ -77,38 +77,58 @@ export type StoreReview = {
 };
 
 export async function fetchProducts(params: Record<string, string | number | undefined> = {}): Promise<{ items: StoreProduct[]; total: number; page: number; pages: number }> {
-  const query = new URLSearchParams();
-  for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined && value !== "") query.set(key, String(value));
+  try {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== "") query.set(key, String(value));
+    }
+    const res = await fetch(`${API_URL}/products?${query.toString()}`, { next: { revalidate: CATALOG_REVALIDATE_SECONDS } });
+    if (!res.ok) return { items: [] as StoreProduct[], total: 0, page: 1, pages: 1 };
+    const data = await res.json();
+    return {
+      ...data,
+      items: (data.items ?? []).map(normalizeProduct) as StoreProduct[]
+    };
+  } catch (error) {
+    console.warn("[catalog-api] fetchProducts failed:", error);
+    return { items: [] as StoreProduct[], total: 0, page: 1, pages: 1 };
   }
-  const res = await fetch(`${API_URL}/products?${query.toString()}`, { next: { revalidate: CATALOG_REVALIDATE_SECONDS } });
-  if (!res.ok) return { items: [] as StoreProduct[], total: 0, page: 1, pages: 1 };
-  const data = await res.json();
-  return {
-    ...data,
-    items: (data.items ?? []).map(normalizeProduct) as StoreProduct[]
-  };
 }
 
 export async function fetchProduct(slug: string): Promise<StoreProduct | null> {
-  const res = await fetch(`${API_URL}/products/${slug}`, { next: { revalidate: CATALOG_REVALIDATE_SECONDS } });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.product ? normalizeProduct(data.product) : null;
+  try {
+    const res = await fetch(`${API_URL}/products/${slug}`, { next: { revalidate: CATALOG_REVALIDATE_SECONDS } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.product ? normalizeProduct(data.product) : null;
+  } catch (error) {
+    console.warn(`[catalog-api] fetchProduct failed for slug ${slug}:`, error);
+    return null;
+  }
 }
 
 export async function fetchCategories(): Promise<StoreCategory[]> {
-  const res = await fetch(`${API_URL}/products/categories`, { next: { revalidate: CATALOG_REVALIDATE_SECONDS * 5 } });
-  if (!res.ok) return [] as StoreCategory[];
-  const data = await res.json();
-  return (data.categories ?? []) as StoreCategory[];
+  try {
+    const res = await fetch(`${API_URL}/products/categories`, { next: { revalidate: CATALOG_REVALIDATE_SECONDS * 5 } });
+    if (!res.ok) return [] as StoreCategory[];
+    const data = await res.json();
+    return (data.categories ?? []) as StoreCategory[];
+  } catch (error) {
+    console.warn("[catalog-api] fetchCategories failed:", error);
+    return [] as StoreCategory[];
+  }
 }
 
 export async function fetchProductReviews(productId: string): Promise<StoreReview[]> {
-  const res = await fetch(`${API_URL}/reviews/product/${productId}`, { cache: "no-store" });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return (data.reviews ?? []) as StoreReview[];
+  try {
+    const res = await fetch(`${API_URL}/reviews/product/${productId}`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.reviews ?? []) as StoreReview[];
+  } catch (error) {
+    console.warn(`[catalog-api] fetchProductReviews failed for product ${productId}:`, error);
+    return [];
+  }
 }
 
 export function normalizeProduct(product: any): StoreProduct {

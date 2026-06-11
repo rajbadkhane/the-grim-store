@@ -1,7 +1,7 @@
 import { cookieOptions } from "../constants/http.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { verifyRefreshToken, signAccessToken, signRefreshToken } from "../utils/jwt.js";
-import { issueOtp, resetPassword, verifyOtpAndLogin } from "../services/auth.service.js";
+import { issueOtp, resetPassword, verifyOtpAndLogin, loginOrCreateSocialUser, registerWithPassword, loginWithPasswordService } from "../services/auth.service.js";
 import { ApiError } from "../utils/ApiError.js";
 import { getUserById, publicUser, saveUserState } from "../lib/sql.js";
 
@@ -55,4 +55,31 @@ export const resetPasswordController = asyncHandler(async (req, res) => {
   const { email, code, password } = req.body;
   await resetPassword(email, code, password);
   res.json({ success: true, message: "Password reset complete" });
+});
+
+export const googleLogin = asyncHandler(async (req, res) => {
+  const { email, name, avatar } = req.body;
+  if (!email) throw new ApiError(400, "Email is required");
+  const { user, accessToken, refreshToken } = await loginOrCreateSocialUser(email, name, avatar);
+  res.cookie("accessToken", accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
+  res.cookie("refreshToken", refreshToken, cookieOptions);
+  res.json({ success: true, user: publicUser(user) });
+});
+
+export const register = asyncHandler(async (req, res) => {
+  const { email, password, name, phone } = req.body;
+  if (!email || !password || !name || !phone) throw new ApiError(400, "All fields are required");
+  const { user, accessToken, refreshToken } = await registerWithPassword(email, password, name, phone);
+  res.cookie("accessToken", accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
+  res.cookie("refreshToken", refreshToken, cookieOptions);
+  res.json({ success: true, user: publicUser(user) });
+});
+
+export const loginWithPassword = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) throw new ApiError(400, "Email and password are required");
+  const { user, accessToken, refreshToken } = await loginWithPasswordService(email, password);
+  res.cookie("accessToken", accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
+  res.cookie("refreshToken", refreshToken, cookieOptions);
+  res.json({ success: true, user: publicUser(user) });
 });

@@ -29,8 +29,8 @@ export function ProductCardFigma({ product }: { product: any }) {
   const image = selectedVariant?.images?.[0] || product.image || product.images?.[0];
   const salePrice = Number(selectedVariant?.salePrice ?? product.salePrice ?? 0);
   const price = Number(selectedVariant?.price ?? product.price ?? salePrice);
-  const rating = Number(product.rating ?? 0);
-  const reviewCount = Number(product.reviewCount ?? 0);
+  const rating = Number(product.rating ?? product.ratings?.average ?? 0);
+  const reviewCount = Number(product.reviewCount ?? product.ratings?.count ?? 0);
 
   const isWishlisted = Array.isArray(user?.wishlist) && user.wishlist.map(String).includes(String(product.id));
 
@@ -57,10 +57,8 @@ export function ProductCardFigma({ product }: { product: any }) {
     e.stopPropagation();
 
     if (isLoading) return;
-
     setIsLoading(true);
 
-    // Get exact starting center coordinates of image container
     let startX = e.clientX;
     let startY = e.clientY;
 
@@ -70,14 +68,12 @@ export function ProductCardFigma({ product }: { product: any }) {
       startY = rect.top + rect.height / 2;
     }
 
-    // Trigger quadratic Bezier arc flight animation
     addFlight({
       id: `flight-${Date.now()}-${Math.random()}`,
       image: image || "",
       startX,
       startY,
       onComplete: () => {
-        // Appends product state to cart upon flight arrival impact
         add({
           id: selectedVariant?.sku ? `${product.id}:${selectedVariant.sku}` : product.id,
           slug: product.slug,
@@ -104,105 +100,144 @@ export function ProductCardFigma({ product }: { product: any }) {
     ? Math.round(((price - salePrice) / price) * 100)
     : 0;
 
+  const sizes = Array.from(new Set(variants.map((v: any) => v.size).filter(Boolean)));
+
   return (
     <motion.article
       data-reveal
-      whileHover={{ y: -8, scale: 1.015 }}
-      transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-      className="electrox-card group flex w-full flex-col rounded-3xl p-3 pb-4"
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className="group relative flex w-full flex-col overflow-hidden rounded-xl border border-neutral-200/50 dark:border-neutral-800 bg-white dark:bg-[#0c0c0e] p-2 transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.42)]"
     >
       <div 
         ref={imageContainerRef}
-        className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0B1224] via-[#111827] to-[#050816] transition-colors duration-300"
+        className="relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-lg bg-neutral-50 dark:bg-[#121212] transition-colors duration-300"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_15%,rgba(59,130,246,0.22),transparent_42%),radial-gradient(circle_at_20%_90%,rgba(168,85,247,0.18),transparent_36%)]" />
         {image ? (
           <Image
             src={image}
             alt={product.title}
             fill
             sizes="(max-width: 768px) 50vw, 25vw"
-            className="object-contain p-4 transition-transform duration-700 group-hover:scale-110"
+            className="object-contain p-3.5 transition-transform duration-500 group-hover:scale-104"
             draggable={false}
           />
         ) : (
-          <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-500">No Image</div>
+          <div className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-neutral-600">No Image</div>
         )}
 
-        <div className="absolute left-3 top-3 flex flex-col gap-1.5 z-10">
+        {/* Brand Badges / Discount */}
+        <div className="absolute left-2 top-2 flex flex-col gap-1 z-10">
           {hasDiscount && (
-            <span className="rounded-full border border-blue-300/30 bg-blue-500/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-blue-100 shadow-[0_0_24px_rgba(59,130,246,0.22)] backdrop-blur-md">
+            <span className="rounded bg-rose-500 px-1.5 py-0.5 text-[9px] font-black uppercase text-white shadow-sm">
               -{discountPercentage}%
             </span>
           )}
           {product.bestseller && (
-            <span className="rounded-full border border-purple-300/30 bg-purple-500/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-purple-100 backdrop-blur-md">
+            <span className="rounded bg-indigo-600 px-1.5 py-0.5 text-[9px] font-black uppercase text-white shadow-sm">
               NEW
             </span>
           )}
         </div>
 
-        <div className="absolute right-3 top-3 flex flex-col gap-2 z-10">
+        {/* Wishlist and Quick View Buttons */}
+        <div className="absolute right-2 top-2 flex flex-col gap-1.5 z-20">
           <button
             aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
             onClick={handleWishlistToggle}
-            className="rounded-full border border-white/10 bg-black/45 p-2 text-white backdrop-blur-md transition duration-200 hover:border-pink-300/50 hover:bg-pink-500/30 hover:shadow-[0_0_24px_rgba(236,72,153,0.28)]"
+            className="flex h-7 w-7 items-center justify-center rounded-full border border-neutral-200/50 dark:border-neutral-800/50 bg-white/95 dark:bg-neutral-900/90 text-neutral-800 dark:text-white shadow-sm transition hover:scale-110"
           >
-            <Heart size={16} className={isWishlisted ? "fill-blue-500 text-blue-500" : "text-white"} />
+            <Heart size={13} className={isWishlisted ? "fill-rose-500 text-rose-500" : "text-neutral-500 dark:text-neutral-400"} />
           </button>
           <Link
             href={`/products/${product.slug}`}
-            className="flex items-center justify-center rounded-full border border-white/10 bg-black/45 p-2 text-white backdrop-blur-md transition duration-200 hover:border-blue-300/50 hover:bg-blue-500/30 hover:shadow-[0_0_24px_rgba(59,130,246,0.28)]"
+            className="hidden sm:flex h-7 w-7 items-center justify-center rounded-full border border-neutral-200/50 dark:border-neutral-800/50 bg-white/95 dark:bg-neutral-900/90 text-neutral-800 dark:text-white shadow-sm transition hover:scale-110 opacity-0 group-hover:opacity-100 duration-200"
             title="Quick view"
           >
-            <Eye size={16} />
+            <Eye size={13} className="text-neutral-500 dark:text-neutral-400" />
           </Link>
         </div>
 
-        <motion.button
+        {/* Ratings pill (Myntra Style) */}
+        {rating > 0 && (
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded bg-white/90 dark:bg-neutral-900/90 px-1.5 py-0.5 text-[9px] font-bold text-neutral-800 dark:text-neutral-200 shadow-sm z-10 border border-neutral-200/10">
+            <span>{rating.toFixed(1)}</span>
+            <Star size={9} fill="currentColor" className="text-amber-500" />
+            {reviewCount > 0 && (
+              <>
+                <span className="text-neutral-300 dark:text-neutral-700">|</span>
+                <span>{reviewCount}</span>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Hover Quick Add Button (Myntra/Flipkart Style) */}
+        <button
           disabled={isLoading}
           onClick={handleAddToCart}
-          whileTap={{ scale: 0.95 }}
-          className="absolute bottom-3 left-3 right-3 z-20 flex translate-y-16 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-white/15 bg-gradient-to-r from-blue-500 via-violet-600 to-purple-500 py-3 text-center text-[11px] font-black uppercase tracking-widest text-white opacity-0 shadow-[0_0_34px_rgba(59,130,246,0.3)] transition duration-300 ease-out hover:shadow-[0_0_44px_rgba(168,85,247,0.38)] disabled:opacity-60 group-hover:translate-y-0 group-hover:opacity-100"
+          className="absolute bottom-0 left-0 right-0 z-25 flex cursor-pointer items-center justify-center gap-1.5 bg-indigo-650 hover:bg-indigo-700 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 py-2.5 text-center text-[10px] font-black uppercase tracking-wider opacity-0 translate-y-2 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-200"
         >
           {isLoading ? (
-            <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <div className="w-3 h-3 border-2 border-white/30 border-t-white dark:border-neutral-900/30 dark:border-t-neutral-900 rounded-full animate-spin" />
           ) : (
-            <ShoppingCart size={14} />
+            <ShoppingCart size={11} />
           )}
           {isLoading ? "Adding..." : "Add To Cart"}
-        </motion.button>
+        </button>
       </div>
 
-      <div className="pt-3 flex flex-col flex-grow">
-        <Link href={`/products/${product.slug}`} className="line-clamp-1 text-sm font-black text-white transition duration-200 group-hover:text-blue-200">
-          {product.title}
-        </Link>
+      {/* Info Block */}
+      <div className="pt-2 flex flex-col flex-grow">
+        {/* Brand label & Assured Tag */}
+        <div className="flex items-center justify-between gap-1.5">
+          <p className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 truncate">
+            {product.brand || "The Grim Store"}
+          </p>
+          {/* Assured Star Badge */}
+          <div className="inline-flex items-center gap-0.5 bg-blue-600 dark:bg-blue-800 px-1 py-0.2 rounded text-[7px] font-black uppercase text-white tracking-widest scale-90 shrink-0 shadow-sm select-none">
+            Assured <span className="text-yellow-400">★</span>
+          </div>
+        </div>
         
-        <div className="mt-1 flex items-center gap-2">
-          <span className="text-sm font-black text-blue-200">{formatMoney(salePrice)}</span>
+        {/* Title / Variant Hover container */}
+        <div className="relative mt-1 h-5 overflow-hidden">
+          <div className="transition-all duration-300 group-hover:-translate-y-full group-hover:opacity-0">
+            <Link href={`/products/${product.slug}`} className="block line-clamp-1 text-xs font-bold text-foreground transition duration-150 hover:text-indigo-600 dark:hover:text-indigo-400">
+              {product.title}
+            </Link>
+          </div>
+          <div className="absolute inset-0 flex items-center gap-1.5 opacity-0 translate-y-full transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+            <span className="text-[8px] font-extrabold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">Specs:</span>
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+              {sizes.length > 0 ? (
+                sizes.map((sz: any) => (
+                  <span key={sz} className="text-[8px] font-black px-1.5 py-0.2 rounded border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 text-foreground scale-95 uppercase shrink-0">
+                    {sz}
+                  </span>
+                ))
+              ) : (
+                <span className="text-[8px] font-black text-neutral-450 uppercase">Standard</span>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Price row */}
+        <div className="mt-1 flex items-baseline gap-1.5 flex-wrap">
+          <span className="text-xs font-extrabold text-foreground">{formatMoney(salePrice)}</span>
           {hasDiscount && (
-            <span className="text-xs font-bold text-slate-500 line-through">{formatMoney(price)}</span>
+            <>
+              <span className="text-[10px] font-semibold text-neutral-400 line-through">{formatMoney(price)}</span>
+              <span className="text-[9px] font-extrabold text-emerald-600 dark:text-emerald-450">({discountPercentage}% OFF)</span>
+            </>
           )}
         </div>
 
-        <div className="mt-1 flex items-center gap-1.5">
-          <div className="flex items-center text-violet-300">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star
-                key={i}
-                size={12}
-                fill={i < Math.round(rating) ? "currentColor" : "none"}
-                className={i < Math.round(rating) ? "text-violet-300" : "text-white/15"}
-              />
-            ))}
-          </div>
-          <span className="text-[11px] font-bold text-slate-500">({reviewCount})</span>
-        </div>
-
-        {Array.isArray(product.colors) && product.colors.length > 0 && (
-          <div className="mt-2 flex items-center gap-1.5">
-            {product.colors.map((col: any) => (
+        {/* Swatches (optional color indicator) */}
+        {Array.isArray(product.colors) && product.colors.length > 1 && (
+          <div className="mt-2 flex items-center gap-1">
+            {product.colors.slice(0, 4).map((col: any) => (
               <button
                 key={col.name}
                 onClick={(e) => {
@@ -210,18 +245,18 @@ export function ProductCardFigma({ product }: { product: any }) {
                   e.stopPropagation();
                   setSelectedColor(col.name);
                 }}
-                className={`w-3.5 h-3.5 rounded-full border transition-all duration-200 ${
-                  selectedColor === col.name ? "scale-125 border-blue-300 ring-2 ring-blue-500/30" : "border-white/20"
+                className={`w-2.5 h-2.5 rounded-full border transition-all duration-150 ${
+                  selectedColor === col.name ? "scale-110 border-indigo-550 ring-1 ring-indigo-550/20" : "border-neutral-200 dark:border-white/10"
                 }`}
                 style={{ backgroundColor: col.hex }}
                 title={col.name}
               />
             ))}
+            {product.colors.length > 4 && (
+              <span className="text-[8px] font-bold text-neutral-400">+{product.colors.length - 4}</span>
+            )}
           </div>
         )}
-        <div className="mt-3 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-          <Zap size={12} className="text-blue-300" /> Fast Dispatch
-        </div>
       </div>
     </motion.article>
   );

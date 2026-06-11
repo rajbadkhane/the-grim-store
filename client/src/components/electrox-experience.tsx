@@ -82,10 +82,11 @@ export function ElectroXExperience({ children }: { children: React.ReactNode }) 
       <AnimatePresence mode="wait">
         <motion.div
           key={routeKey}
-          initial={{ opacity: 0, y: 14, filter: "blur(10px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          exit={{ opacity: 0, y: -12, filter: "blur(8px)" }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          style={{ willChange: "transform, opacity" }}
         >
           {children}
         </motion.div>
@@ -94,27 +95,27 @@ export function ElectroXExperience({ children }: { children: React.ReactNode }) 
       <AnimatePresence>
         {booting && (
           <motion.div
-            className="fixed inset-0 z-[300] grid place-items-center bg-[#050816]"
+            className="fixed inset-0 z-[300] grid place-items-center bg-background"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.55, ease: "easeOut" }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
           >
             <div className="relative min-w-[280px] text-center">
               <motion.div
-                className="mx-auto grid h-20 w-20 place-items-center rounded-[1.6rem] border border-white/15 bg-white/[0.06] text-xl font-black text-white shadow-[0_0_80px_rgba(59,130,246,0.45)] backdrop-blur-2xl"
+                className="mx-auto grid h-20 w-20 place-items-center rounded-[1.6rem] border border-electrox-elevated bg-electrox-surface text-xl font-black text-foreground shadow-sm"
                 initial={{ scale: 0.8, rotate: -8 }}
                 animate={{ scale: 1, rotate: 0 }}
-                transition={{ duration: 0.56, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
               >
                 GS
               </motion.div>
-              <p className="mt-5 text-xs font-black uppercase tracking-[0.42em] text-slate-300">The Grim Store</p>
-              <div className="mt-5 h-1 overflow-hidden rounded-full bg-white/10">
+              <p className="mt-5 text-xs font-black uppercase tracking-[0.42em] text-neutral-450">The Grim Store</p>
+              <div className="mt-5 h-1 overflow-hidden rounded-full bg-electrox-bg-2">
                 <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-[#3B82F6] via-[#7C3AED] to-[#A855F7] shadow-[0_0_28px_rgba(168,85,247,0.8)]"
+                  className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-650 to-purple-600 shadow-sm"
                   initial={{ width: "12%" }}
                   animate={{ width: "100%" }}
-                  transition={{ duration: 0.78, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
                 />
               </div>
             </div>

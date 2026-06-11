@@ -84,3 +84,81 @@ export async function resetPassword(email: string, code: string, password: strin
   await execute("UPDATE users SET password_hash = :passwordHash WHERE email = :email", { email: normalizedEmail, passwordHash });
   await execute("DELETE FROM otps WHERE id = :id", { id: record.id });
 }
+
+export async function loginOrCreateSocialUser(email: string, name: string, avatar?: string) {
+  const normalizedEmail = normalizeEmail(email);
+  let user = await getUserByEmail(normalizedEmail);
+  
+  if (!user) {
+    const userId = id();
+    await execute(
+      `INSERT INTO users (id, email, name, phone, email_verified, wishlist, cart, addresses, avatar)
+       VALUES (:id, :email, :name, '', TRUE, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, :avatar)`,
+      { id: userId, email: normalizedEmail, name: name ?? "", avatar: avatar ?? "" }
+    );
+    user = mapUser(await row("SELECT * FROM users WHERE id = :userId", { userId }))!;
+    await emailService.sendWelcome(normalizedEmail, name ?? "");
+  } else {
+    if (avatar && !user.avatar) {
+      user.avatar = avatar;
+      await saveUserState(user);
+    }
+  }
+
+  if (user.isBlocked) throw new ApiError(403, "This account is blocked");
+
+  user.emailVerified = true;
+  user.lastLogin = new Date();
+  const accessToken = signAccessToken({ id: user.id, role: user.role });
+  const refreshToken = signRefreshToken({ id: user.id, role: user.role });
+  user.refreshToken = refreshToken;
+  await saveUserState(user);
+
+  return { user, accessToken, refreshToken };
+}
+
+export async function registerWithPassword(email: string, password: string, name: string, phone: string) {
+  const normalizedEmail = normalizeEmail(email);
+  let user = await getUserByEmail(normalizedEmail);
+  if (user) throw new ApiError(400, "User already exists with this email");
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  const userId = id();
+  await execute(
+    `INSERT INTO users (id, email, name, phone, email_verified, password_hash, wishlist, cart, addresses)
+     VALUES (:id, :email, :name, :phone, TRUE, :passwordHash, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb)`,
+    { id: userId, email: normalizedEmail, name, phone, passwordHash }
+  );
+
+  const createdUser = mapUser(await row("SELECT * FROM users WHERE id = :userId", { userId }))!;
+  await emailService.sendWelcome(normalizedEmail, name);
+
+  const accessToken = signAccessToken({ id: createdUser.id, role: createdUser.role });
+  const refreshToken = signRefreshToken({ id: createdUser.id, role: createdUser.role });
+  createdUser.refreshToken = refreshToken;
+  await saveUserState(createdUser);
+
+  return { user: createdUser, accessToken, refreshToken };
+}
+
+export async function loginWithPasswordService(email: string, password: string) {
+  const normalizedEmail = normalizeEmail(email);
+  const user = await getUserByEmail(normalizedEmail);
+  if (!user) throw new ApiError(400, "Invalid email or password");
+  if (!user.passwordHash) {
+    throw new ApiError(400, "Password is not set for this account. Please log in using OTP first, and set a password in your profile page.");
+  }
+
+  const isOk = await bcrypt.compare(password, user.passwordHash);
+  if (!isOk) throw new ApiError(400, "Invalid email or password");
+
+  if (user.isBlocked) throw new ApiError(403, "This account is blocked");
+
+  user.lastLogin = new Date();
+  const accessToken = signAccessToken({ id: user.id, role: user.role });
+  const refreshToken = signRefreshToken({ id: user.id, role: user.role });
+  user.refreshToken = refreshToken;
+  await saveUserState(user);
+
+  return { user, accessToken, refreshToken };
+}

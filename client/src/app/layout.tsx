@@ -6,14 +6,26 @@ import { storefrontJsonLd } from "@/lib/seo";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL("https://thegrimstore.com"),
   title: {
     default: "The Grim Store | Premium Electronics Ecommerce",
     template: "%s | The Grim Store"
   },
   description: "Premium electronics, smart gadgets, secure checkout, live delivery tracking, and a futuristic dark-mode shopping experience.",
   applicationName: "The Grim Store",
-  keywords: ["The Grim Store", "premium electronics", "gadgets", "smart devices", "wireless accessories", "electronics ecommerce"],
+  keywords: [
+    "The Grim Store",
+    "thegrimstore.com",
+    "the grim store",
+    "the grimstore",
+    "premium electronics",
+    "buy smart gadgets online",
+    "wireless gadgets",
+    "electronics ecommerce store",
+    "Razorpay secure orders",
+    "track order The Grim Store",
+    "official the grim store website"
+  ],
   alternates: { canonical: "/" },
   category: "electronics ecommerce",
   openGraph: {
@@ -39,12 +51,32 @@ import { FlyCartContainer } from "@/components/home/fly-cart-container";
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('theme');
+                  if (saved === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.style.colorScheme = 'dark';
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.style.colorScheme = 'light';
+                  }
+                } catch (e) {}
+              })();
+            `
+          }}
+        />
+      </head>
       <body>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(storefrontJsonLd()) }} />
         <Providers>
           <Header />
-          <main>{children}</main>
+          <main className="pb-16 lg:pb-0">{children}</main>
           <Footer />
           <LoginModal />
           <FlyCartContainer />

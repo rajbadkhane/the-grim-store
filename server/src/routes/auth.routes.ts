@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { forgotPassword, logout, me, refreshToken, requestOtp, resetPasswordController, verifyOtp } from "../controllers/auth.controller.js";
+import { forgotPassword, logout, me, refreshToken, requestOtp, resetPasswordController, verifyOtp, googleLogin, register, loginWithPassword } from "../controllers/auth.controller.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { authLimiter } from "../middlewares/rateLimiter.js";
 import { validate } from "../middlewares/validate.js";
@@ -15,3 +15,7 @@ authRoutes.post("/reset-password", authLimiter, validate(resetPasswordSchema), r
 authRoutes.post("/refresh", refreshToken);
 authRoutes.get("/me", requireAuth, me);
 authRoutes.post("/logout", requireAuth, logout);
+
+authRoutes.post("/register", authLimiter, register);
+authRoutes.post("/password-login", authLimiter, loginWithPassword);
+authRoutes.post("/google-login", authLimiter, googleLogin);

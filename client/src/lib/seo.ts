@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export function siteUrl(path = "/") {
-  const base = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  const base = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://thegrimstore.com").replace(/\/$/, "");
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   return `${base}${normalizedPath}`;
 }
@@ -41,12 +41,12 @@ export function productJsonLd(product: any, reviews: any[] = []) {
       sku: product.variants?.[0]?.sku || product.slug,
       ...(hasReviews
         ? {
-            aggregateRating: {
-              "@type": "AggregateRating",
-              ratingValue: product.rating,
-              reviewCount: product.reviewCount
-            }
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: product.rating,
+            reviewCount: product.reviewCount
           }
+        }
         : {}),
       review: reviews.slice(0, 10).map((review) => ({
         "@type": "Review",

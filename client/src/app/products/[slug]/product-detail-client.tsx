@@ -170,132 +170,177 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
   }
 
   return (
-    <div className="text-white">
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <nav aria-label="Breadcrumb" className="mb-5 text-xs font-bold uppercase tracking-[0.16em] text-neutral-400 dark:text-white/38">
-        Home / Products / <span className="text-blue-500 dark:text-blue-300">{product.title}</span>
-      </nav>
+    <div className="text-foreground">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <nav aria-label="Breadcrumb" className="mb-5 text-xs font-bold uppercase tracking-[0.16em] text-neutral-450">
+          Home / Products / <span className="text-electrox-blue">{product.title}</span>
+        </nav>
 
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)]">
-        <section className="min-w-0">
-          <div className="md:hidden">
-            <Swiper spaceBetween={12} slidesPerView={1.06} onSlideChange={(swiper) => setActiveImage(gallery[swiper.activeIndex] ?? visibleImage)}>
+        <div className="grid gap-8 md:grid-cols-[1.1fr_0.9fr] items-start">
+          <section className="min-w-0">
+            {/* Mobile View Slider */}
+            <div className="md:hidden">
+              <Swiper spaceBetween={12} slidesPerView={1.06} onSlideChange={(swiper) => setActiveImage(gallery[swiper.activeIndex] ?? visibleImage)}>
+                {gallery.map((image, index) => (
+                  <SwiperSlide key={`${image}-${index}`}>
+                    <GalleryFrame image={image} title={product.title} priority={index === 0} />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
+
+            {/* Desktop View 2-Column Grid (Myntra Style) */}
+            <div className={`hidden md:grid gap-4.5 ${gallery.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
               {gallery.map((image, index) => (
-                <SwiperSlide key={`${image}-${index}`}>
-                  <GalleryFrame image={image} title={product.title} priority={index === 0} />
-                </SwiperSlide>
+                <div key={`${image}-${index}`} className="group relative aspect-[3/4] overflow-hidden rounded-2xl border border-neutral-200/50 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/60 shadow-sm transition hover:shadow-md">
+                  <Image
+                    src={image}
+                    alt={`${product.title} view ${index + 1}`}
+                    fill
+                    sizes="(max-width: 1280px) 25vw, 400px"
+                    className="object-contain p-6 transition duration-500 group-hover:scale-103"
+                    priority={index === 0}
+                  />
+                </div>
               ))}
-            </Swiper>
-          </div>
+            </div>
 
-          <div className="hidden gap-4 md:grid md:grid-cols-[88px_1fr]">
-            <div className="grid h-fit gap-3">
-              {gallery.map((image, index) => (
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <InfoPill icon={<Truck size={18} />} title="Fast dispatch" text="Ships in 24-48 hours" />
+              <InfoPill icon={<RotateCcw size={18} />} title="Easy returns" text="7-day size exchange" />
+              <InfoPill icon={<ShieldCheck size={18} />} title="Secure checkout" text="Protected payments" />
+            </div>
+          </section>
+
+          {/* Sticky Info Panel */}
+          <aside className="md:sticky md:top-24 md:h-fit self-start">
+            <div className="rounded-2xl border border-neutral-200/50 dark:border-neutral-850 bg-white dark:bg-[#0c0c0e] p-5 sm:p-6 shadow-sm">
+              <div className="border-b border-neutral-200/40 dark:border-neutral-800/40 pb-5">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600 dark:text-indigo-400">{product.brand}</p>
+                  {/* Assured Checkmark badge */}
+                  <div className="inline-flex items-center gap-1 bg-blue-650 dark:bg-blue-800 px-2 py-0.5 rounded text-[9px] font-black uppercase text-white tracking-widest shadow-sm select-none">
+                    Assured <span className="text-yellow-400">★</span>
+                  </div>
+                </div>
+                <h1 className="mt-3 text-2xl font-black leading-tight tracking-normal text-foreground sm:text-3xl">{product.title}</h1>
+                
+                {/* Rating badge */}
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <span className="inline-flex items-center gap-1 rounded bg-emerald-500/10 px-2 py-1 text-xs font-black text-emerald-600 dark:text-emerald-450">
+                    <Star size={13} fill="currentColor" /> {product.rating.toFixed(1)}
+                  </span>
+                  <span className="text-xs font-bold text-neutral-450">{product.reviewCount} verified reviews</span>
+                  <span className={`rounded px-2.5 py-1 text-xs font-black uppercase ${canBuy ? "bg-indigo-550/10 text-indigo-650 dark:text-indigo-400" : "bg-neutral-100 text-neutral-500 dark:bg-white/10 dark:text-white/55"}`}>
+                    {canBuy ? `${selectedVariant.stock} in stock` : "Out of stock"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Price row */}
+              <div className="mt-5">
+                <div className="flex flex-wrap items-baseline gap-2.5">
+                  <motion.span key={selectedVariant.salePrice} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-3xl font-black text-foreground">
+                    {formatMoney(selectedVariant.salePrice)}
+                  </motion.span>
+                  {selectedVariant.price > selectedVariant.salePrice && (
+                    <>
+                      <span className="text-base font-bold text-neutral-450 line-through">{formatMoney(selectedVariant.price)}</span>
+                      <span className="text-base font-extrabold text-orange-500 dark:text-orange-400">({discount}% OFF)</span>
+                    </>
+                  )}
+                </div>
+                <p className="mt-1 text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-450">Inclusive of all taxes</p>
+              </div>
+
+              <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-neutral-450">SKU {selectedVariant.sku}</p>
+              <p className="mt-5 text-sm leading-6 text-neutral-450 font-medium">{product.shortDescription || product.description}</p>
+
+              {/* Swatch options selection */}
+              <div className="mt-6 grid gap-5">
+                <VariantGroup title="Color" options={colorOptions} selected={color} onPick={pickColor} swatches />
+                <VariantGroup title="Size" options={sizeOptions} selected={size} onPick={(value) => pickDimension("size", value)} />
+                {materialOptions.length > 1 && <VariantGroup title="Material" options={materialOptions} selected={material} onPick={(value) => pickDimension("material", value)} />}
+                {patternOptions.length > 1 && <VariantGroup title="Pattern" options={patternOptions} selected={pattern} onPick={(value) => pickDimension("pattern", value)} />}
+              </div>
+
+              {/* Quantity selector */}
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <div className="inline-flex h-11 items-center rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900">
+                  <button aria-label="Decrease quantity" type="button" className="grid h-11 w-10 place-items-center text-neutral-450 hover:text-foreground" onClick={() => setQuantity((value) => Math.max(1, value - 1))}>
+                    <Minus size={14} />
+                  </button>
+                  <span className="w-8 text-center text-xs font-black">{quantity}</span>
+                  <button
+                    aria-label="Increase quantity"
+                    type="button"
+                    className="grid h-11 w-10 place-items-center text-neutral-450 hover:text-foreground"
+                    onClick={() => setQuantity((value) => Math.min(selectedVariant.stock || 1, value + 1))}
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Actions Buy Now / Add to Cart (Flipkart/Myntra Style CTAs) */}
+              <div className="mt-6 grid gap-3 sm:grid-cols-[1.1fr_1fr_auto]">
                 <button
-                  key={`${image}-${index}`}
+                  onClick={buyNow}
+                  disabled={!canBuy}
+                  className="flex min-h-13 items-center justify-center gap-2 rounded-xl bg-[#fb641b] hover:bg-[#e65a12] text-white font-black text-xs uppercase tracking-widest transition shadow-sm hover:shadow disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Zap size={14} className="fill-current" /> Buy Now
+                </button>
+                <button
+                  onClick={addSelectedToCart}
+                  disabled={!canBuy}
+                  className="flex min-h-13 items-center justify-center gap-2 rounded-xl bg-indigo-650 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest transition shadow-sm hover:shadow disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ShoppingBag size={14} /> Add to Bag
+                </button>
+                <button
                   type="button"
-                  aria-label={`Show product image ${index + 1}`}
-                  onClick={() => setActiveImage(image)}
-                  className={`relative aspect-square overflow-hidden rounded-2xl border bg-white/[0.045] p-1 transition ${
-                    visibleImage === image ? "border-blue-500 shadow-[0_0_0_3px_rgba(59,130,246,0.18)]" : "border-neutral-200 hover:border-neutral-400 dark:border-white/10 dark:hover:border-white/35"
+                  aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                  onClick={toggleWishlist}
+                  className={`grid min-h-13 w-13 place-items-center rounded-xl border transition ${
+                    isWishlisted
+                      ? "border-rose-500 bg-rose-500/5 text-rose-500 shadow-sm"
+                      : "border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 text-foreground hover:border-rose-500 hover:bg-rose-500/5 hover:text-rose-500"
                   }`}
                 >
-                  <Image src={image} alt={`${product.title} thumbnail ${index + 1}`} fill sizes="88px" className="object-contain p-1" />
+                  <Heart size={16} className={isWishlisted ? "fill-rose-500" : ""} />
                 </button>
-              ))}
+              </div>
+
+              {/* Delivery Pincode Checker (Flipkart style) */}
+              <div className="mt-6 border-t border-neutral-200/40 dark:border-neutral-800/40 pt-5">
+                <p className="text-xs font-extrabold uppercase tracking-wider text-neutral-450 mb-2.5">Delivery Options</p>
+                <div className="flex max-w-sm rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 px-3 py-1.5 items-center">
+                  <Truck size={14} className="text-neutral-400 dark:text-neutral-500 mr-2" />
+                  <input
+                    type="text"
+                    placeholder="Enter Pincode"
+                    maxLength={6}
+                    className="flex-1 bg-transparent text-xs font-bold text-foreground outline-none placeholder:text-neutral-450"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => toast.success("Pincode is serviceable for fast dispatch!")}
+                    className="text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 hover:underline px-2"
+                  >
+                    Check
+                  </button>
+                </div>
+                <p className="mt-2 text-[10px] text-neutral-400 dark:text-neutral-500 font-semibold">Please enter PIN code to check delivery time & COD availability.</p>
+              </div>
+
+              <ProductSummary product={product} />
             </div>
-            <AnimatePresence mode="wait">
-              <motion.div key={visibleImage} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.28 }}>
-                <GalleryFrame image={visibleImage} title={product.title} priority />
-              </motion.div>
-            </AnimatePresence>
-          </div>
+          </aside>
+        </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <InfoPill icon={<Truck size={18} />} title="Fast dispatch" text="Ships in 24-48 hours" />
-            <InfoPill icon={<RotateCcw size={18} />} title="Easy returns" text="7-day size exchange" />
-            <InfoPill icon={<ShieldCheck size={18} />} title="Secure checkout" text="Protected payments" />
-          </div>
-        </section>
-
-        <aside className="xl:sticky xl:top-24 xl:h-fit">
-          <div className="electrox-card rounded-[1.5rem] p-5 sm:p-6">
-          <div className="border-b border-white/10 pb-5">
-            <p className="text-sm font-black uppercase tracking-[0.24em] text-blue-500 dark:text-blue-400">{product.brand}</p>
-            <h1 className="mt-3 text-3xl font-black leading-tight tracking-normal text-white sm:text-4xl">{product.title}</h1>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2.5 py-1.5 text-sm font-black text-emerald-600 dark:text-emerald-300">
-                <Star size={15} fill="currentColor" /> {product.rating.toFixed(1)}
-              </span>
-              <span className="text-sm font-bold text-neutral-500 dark:text-white/52">{product.reviewCount} verified reviews</span>
-              <span className={`rounded-md px-2.5 py-1.5 text-xs font-black uppercase ${canBuy ? "bg-blue-500/10 text-blue-600 dark:bg-blue-600/16 dark:text-blue-300" : "bg-neutral-100 text-neutral-500 dark:bg-white/10 dark:text-white/55"}`}>
-                {canBuy ? `${selectedVariant.stock} in stock` : "Out of stock"}
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-5 flex flex-wrap items-end gap-3">
-            <motion.span key={selectedVariant.salePrice} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-4xl font-black">
-              {formatMoney(selectedVariant.salePrice)}
-            </motion.span>
-            {selectedVariant.price > selectedVariant.salePrice && <span className="text-lg font-bold text-neutral-400 line-through dark:text-white/35">{formatMoney(selectedVariant.price)}</span>}
-            {discount > 0 && <span className="mb-1 rounded-md bg-blue-600 px-2.5 py-1 text-xs font-black">{discount}% OFF</span>}
-          </div>
-          <p className="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-neutral-400 dark:text-white/40">SKU {selectedVariant.sku}</p>
-          <p className="mt-5 text-base leading-7 text-slate-300">{product.shortDescription || product.description}</p>
-
-          <div className="mt-6 grid gap-5">
-            <VariantGroup title="Color" options={colorOptions} selected={color} onPick={pickColor} swatches />
-            <VariantGroup title="Size" options={sizeOptions} selected={size} onPick={(value) => pickDimension("size", value)} />
-            {materialOptions.length > 1 && <VariantGroup title="Material" options={materialOptions} selected={material} onPick={(value) => pickDimension("material", value)} />}
-            {patternOptions.length > 1 && <VariantGroup title="Pattern" options={patternOptions} selected={pattern} onPick={(value) => pickDimension("pattern", value)} />}
-          </div>
-
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <div className="inline-flex h-12 items-center rounded-2xl border border-white/10 bg-white/[0.045]">
-              <button aria-label="Decrease quantity" type="button" className="grid h-12 w-11 place-items-center" onClick={() => setQuantity((value) => Math.max(1, value - 1))}>
-                <Minus size={16} />
-              </button>
-              <span className="w-10 text-center text-sm font-black">{quantity}</span>
-              <button
-                aria-label="Increase quantity"
-                type="button"
-                className="grid h-12 w-11 place-items-center"
-                onClick={() => setQuantity((value) => Math.min(selectedVariant.stock || 1, value + 1))}
-              >
-                <Plus size={16} />
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
-            <Button onClick={buyNow} disabled={!canBuy} className="min-h-13 text-base">
-              <Zap size={19} /> Buy now
-            </Button>
-            <Button variant="outline" onClick={addSelectedToCart} disabled={!canBuy} className="min-h-13 text-base">
-              <ShoppingBag size={19} /> Add to cart
-            </Button>
-            <button
-              type="button"
-              aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-              onClick={toggleWishlist}
-              className={`grid min-h-13 place-items-center rounded-md border px-4 transition ${
-                isWishlisted
-                  ? "border-blue-500 bg-blue-600/18 text-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.2)]"
-                  : "border-white/15 bg-white/5 text-white hover:border-blue-400 hover:bg-blue-500/10"
-              }`}
-            >
-              <Heart size={20} className={isWishlisted ? "fill-blue-500" : ""} />
-            </button>
-          </div>
-
-          <ProductSummary product={product} />
-          </div>
-        </aside>
+        <RichDescription product={product} />
       </div>
-
-      <RichDescription product={product} />
-    </div>
     </div>
   );
 }
@@ -318,7 +363,7 @@ function optionSet(variants: StoreProductVariant[], key: keyof StoreProductVaria
 
 function GalleryFrame({ image, title, priority }: { image: string; title: string; priority?: boolean }) {
   return (
-    <div className="group relative aspect-square overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.045] shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
+    <div className="group relative aspect-square overflow-hidden rounded-2xl border border-electrox-elevated bg-neutral-50 dark:bg-[#121212] shadow-sm">
       {image ? (
         <Image
           src={image}
@@ -326,10 +371,10 @@ function GalleryFrame({ image, title, priority }: { image: string; title: string
           fill
           priority={priority}
           sizes="(max-width: 768px) 95vw, (max-width: 1280px) 58vw, 680px"
-          className="object-contain p-6 transition duration-500 group-hover:scale-103 sm:p-8"
+          className="object-contain p-6 transition duration-500 group-hover:scale-102 sm:p-8"
         />
       ) : (
-        <div className="grid h-full place-items-center text-xs font-black uppercase tracking-widest text-neutral-400 dark:text-white/35">No image</div>
+        <div className="grid h-full place-items-center text-xs font-black uppercase tracking-widest text-neutral-450">No image</div>
       )}
     </div>
   );
@@ -339,8 +384,8 @@ function VariantGroup({ title, options, selected, onPick, swatches }: { title: s
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm font-black uppercase tracking-[0.18em] text-neutral-500 dark:text-white/50">{title}</p>
-        {title === "Size" && <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-500 dark:text-blue-300"><Ruler size={14} /> Size chart</span>}
+        <p className="text-xs font-extrabold uppercase tracking-wider text-neutral-450">{title}</p>
+        {title === "Size" && <span className="inline-flex items-center gap-1 text-[10px] font-black text-electrox-blue uppercase tracking-wider"><Ruler size={12} /> Size chart</span>}
       </div>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (
@@ -349,11 +394,11 @@ function VariantGroup({ title, options, selected, onPick, swatches }: { title: s
             type="button"
             disabled={!option.enabled}
             onClick={() => onPick(option.label)}
-            className={`relative inline-flex min-h-11 items-center justify-center gap-2 rounded-md border px-4 text-sm font-black transition ${
-              selected === option.label ? "border-blue-500 bg-blue-500/10 text-blue-600 dark:bg-blue-600/18 dark:text-white" : "border-neutral-200 bg-neutral-50 text-neutral-700 hover:border-blue-400 dark:border-white/12 dark:bg-white/[0.035] dark:text-white/72"
+            className={`relative inline-flex min-h-10 items-center justify-center gap-2 rounded border px-3 text-xs font-extrabold transition ${
+              selected === option.label ? "border-electrox-blue bg-electrox-blue/5 text-electrox-blue" : "border-electrox-elevated bg-electrox-bg-2 text-foreground hover:border-electrox-blue"
             } disabled:cursor-not-allowed disabled:opacity-35`}
           >
-            {swatches && <span className="h-4 w-4 rounded-full border border-white/30" style={{ backgroundColor: option.hex ?? option.label }} />}
+            {swatches && <span className="h-3 w-3 rounded-full border border-neutral-300 dark:border-white/20" style={{ backgroundColor: option.hex ?? option.label }} />}
             {option.label}
           </button>
         ))}
@@ -364,11 +409,11 @@ function VariantGroup({ title, options, selected, onPick, swatches }: { title: s
 
 function InfoPill({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.045] p-4">
-      <span className="text-blue-400">{icon}</span>
+    <div className="flex items-center gap-3 rounded-2xl border border-electrox-elevated bg-electrox-surface p-4 shadow-sm">
+      <span className="text-electrox-blue">{icon}</span>
       <div>
-        <p className="text-sm font-black text-white">{title}</p>
-        <p className="text-xs font-bold text-slate-400">{text}</p>
+        <p className="text-xs font-black text-foreground">{title}</p>
+        <p className="text-[10px] font-bold text-neutral-450">{text}</p>
       </div>
     </div>
   );
@@ -378,23 +423,23 @@ function ProductSummary({ product }: { product: StoreProduct }) {
   const items = product.summary.length
     ? product.summary
     : [
-        { title: "Fabric", text: "Premium cotton rich fabric with a clean handfeel." },
-        { title: "Fit", text: "Structured electronics silhouette made for daily rotation." },
-        { title: "Finish", text: "Bio-washed surface, reinforced seams, and durable color." }
+        { title: "Material", text: "High grade components certified for daily use." },
+        { title: "Standard", text: "Rigorously tested to comply with international specifications." },
+        { title: "Care", text: "Covered by direct service guarantee." }
       ];
 
   return (
-    <section className="mt-7 rounded-2xl border border-white/10 bg-white/[0.045] p-5">
-      <div className="flex items-center gap-2">
-        <Sparkles size={18} className="text-blue-400" />
-        <h2 className="font-black">Product Summary</h2>
+    <section className="mt-7 rounded-2xl border border-electrox-elevated bg-electrox-surface p-5 shadow-sm">
+      <div className="flex items-center gap-2 border-b border-electrox-elevated pb-3">
+        <Sparkles size={16} className="text-electrox-blue" />
+        <h2 className="text-xs font-black uppercase tracking-wider text-foreground">Product Summary</h2>
       </div>
       <div className="mt-4 grid gap-3">
         {items.map((item, index) => (
           <div key={`${item.text}-${index}`} className="flex gap-3">
-            <PackageCheck size={18} className="mt-0.5 shrink-0 text-blue-400" />
-            <p className="text-sm leading-6 text-neutral-600 dark:text-white/68">
-              {item.title && <strong className="text-neutral-950 dark:text-white">{item.title}: </strong>}
+            <PackageCheck size={16} className="mt-0.5 shrink-0 text-electrox-blue" />
+            <p className="text-xs leading-5 text-neutral-450 font-semibold">
+              {item.title && <strong className="text-foreground">{item.title}: </strong>}
               {item.text}
             </p>
           </div>
@@ -411,25 +456,25 @@ function RichDescription({ product }: { product: StoreProduct }) {
   const descriptionHtml = textToHtml(product.description);
 
   return (
-    <section className="mt-12 grid gap-6 border-t border-neutral-200 pt-10 dark:border-white/10 lg:grid-cols-[1fr_360px]">
+    <section className="mt-12 grid gap-6 border-t border-electrox-elevated pt-10 lg:grid-cols-[1fr_360px]">
       <article>
-        <p className="text-sm font-black uppercase tracking-[0.24em] text-blue-500 dark:text-blue-400">Details & care</p>
+        <p className="text-xs font-black uppercase tracking-[0.24em] text-electrox-blue">Details & care</p>
         <div className="rich-product-html mt-4" dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
         {hasCustomRichDescription && <div className="rich-product-html mt-8" dangerouslySetInnerHTML={{ __html: product.descriptionHtml }} />}
       </article>
       <aside className="grid h-fit gap-4">
-        <div className="rounded-md border border-neutral-200 bg-neutral-50 p-5 dark:border-white/10 dark:bg-white/[0.035]">
-          <h3 className="font-black">Delivery</h3>
-          <p className="mt-2 text-sm leading-6 text-neutral-600 dark:text-white/58">{String(product.deliveryInfo?.text ?? "Free delivery above INR 1499. Standard delivery usually takes 3-6 business days.")}</p>
+        <div className="rounded-2xl border border-electrox-elevated bg-electrox-surface p-5 shadow-sm">
+          <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Delivery</h3>
+          <p className="mt-2.5 text-xs leading-5 text-neutral-450 font-semibold">{String(product.deliveryInfo?.text ?? "Free delivery above INR 1499. Standard delivery usually takes 3-6 business days.")}</p>
         </div>
-        <div className="rounded-md border border-neutral-200 bg-neutral-50 p-5 dark:border-white/10 dark:bg-white/[0.035]">
-          <h3 className="font-black">Return Policy</h3>
-          <p className="mt-2 text-sm leading-6 text-neutral-600 dark:text-white/58">{product.returnPolicy || "Easy 7-day exchange for size issues on unused products with original tags."}</p>
+        <div className="rounded-2xl border border-electrox-elevated bg-electrox-surface p-5 shadow-sm">
+          <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Return Policy</h3>
+          <p className="mt-2.5 text-xs leading-5 text-neutral-450 font-semibold">{product.returnPolicy || "Easy 7-day exchange for size issues on unused products with original tags."}</p>
         </div>
         {product.careInstructions.length > 0 && (
-          <div className="rounded-md border border-neutral-200 bg-neutral-50 p-5 dark:border-white/10 dark:bg-white/[0.035]">
-            <h3 className="font-black">Care Instructions</h3>
-            <ul className="mt-3 grid gap-2 text-sm text-white/58">
+          <div className="rounded-2xl border border-electrox-elevated bg-electrox-surface p-5 shadow-sm">
+            <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Care Instructions</h3>
+            <ul className="mt-3 grid gap-2 text-xs text-neutral-450">
               {product.careInstructions.map((item) => <li key={item}>- {item}</li>)}
             </ul>
           </div>
@@ -446,7 +491,7 @@ function textToHtml(value: string) {
     .replace(/>/g, "&gt;")
     .trim();
 
-  if (!escaped) return "<h2>Product Details</h2><p>Premium fashion-grade construction with a comfortable everyday fit.</p>";
+  if (!escaped) return "<h2>Product Details</h2><p>Premium grade construction with comfortable daily utility.</p>";
 
   return escaped
     .split(/\n{2,}/)

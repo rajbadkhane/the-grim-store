@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion, useScroll, useMotionValueEvent } from "framer-motion";
-import { ChevronRight, Heart, Menu, Search, ShoppingBag, User, X, Zap, Sparkles, Cpu } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { ChevronRight, Heart, Menu, Search, ShoppingBag, User, X, Zap, Sparkles, Cpu, Sun, Moon, Home } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/store/cart";
 import { useFlyCartStore } from "@/store/fly-cart";
+import { useTheme } from "@/components/theme-provider";
 
 type HeaderCategory = {
   id: string;
@@ -31,6 +32,8 @@ type Particle = {
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
 
 export function Header() {
+  const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -150,43 +153,55 @@ export function Header() {
   return (
     <>
       <motion.header
-        animate={{ y: hidden ? -96 : 0 }}
+        animate={{ y: hidden ? -130 : 0 }}
         transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-        className="sticky top-0 z-50 px-3 pt-3"
+        className="sticky top-0 z-50 px-3 pt-2 w-full flex flex-col gap-2"
       >
+        {/* Top Announcement Strip */}
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between rounded-xl bg-slate-900/90 dark:bg-black/95 px-4 py-1.5 text-[10px] sm:text-xs font-black text-white/90 shadow-sm border border-neutral-200/5 dark:border-neutral-900/40 backdrop-blur-md">
+          <div className="flex-1 text-center truncate tracking-wide">
+            <span>🌐 Welcome to <strong className="text-indigo-400">thegrimstore.com</strong> | ⚡ LAUNCH OFFER: Use code <strong className="text-yellow-400">GRIM40</strong> for 40% off on premium gadgets!</span>
+          </div>
+          <div className="flex items-center gap-2.5 shrink-0 ml-2">
+            <Link href="/account?tab=orders" className="bg-indigo-650 hover:bg-indigo-700 text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded text-white transition select-none">
+              Track Order
+            </Link>
+          </div>
+        </div>
+
         <div
-          className={`mx-auto flex max-w-7xl items-center justify-between rounded-2xl border border-white/12 bg-[#050816]/78 px-4 backdrop-blur-2xl transition-all duration-300 shadow-[0_22px_70px_rgba(0,0,0,0.24)] ${
+          className={`mx-auto flex w-full max-w-7xl items-center justify-between rounded-2xl border border-electrox-elevated/42 bg-electrox-bg/78 px-4 backdrop-blur-2xl transition-all duration-300 shadow-[0_8px_30px_rgba(0,0,0,0.03)] dark:shadow-[0_22px_70px_rgba(0,0,0,0.42)] ${
             compact ? "h-14" : "h-18"
           }`}
         >
           <Link href="/" className="group flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-2xl border border-white/15 bg-white/[0.06] text-sm font-black text-white shadow-[0_0_34px_rgba(59,130,246,0.32)]">
-              <Cpu size={18} />
+            <span className="grid h-10 w-10 place-items-center rounded-2xl border border-electrox-elevated/50 bg-electrox-surface text-sm font-black text-foreground shadow-sm">
+              <Cpu size={18} className="text-electrox-blue dark:text-white" />
             </span>
             <span className="leading-none">
-              <span className="block text-sm font-black uppercase tracking-[0.24em] text-white">The Grim</span>
-              <span className="mt-1 block text-[10px] font-bold uppercase tracking-[0.34em] text-slate-400 group-hover:text-blue-300">Electronics</span>
+              <span className="block text-sm font-black uppercase tracking-[0.24em] text-foreground">The Grim</span>
+              <span className="mt-1 block text-[10px] font-bold uppercase tracking-[0.34em] text-neutral-400 dark:text-neutral-450 group-hover:text-electrox-blue">Store</span>
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-1 text-sm font-bold text-slate-300 lg:flex">
+          <nav className="hidden items-center gap-1 text-sm font-bold text-neutral-450 dark:text-slate-350 lg:flex">
             <NavLink href="/products">Catalog</NavLink>
             <div className="group relative py-5">
-              <button className="rounded-full px-4 py-2 transition hover:bg-white/[0.06] hover:text-white">Categories</button>
-              <div className="invisible absolute left-1/2 top-16 grid w-[760px] -translate-x-1/2 grid-cols-3 gap-3 rounded-2xl border border-white/12 bg-[#081026]/95 p-4 opacity-0 shadow-[0_30px_100px_rgba(0,0,0,0.55)] backdrop-blur-2xl transition group-hover:visible group-hover:opacity-100">
+              <button className="rounded-full px-4 py-2 transition hover:bg-electrox-elevated hover:text-foreground">Categories</button>
+              <div className="invisible absolute left-1/2 top-16 grid w-[760px] -translate-x-1/2 grid-cols-3 gap-3 rounded-2xl border border-electrox-elevated/70 bg-electrox-surface/98 p-4 opacity-0 shadow-xl backdrop-blur-2xl transition group-hover:visible group-hover:opacity-100">
                 {categories.slice(0, 9).map((item, index) => (
                   <Link
                     key={item.id}
                     href={item.slug ? `/products?category=${item.slug}` : "/products"}
-                    className="group/item rounded-2xl border border-white/10 bg-white/[0.035] p-4 transition hover:-translate-y-1 hover:border-blue-400/60 hover:bg-blue-500/10 hover:shadow-[0_0_36px_rgba(59,130,246,0.18)]"
+                    className="group/item rounded-2xl border border-electrox-elevated/40 bg-electrox-bg-2 p-4 transition hover:-translate-y-0.5 hover:border-electrox-blue/60 hover:bg-electrox-blue/5 hover:shadow-sm"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <span className="font-black text-white">{item.name}</span>
-                      <span className="grid h-8 w-8 place-items-center rounded-full bg-white/8 text-blue-300">
+                      <span className="font-black text-foreground">{item.name}</span>
+                      <span className="grid h-8 w-8 place-items-center rounded-full bg-electrox-elevated text-electrox-blue font-mono text-xs">
                         {index + 1}
                       </span>
                     </div>
-                    <p className="mt-2 text-xs leading-5 text-slate-400">Live inventory, fast checkout, verified delivery flow.</p>
+                    <p className="mt-2 text-xs leading-5 text-neutral-450">Verified inventory and fast dispatch checkout.</p>
                   </Link>
                 ))}
               </div>
@@ -195,17 +210,27 @@ export function Header() {
             <NavLink href="/account?tab=orders">Orders</NavLink>
           </nav>
 
-          <div className="hidden w-full max-w-sm items-center rounded-full border border-white/10 bg-white/[0.055] px-3 py-2 lg:flex">
-            <Search size={17} className="text-slate-400" />
-            <button onClick={() => setSearchOpen(true)} className="ml-2 flex-1 text-left text-sm font-medium text-slate-400">
-              Search phones, audio, cameras...
+          <div className="hidden w-full max-w-sm items-center rounded-full border border-electrox-elevated/60 bg-electrox-bg-2 px-3 py-2 lg:flex">
+            <Search size={17} className="text-neutral-450" />
+            <button onClick={() => setSearchOpen(true)} className="ml-2 flex-1 text-left text-sm font-medium text-neutral-450">
+              Search phones, audio, gadgets...
             </button>
           </div>
 
           <div className="flex items-center gap-1.5">
-            <button aria-label="Search products" onClick={() => setSearchOpen(true)} className="grid h-10 w-10 place-items-center rounded-full text-slate-300 hover:bg-white/10 hover:text-white lg:hidden">
+            <button aria-label="Search products" onClick={() => setSearchOpen(true)} className="grid h-10 w-10 place-items-center rounded-full text-neutral-450 hover:bg-electrox-elevated hover:text-foreground lg:hidden">
               <Search size={19} />
             </button>
+            
+            {/* Theme Toggle Button */}
+            <button
+              aria-label="Toggle theme"
+              onClick={toggleTheme}
+              className="grid h-10 w-10 place-items-center rounded-full text-neutral-450 hover:bg-electrox-elevated hover:text-foreground transition duration-200"
+            >
+              {theme === "dark" ? <Sun size={19} className="text-amber-500" /> : <Moon size={19} className="text-slate-600" />}
+            </button>
+
             <IconLink href="/account" label="Account">
               <User size={19} />
             </IconLink>
@@ -213,9 +238,9 @@ export function Header() {
               <Heart size={19} />
             </IconLink>
             <motion.div ref={cartRef} className="relative" animate={{ scale: arrivalTriggered ? [1, 1.18, 1] : 1 }} transition={{ duration: 0.42 }}>
-              <Link aria-label="Cart" href="/cart" className="relative grid h-10 w-10 place-items-center rounded-full border border-blue-400/20 bg-blue-500/10 text-blue-100 hover:border-blue-300/50 hover:shadow-[0_0_28px_rgba(59,130,246,0.32)]">
+              <Link aria-label="Cart" href="/cart" className="relative grid h-10 w-10 place-items-center rounded-full border border-electrox-blue/20 bg-electrox-blue/10 text-electrox-blue hover:border-electrox-blue/50 hover:shadow-sm">
                 <ShoppingBag size={19} />
-                {cartCount > 0 && <span className="absolute -right-1 -top-1 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 px-1.5 py-0.5 text-[10px] font-black text-white">{cartCount}</span>}
+                {cartCount > 0 && <span className="absolute -right-1 -top-1 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-1.5 py-0.5 text-[10px] font-black text-white">{cartCount}</span>}
               </Link>
               <div className="pointer-events-none absolute inset-0 grid place-items-center">
                 {particles.map((p) => (
@@ -223,9 +248,6 @@ export function Header() {
                 ))}
               </div>
             </motion.div>
-            <button aria-label="Open menu" className="grid h-10 w-10 place-items-center rounded-full text-slate-300 hover:bg-white/10 hover:text-white lg:hidden" onClick={() => setOpen(true)}>
-              <Menu size={21} />
-            </button>
           </div>
         </div>
       </motion.header>
@@ -240,59 +262,21 @@ export function Header() {
         onPick={performSearch}
       />
 
-      <AnimatePresence>
-        {open && (
-          <motion.div className="fixed inset-0 z-[100] bg-[#020617]/80 backdrop-blur-md lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <button type="button" aria-label="Close menu backdrop" className="absolute inset-0 h-full w-full cursor-default" onClick={() => setOpen(false)} />
-            <motion.aside
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", stiffness: 420, damping: 34 }}
-              className="relative z-[101] flex h-dvh w-[88vw] max-w-[390px] flex-col overflow-y-auto border-r border-white/10 bg-[#050816] p-5 text-white shadow-2xl"
-            >
-              <div className="flex min-h-11 items-center justify-between gap-3">
-                <Link href="/" onClick={() => setOpen(false)} className="text-base font-black uppercase tracking-[0.22em] text-white">
-                  Grim Electronics
-                </Link>
-                <button aria-label="Close menu" className="rounded-full p-2 text-slate-300 hover:bg-white/10 hover:text-white" onClick={() => setOpen(false)}>
-                  <X size={22} />
-                </button>
-              </div>
-
-              <button onClick={() => setSearchOpen(true)} className="mt-6 flex min-h-12 items-center rounded-2xl border border-white/10 bg-white/[0.055] px-4 text-sm font-bold text-slate-400">
-                <Search size={18} />
-                <span className="ml-2">Search products</span>
-              </button>
-
-              <nav className="mt-6 grid gap-2.5">
-                {mobileLinks.map((item) => (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    onClick={() => setOpen(false)}
-                    className="group flex min-h-13 items-center justify-between rounded-2xl border border-white/10 bg-white/[0.045] px-4 text-sm font-black text-slate-100 transition hover:border-blue-400/60 hover:bg-blue-500/10"
-                  >
-                    <span>{item.label}</span>
-                    <ChevronRight size={16} className="text-slate-500 transition group-hover:translate-x-0.5 group-hover:text-blue-300" />
-                  </Link>
-                ))}
-              </nav>
-
-              <Link href="/products?sort=popular" onClick={() => setOpen(false)} className="mt-auto flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 via-violet-600 to-purple-500 px-4 text-sm font-black uppercase tracking-[0.18em] text-white shadow-[0_0_38px_rgba(59,130,246,0.28)]">
-                <Zap size={16} /> Shop Trending
-              </Link>
-            </motion.aside>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Mobile App Bottom Tab Bar (Flipkart/Myntra style) */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-neutral-200/50 dark:border-neutral-900 bg-white/95 dark:bg-[#0c0c0e]/95 backdrop-blur-lg py-2.5 px-3 flex items-center justify-around lg:hidden shadow-[0_-4px_16px_rgba(0,0,0,0.04)] select-none">
+        <BottomTabLink href="/" label="Home" icon={Home} active={pathname === "/"} />
+        <BottomTabLink href="/products" label="Explore" icon={Search} active={pathname.startsWith("/products")} />
+        <BottomTabLink href="/wishlist" label="Wishlist" icon={Heart} active={pathname.startsWith("/wishlist")} />
+        <BottomTabLink href="/cart" label="Cart" icon={ShoppingBag} active={pathname.startsWith("/cart")} badge={cartCount} />
+        <BottomTabLink href="/account" label="Profile" icon={User} active={pathname.startsWith("/account")} />
+      </div>
     </>
   );
 }
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className="rounded-full px-4 py-2 transition hover:bg-white/[0.06] hover:text-white">
+    <Link href={href} className="rounded-full px-4 py-2 transition hover:bg-electrox-elevated hover:text-foreground">
       {children}
     </Link>
   );
@@ -300,7 +284,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
 
 function IconLink({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
   return (
-    <Link href={href} aria-label={label} className="hidden h-10 w-10 place-items-center rounded-full text-slate-300 transition hover:bg-white/10 hover:text-white sm:grid">
+    <Link href={href} aria-label={label} className="hidden h-10 w-10 place-items-center rounded-full text-neutral-450 transition hover:bg-electrox-elevated hover:text-foreground sm:grid">
       {children}
     </Link>
   );
@@ -326,24 +310,24 @@ function SearchOverlay({
   return (
     <AnimatePresence>
       {open && (
-        <motion.div className="fixed inset-0 z-[180] bg-[#020617]/88 p-4 backdrop-blur-xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        <motion.div className="fixed inset-0 z-[180] bg-black/60 dark:bg-black/80 p-4 backdrop-blur-xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
           <div className="mx-auto max-w-4xl pt-12 sm:pt-20">
             <div className="flex items-center justify-between">
-              <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.34em] text-blue-200">
+              <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.34em] text-electrox-blue">
                 <Sparkles size={15} /> Instant Search
               </p>
-              <button onClick={onClose} aria-label="Close search" className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white">
+              <button onClick={onClose} aria-label="Close search" className="grid h-10 w-10 place-items-center rounded-full border border-electrox-elevated bg-electrox-surface text-neutral-450 hover:bg-electrox-elevated hover:text-foreground">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={onSubmit} className="mt-5 flex min-h-16 items-center rounded-3xl border border-blue-400/30 bg-white/[0.08] px-5 shadow-[0_0_80px_rgba(59,130,246,0.18)]">
-              <Search size={22} className="text-blue-200" />
+            <form onSubmit={onSubmit} className="mt-5 flex min-h-16 items-center rounded-3xl border border-electrox-blue/30 bg-electrox-surface px-5 shadow-lg">
+              <Search size={22} className="text-electrox-blue" />
               <input
                 autoFocus
                 value={query}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder="Search wireless audio, smart watches, cameras..."
-                className="ml-3 min-w-0 flex-1 bg-transparent text-lg font-bold text-white outline-none placeholder:text-slate-500"
+                className="ml-3 min-w-0 flex-1 bg-transparent text-lg font-bold text-foreground outline-none placeholder:text-neutral-450"
               />
             </form>
             <div className="mt-5 grid gap-3">
@@ -355,13 +339,13 @@ function SearchOverlay({
                 <button
                   key={suggestion.id}
                   onClick={() => onPick(suggestion.title)}
-                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.045] px-4 py-3 text-left transition hover:border-blue-400/60 hover:bg-blue-500/10"
+                  className="flex items-center justify-between rounded-2xl border border-electrox-elevated bg-electrox-surface px-4 py-3 text-left transition hover:border-electrox-blue/60 hover:bg-electrox-blue/5"
                 >
                   <span>
-                    <span className="block font-black text-white">{suggestion.title}</span>
-                    <span className="mt-1 block text-xs text-slate-400">{[suggestion.brand, suggestion.category].filter(Boolean).join(" / ") || "Suggested product"}</span>
+                    <span className="block font-black text-foreground">{suggestion.title}</span>
+                    <span className="mt-1 block text-xs text-neutral-450">{[suggestion.brand, suggestion.category].filter(Boolean).join(" / ") || "Suggested product"}</span>
                   </span>
-                  <ChevronRight size={16} className="text-slate-500" />
+                  <ChevronRight size={16} className="text-neutral-450" />
                 </button>
               ))}
             </div>
@@ -392,5 +376,35 @@ function FlyingParticle({ particle, onComplete }: { particle: Particle; onComple
         boxShadow: `0 0 10px ${particle.color}`
       }}
     />
+  );
+}
+
+function BottomTabLink({
+  href,
+  label,
+  icon: Icon,
+  active,
+  badge
+}: {
+  href: string;
+  label: string;
+  icon: any;
+  active: boolean;
+  badge?: number;
+}) {
+  return (
+    <Link href={href} className="relative flex flex-col items-center justify-center gap-1 min-w-[54px] text-center">
+      <div className="relative">
+        <Icon size={19} className={active ? "text-indigo-650 dark:text-indigo-400" : "text-neutral-400 dark:text-neutral-500"} />
+        {badge !== undefined && badge > 0 && (
+          <span className="absolute -right-2 -top-1.5 rounded-full bg-rose-500 px-1 py-0.2 text-[8px] font-black text-white min-w-[14px] text-center scale-90">
+            {badge}
+          </span>
+        )}
+      </div>
+      <span className={`text-[8px] font-extrabold uppercase tracking-widest ${active ? "text-indigo-650 dark:text-indigo-400" : "text-neutral-400 dark:text-neutral-500"}`}>
+        {label}
+      </span>
+    </Link>
   );
 }
