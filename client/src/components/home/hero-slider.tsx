@@ -79,7 +79,7 @@ export function HeroSlider({ products = [] }: { products?: StoreProduct[] }) {
           {/* Text Left */}
           <div className="flex flex-col items-start justify-center text-white max-w-md z-10">
             <div className="flex items-center gap-3">
-              <IconComp size={20} className="text-red-500" />
+              <IconComp size={20} className="text-blue-500" />
               <span className="text-sm font-semibold tracking-wider text-white/80">{slide.brandText}</span>
             </div>
             
@@ -89,7 +89,7 @@ export function HeroSlider({ products = [] }: { products?: StoreProduct[] }) {
 
             <Link
               href={slide.link}
-              className="mt-6 inline-flex items-center gap-2 text-sm font-black border-b-2 border-white/40 pb-1 hover:border-red-500 hover:text-red-400 transition-all duration-200"
+              className="mt-6 inline-flex items-center gap-2 text-sm font-black border-b-2 border-white/40 pb-1 hover:border-blue-500 hover:text-blue-400 transition-all duration-200"
             >
               Shop Now
               <ArrowRight size={16} />
@@ -121,7 +121,7 @@ export function HeroSlider({ products = [] }: { products?: StoreProduct[] }) {
             onClick={() => setCurrent(idx)}
             aria-label={`Go to slide ${idx + 1}`}
             className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-              idx === current ? "bg-red-500 scale-125 shadow-md shadow-red-500/50" : "bg-white/30 hover:bg-white/50"
+              idx === current ? "bg-blue-500 scale-125 shadow-md shadow-blue-500/50" : "bg-white/30 hover:bg-white/50"
             }`}
           />
         ))}

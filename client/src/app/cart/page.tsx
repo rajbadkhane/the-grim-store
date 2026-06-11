@@ -28,9 +28,10 @@ export default function CartPage() {
   }
 
   return (
-    <div className="bg-white dark:bg-[#070707] text-neutral-900 dark:text-[#f7f3ef] transition-colors duration-300 min-h-[calc(100vh-4rem)]">
+    <div className="min-h-[calc(100vh-4rem)] text-white">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-black text-neutral-950 dark:text-white tracking-tight">Shopping Cart</h1>
+        <p className="text-xs font-black uppercase tracking-[0.28em] text-blue-200">Secure cart</p>
+        <h1 className="electrox-gradient-text mt-2 text-3xl font-black tracking-tight sm:text-5xl">Shopping Cart</h1>
         
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
           {/* Cart Items List */}
@@ -40,18 +41,18 @@ export default function CartPage() {
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="rounded-md border border-neutral-200 dark:border-white/10 bg-neutral-50 dark:bg-white/[0.035] p-12 text-center flex flex-col items-center justify-center gap-4 py-20 shadow-inner"
+                  className="electrox-card flex flex-col items-center justify-center gap-4 rounded-[2rem] p-12 py-20 text-center"
                 >
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-neutral-100 dark:bg-white/5 text-neutral-400 dark:text-white/30 ring-8 ring-neutral-50 dark:ring-transparent">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.055] text-blue-200 shadow-[0_0_40px_rgba(59,130,246,0.18)]">
                     <ShoppingBag size={24} />
                   </div>
-                  <h2 className="text-lg font-bold text-neutral-800 dark:text-white/80">Your cart is empty</h2>
-                  <p className="text-sm text-neutral-500 dark:text-white/60 max-w-sm">
-                    Looks like you haven't added anything to your cart yet. Explore our premium streetwear drops to find your fit.
+                  <h2 className="text-lg font-bold text-white">Your cart is empty</h2>
+                  <p className="max-w-sm text-sm text-slate-400">
+                    Looks like you haven't added anything yet. Explore premium electronics, audio, smart gadgets, and accessories.
                   </p>
                   <Link href="/products" className="mt-2">
                     <Button variant="primary" className="px-8 font-black uppercase text-xs tracking-wider">
-                      Shop New Drops
+                      Explore Catalog
                     </Button>
                   </Link>
                 </motion.div>
@@ -66,48 +67,48 @@ export default function CartPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -10 }}
                     transition={{ duration: 0.25 }}
-                    className="grid grid-cols-[100px_1fr] sm:grid-cols-[128px_1fr_auto] gap-5 rounded-md border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 shadow-sm hover:shadow-md hover:border-neutral-300 dark:hover:border-white/20 transition duration-200"
+                    className="electrox-card grid grid-cols-[100px_1fr] gap-5 rounded-[1.5rem] p-4 transition duration-300 hover:-translate-y-1 hover:border-blue-300/40 hover:shadow-[0_24px_70px_rgba(59,130,246,0.12)] sm:grid-cols-[128px_1fr_auto]"
                   >
                     {/* Item Image */}
-                    <div className="relative aspect-square overflow-hidden rounded-md bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-transparent flex items-center justify-center">
+                    <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/[0.045]">
                       {item.image ? (
-                        <Image src={item.image} alt={item.title} fill sizes="128px" className="object-cover" />
+                        <Image src={item.image} alt={item.title} fill sizes="128px" className="object-contain p-2" />
                       ) : (
-                        <span className="text-[10px] font-black text-neutral-400 uppercase">No Image</span>
+                        <span className="text-[10px] font-black uppercase text-slate-500">No Image</span>
                       )}
                     </div>
 
                     {/* Item Info */}
                     <div className="flex flex-col justify-between">
                       <div>
-                        <Link href={`/products/${item.slug}`} className="font-bold text-base text-neutral-900 dark:text-white hover:text-red-500 dark:hover:text-red-400 transition">
+                        <Link href={`/products/${item.slug}`} className="text-base font-bold text-white transition hover:text-blue-200">
                           {item.title}
                         </Link>
-                        <p className="mt-1.5 text-xs font-semibold text-neutral-500 dark:text-white/50 flex flex-wrap gap-x-2 gap-y-1">
-                          <span>Size: <strong className="text-neutral-700 dark:text-white/80">{item.size ?? "One Size"}</strong></span>
-                          <span className="text-neutral-300 dark:text-white/20">|</span>
-                          <span>Color: <strong className="text-neutral-700 dark:text-white/80">{item.color ?? "Default"}</strong></span>
+                        <p className="mt-1.5 flex flex-wrap gap-x-2 gap-y-1 text-xs font-semibold text-slate-400">
+                          <span>Variant: <strong className="text-slate-200">{item.size ?? "Standard"}</strong></span>
+                          <span className="text-white/20">|</span>
+                          <span>Color: <strong className="text-slate-200">{item.color ?? "Default"}</strong></span>
                         </p>
                         {item.sku && (
-                          <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-neutral-400 dark:text-white/35">
+                          <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">
                             SKU: {item.sku}
                           </p>
                         )}
                       </div>
                       
                       {/* Quantity Selector Capsule */}
-                      <div className="mt-4 flex items-center rounded-md border border-neutral-250 dark:border-white/10 bg-neutral-50 dark:bg-neutral-900/40 w-fit shadow-inner">
+                      <div className="mt-4 flex w-fit items-center rounded-2xl border border-white/10 bg-white/[0.045] shadow-inner">
                         <button
                           aria-label="Decrease quantity"
-                          className="p-1.5 px-3 text-neutral-500 dark:text-white/60 hover:bg-neutral-200 dark:hover:bg-white/10 rounded-l-md transition duration-150"
+                          className="rounded-l-2xl p-1.5 px-3 text-slate-400 transition duration-150 hover:bg-white/10 hover:text-white"
                           onClick={() => update(lineKey, Math.max(1, item.quantity - 1))}
                         >
                           <Minus size={14} />
                         </button>
-                        <span className="w-10 text-center text-xs font-black text-neutral-850 dark:text-white">{item.quantity}</span>
+                        <span className="w-10 text-center text-xs font-black text-white">{item.quantity}</span>
                         <button
                           aria-label="Increase quantity"
-                          className="p-1.5 px-3 text-neutral-500 dark:text-white/60 hover:bg-neutral-200 dark:hover:bg-white/10 rounded-r-md transition duration-150"
+                          className="rounded-r-2xl p-1.5 px-3 text-slate-400 transition duration-150 hover:bg-white/10 hover:text-white"
                           onClick={() => update(lineKey, item.quantity + 1)}
                         >
                           <Plus size={14} />
@@ -116,19 +117,19 @@ export default function CartPage() {
                     </div>
 
                     {/* Price and Delete Button */}
-                    <div className="col-span-2 sm:col-span-1 flex sm:flex-col justify-between sm:items-end gap-3 pt-3 sm:pt-0 border-t sm:border-0 border-neutral-100 dark:border-transparent">
-                      <p className="font-black text-base text-neutral-900 dark:text-white">{formatMoney(item.salePrice * item.quantity)}</p>
+                    <div className="col-span-2 flex justify-between gap-3 border-t border-white/10 pt-3 sm:col-span-1 sm:flex-col sm:items-end sm:border-0 sm:pt-0">
+                      <p className="text-base font-black text-white">{formatMoney(item.salePrice * item.quantity)}</p>
                       <div className="flex items-center gap-2">
                         <button
                           aria-label={`Buy ${item.title} now`}
-                          className="inline-flex h-9 items-center gap-1.5 rounded-md bg-red-600 px-3 text-xs font-black uppercase tracking-wider text-white hover:bg-red-500 transition duration-200 cursor-pointer"
+                          className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-2xl bg-gradient-to-r from-blue-500 via-violet-600 to-purple-500 px-3 text-xs font-black uppercase tracking-wider text-white transition duration-200 hover:shadow-[0_0_28px_rgba(59,130,246,0.28)]"
                           onClick={() => buyNow(item)}
                         >
                           <Zap size={14} /> Buy now
                         </button>
                         <button
                           aria-label="Remove item"
-                          className="h-9 w-9 flex items-center justify-center rounded-md text-neutral-400 dark:text-white/55 hover:bg-red-500/10 dark:hover:bg-red-650/15 hover:text-red-500 dark:hover:text-red-400 transition duration-200 cursor-pointer"
+                          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-2xl text-slate-400 transition duration-200 hover:bg-rose-500/10 hover:text-rose-300"
                           onClick={() => remove(lineKey)}
                         >
                           <Trash2 size={16} />
@@ -143,19 +144,19 @@ export default function CartPage() {
           </section>
 
           {/* Order Summary Sidebar */}
-          <aside className="h-fit rounded-md border border-neutral-200 dark:border-white/10 bg-neutral-50 dark:bg-white/[0.04] p-6 shadow-sm">
-            <h2 className="text-lg font-black text-neutral-900 dark:text-white tracking-tight border-b border-neutral-200 dark:border-white/10 pb-3">
+          <aside className="electrox-card h-fit rounded-[1.5rem] p-6">
+            <h2 className="border-b border-white/10 pb-3 text-lg font-black tracking-tight text-white">
               Order Summary
             </h2>
             
             {/* Persisted Coupon code input without black block */}
             <div className="mt-5">
-              <label htmlFor="coupon" className="text-xs font-bold text-neutral-500 dark:text-white/50 uppercase tracking-wider">
+              <label htmlFor="coupon" className="text-xs font-bold uppercase tracking-wider text-slate-400">
                 Promo Code
               </label>
               <input
                 id="coupon"
-                className="mt-1.5 w-full rounded-md border border-neutral-250 dark:border-white/10 bg-white dark:bg-black px-4 py-2.5 text-sm text-neutral-800 dark:text-white outline-none focus:border-red-500 transition shadow-inner placeholder:text-neutral-400 dark:placeholder:text-white/30"
+                className="mt-1.5 w-full rounded-2xl border border-white/10 bg-white/[0.055] px-4 py-2.5 text-sm text-white shadow-inner outline-none transition placeholder:text-slate-500 focus:border-blue-300/60"
                 placeholder="Enter coupon code"
               />
             </div>
@@ -169,7 +170,7 @@ export default function CartPage() {
 
             {/* Checkout Trigger */}
             <Button
-              className="mt-6 w-full py-3 font-black uppercase tracking-wider text-xs shadow-lg"
+              className="mt-6 w-full py-3 text-xs font-black uppercase tracking-wider shadow-lg"
               disabled={!items.length}
               onClick={() => router.push("/checkout")}
             >
@@ -187,8 +188,8 @@ function Row({ label, value, strong }: { label: string; value: string; strong?: 
     <div
       className={`flex items-center justify-between py-1.5 ${
         strong
-          ? "border-t border-neutral-200 dark:border-white/10 pt-4 mt-3 text-base font-black text-neutral-900 dark:text-white"
-          : "text-sm text-neutral-500 dark:text-white/60"
+          ? "mt-3 border-t border-white/10 pt-4 text-base font-black text-white"
+          : "text-sm text-slate-400"
       }`}
     >
       <span>{label}</span>

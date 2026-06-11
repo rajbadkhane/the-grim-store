@@ -7,7 +7,7 @@ export function GET() {
   const lines = [
     "# The Grim Store",
     "",
-    "The Grim Store is a premium streetwear ecommerce storefront for oversized tees, hoodies, limited drops, verified reviews, account orders, returns, refunds, shipping, and secure checkout.",
+    "The Grim Store is a premium electronics ecommerce storefront for oversized tees, hoodies, limited drops, verified reviews, account orders, returns, refunds, shipping, and secure checkout.",
     "",
     "## Primary Public Pages",
     `- Home: ${base}/`,

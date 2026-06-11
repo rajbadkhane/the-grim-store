@@ -8,20 +8,20 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
-    default: "The Grim Store | Premium Streetwear Ecommerce",
+    default: "The Grim Store | Premium Electronics Ecommerce",
     template: "%s | The Grim Store"
   },
-  description: "Premium black and red streetwear, graphic fashion, limited drops, fast checkout, verified reviews, and conversion-focused shopping.",
+  description: "Premium electronics, smart gadgets, secure checkout, live delivery tracking, and a futuristic dark-mode shopping experience.",
   applicationName: "The Grim Store",
-  keywords: ["The Grim Store", "premium streetwear", "oversized tees", "hoodies", "limited fashion drops", "graphic streetwear"],
+  keywords: ["The Grim Store", "premium electronics", "gadgets", "smart devices", "wireless accessories", "electronics ecommerce"],
   alternates: { canonical: "/" },
-  category: "fashion ecommerce",
+  category: "electronics ecommerce",
   openGraph: {
     type: "website",
     url: "/",
     siteName: "The Grim Store",
     title: "The Grim Store",
-    description: "Premium streetwear ecommerce for modern fashion drops.",
+    description: "Premium electronics ecommerce for modern gadget shoppers.",
     images: ["/og-image.jpg"]
   },
   twitter: { card: "summary_large_image", title: "The Grim Store" },
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#070707"
+  themeColor: "#050816"
 };
 
 import { LoginModal } from "@/components/layout/login-modal";
@@ -39,7 +39,7 @@ import { FlyCartContainer } from "@/components/home/fly-cart-container";
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(storefrontJsonLd()) }} />
         <Providers>

@@ -164,12 +164,12 @@ export const sitePages: SitePage[] = [
     slug: "about-us",
     title: "About The Grim Store",
     eyebrow: "Brand",
-    description: "A premium black and red streetwear label built around limited drops, durable essentials, and fast ecommerce experiences.",
+    description: "A premium black and red electronics label built around limited drops, durable essentials, and fast ecommerce experiences.",
     lastUpdated: "11 May 2026",
     sections: [
       {
         title: "What we make",
-        body: ["The Grim Store is built for premium streetwear essentials: oversized tees, hoodies, statement graphics, and limited seasonal drops."]
+        body: ["The Grim Store is built for premium electronics essentials: oversized tees, hoodies, statement graphics, and limited seasonal drops."]
       },
       {
         title: "What we care about",

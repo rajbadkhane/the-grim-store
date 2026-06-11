@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Heart, Eye, Star, ShoppingCart } from "lucide-react";
+import { Heart, Eye, Star, ShoppingCart, Zap } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatMoney } from "@/lib/utils";
 import { useCart } from "@/store/cart";
@@ -105,63 +105,65 @@ export function ProductCardFigma({ product }: { product: any }) {
     : 0;
 
   return (
-    <article className="group flex flex-col w-full transition-all duration-350 hover:-translate-y-1.5 hover:shadow-lg dark:hover:shadow-none bg-white dark:bg-neutral-900/40 border border-neutral-200 dark:border-white/5 rounded-md p-3 pb-4 shadow-sm">
-      {/* Image Container with Badges and Overlay Actions */}
+    <motion.article
+      data-reveal
+      whileHover={{ y: -8, scale: 1.015 }}
+      transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+      className="electrox-card group flex w-full flex-col rounded-3xl p-3 pb-4"
+    >
       <div 
         ref={imageContainerRef}
-        className="relative aspect-square w-full rounded-md border border-neutral-200 dark:border-white/5 bg-neutral-100 dark:bg-neutral-900/60 overflow-hidden flex items-center justify-center transition-colors duration-300"
+        className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0B1224] via-[#111827] to-[#050816] transition-colors duration-300"
       >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_15%,rgba(59,130,246,0.22),transparent_42%),radial-gradient(circle_at_20%_90%,rgba(168,85,247,0.18),transparent_36%)]" />
         {image ? (
           <Image
             src={image}
             alt={product.title}
             fill
             sizes="(max-width: 768px) 50vw, 25vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="object-contain p-4 transition-transform duration-700 group-hover:scale-110"
             draggable={false}
           />
         ) : (
-          <div className="text-xs font-black uppercase text-neutral-400 dark:text-white/30">No Image</div>
+          <div className="text-xs font-black uppercase tracking-[0.24em] text-slate-500">No Image</div>
         )}
 
-        {/* Badges (Left) */}
         <div className="absolute left-3 top-3 flex flex-col gap-1.5 z-10">
           {hasDiscount && (
-            <span className="rounded bg-red-500 px-2.5 py-1 text-[10px] font-black text-white uppercase tracking-wider shadow">
+            <span className="rounded-full border border-blue-300/30 bg-blue-500/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-blue-100 shadow-[0_0_24px_rgba(59,130,246,0.22)] backdrop-blur-md">
               -{discountPercentage}%
             </span>
           )}
           {product.bestseller && (
-            <span className="rounded bg-emerald-500 px-2.5 py-1 text-[10px] font-black text-white uppercase tracking-wider shadow">
+            <span className="rounded-full border border-purple-300/30 bg-purple-500/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-purple-100 backdrop-blur-md">
               NEW
             </span>
           )}
         </div>
 
-        {/* Action Buttons (Right) */}
         <div className="absolute right-3 top-3 flex flex-col gap-2 z-10">
           <button
             aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
             onClick={handleWishlistToggle}
-            className="rounded-full bg-black/60 p-2 text-white hover:bg-red-500/90 hover:scale-110 transition duration-200 backdrop-blur-sm"
+            className="rounded-full border border-white/10 bg-black/45 p-2 text-white backdrop-blur-md transition duration-200 hover:border-pink-300/50 hover:bg-pink-500/30 hover:shadow-[0_0_24px_rgba(236,72,153,0.28)]"
           >
-            <Heart size={16} className={isWishlisted ? "fill-red-500 text-red-500" : "text-white"} />
+            <Heart size={16} className={isWishlisted ? "fill-blue-500 text-blue-500" : "text-white"} />
           </button>
           <Link
             href={`/products/${product.slug}`}
-            className="rounded-full bg-black/60 p-2 text-white hover:bg-red-500/90 hover:scale-110 transition duration-200 backdrop-blur-sm flex items-center justify-center"
+            className="flex items-center justify-center rounded-full border border-white/10 bg-black/45 p-2 text-white backdrop-blur-md transition duration-200 hover:border-blue-300/50 hover:bg-blue-500/30 hover:shadow-[0_0_24px_rgba(59,130,246,0.28)]"
             title="Quick view"
           >
             <Eye size={16} />
           </Link>
         </div>
 
-        {/* Slide-Up Add To Cart Bar */}
         <motion.button
           disabled={isLoading}
           onClick={handleAddToCart}
           whileTap={{ scale: 0.95 }}
-          className="absolute bottom-0 left-0 right-0 bg-black/95 text-white text-center py-2.5 font-black text-[11px] uppercase tracking-widest translate-y-full group-hover:translate-y-0 transition duration-300 ease-out hover:bg-red-650 disabled:bg-neutral-800 disabled:text-white/45 flex items-center justify-center gap-2 cursor-pointer z-20 shadow-lg hover:shadow-red-500/20"
+          className="absolute bottom-3 left-3 right-3 z-20 flex translate-y-16 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-white/15 bg-gradient-to-r from-blue-500 via-violet-600 to-purple-500 py-3 text-center text-[11px] font-black uppercase tracking-widest text-white opacity-0 shadow-[0_0_34px_rgba(59,130,246,0.3)] transition duration-300 ease-out hover:shadow-[0_0_44px_rgba(168,85,247,0.38)] disabled:opacity-60 group-hover:translate-y-0 group-hover:opacity-100"
         >
           {isLoading ? (
             <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -172,36 +174,32 @@ export function ProductCardFigma({ product }: { product: any }) {
         </motion.button>
       </div>
 
-      {/* Product Information */}
       <div className="pt-3 flex flex-col flex-grow">
-        <Link href={`/products/${product.slug}`} className="font-bold text-sm text-neutral-800 dark:text-white/90 group-hover:text-red-550 group-hover:dark:text-red-400 line-clamp-1 transition duration-200">
+        <Link href={`/products/${product.slug}`} className="line-clamp-1 text-sm font-black text-white transition duration-200 group-hover:text-blue-200">
           {product.title}
         </Link>
         
-        {/* Prices */}
         <div className="mt-1 flex items-center gap-2">
-          <span className="font-black text-red-500 text-sm">{formatMoney(salePrice)}</span>
+          <span className="text-sm font-black text-blue-200">{formatMoney(salePrice)}</span>
           {hasDiscount && (
-            <span className="text-xs text-neutral-400 dark:text-white/35 line-through font-bold">{formatMoney(price)}</span>
+            <span className="text-xs font-bold text-slate-500 line-through">{formatMoney(price)}</span>
           )}
         </div>
 
-        {/* Ratings & Review Count */}
         <div className="mt-1 flex items-center gap-1.5">
-          <div className="flex items-center text-amber-400">
+          <div className="flex items-center text-violet-300">
             {Array.from({ length: 5 }).map((_, i) => (
               <Star
                 key={i}
                 size={12}
                 fill={i < Math.round(rating) ? "currentColor" : "none"}
-                className={i < Math.round(rating) ? "text-amber-400" : "text-neutral-200 dark:text-white/20"}
+                className={i < Math.round(rating) ? "text-violet-300" : "text-white/15"}
               />
             ))}
           </div>
-          <span className="text-[11px] font-bold text-neutral-500 dark:text-white/40">({reviewCount})</span>
+          <span className="text-[11px] font-bold text-slate-500">({reviewCount})</span>
         </div>
 
-        {/* Colors Swatches (If present) */}
         {Array.isArray(product.colors) && product.colors.length > 0 && (
           <div className="mt-2 flex items-center gap-1.5">
             {product.colors.map((col: any) => (
@@ -213,7 +211,7 @@ export function ProductCardFigma({ product }: { product: any }) {
                   setSelectedColor(col.name);
                 }}
                 className={`w-3.5 h-3.5 rounded-full border transition-all duration-200 ${
-                  selectedColor === col.name ? "border-red-550 scale-125 ring-1 ring-red-500/30" : "border-neutral-300 dark:border-transparent"
+                  selectedColor === col.name ? "scale-125 border-blue-300 ring-2 ring-blue-500/30" : "border-white/20"
                 }`}
                 style={{ backgroundColor: col.hex }}
                 title={col.name}
@@ -221,7 +219,10 @@ export function ProductCardFigma({ product }: { product: any }) {
             ))}
           </div>
         )}
+        <div className="mt-3 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+          <Zap size={12} className="text-blue-300" /> Fast Dispatch
+        </div>
       </div>
-    </article>
+    </motion.article>
   );
 }

@@ -168,14 +168,14 @@ export function NavigationLoading() {
           <motion.div
             key="page-load-track"
             aria-hidden="true"
-            className="pointer-events-none fixed inset-x-0 top-0 z-[220] h-1 overflow-hidden bg-red-650/10"
+            className="pointer-events-none fixed inset-x-0 top-0 z-[220] h-1 overflow-hidden bg-blue-500/10"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.16 }}
           >
             <motion.div
-              className="h-full rounded-r-full bg-gradient-to-r from-red-650 via-red-500 to-amber-400 shadow-[0_0_18px_rgba(225,29,46,0.55)]"
+              className="h-full rounded-r-full bg-gradient-to-r from-blue-500 via-violet-600 to-purple-500 shadow-[0_0_22px_rgba(59,130,246,0.68)]"
               initial={{ width: "8%", x: "-12%" }}
               animate={{ width: ["18%", "62%", "92%"], x: ["0%", "12%", "24%"] }}
               transition={{ duration: 1.15, ease: [0.22, 1, 0.36, 1], repeat: Infinity }}
@@ -184,14 +184,14 @@ export function NavigationLoading() {
           <motion.div
             key="page-load-glow"
             aria-hidden="true"
-            className="pointer-events-none fixed right-4 top-20 z-[220] h-9 w-9 rounded-md border border-red-500/20 bg-white/78 shadow-xl shadow-red-650/10 backdrop-blur-md dark:bg-neutral-950/78"
+            className="pointer-events-none fixed right-4 top-20 z-[220] h-10 w-10 rounded-2xl border border-blue-300/20 bg-[#050816]/78 shadow-xl shadow-blue-500/20 backdrop-blur-md"
             initial={{ opacity: 0, scale: 0.92, y: -6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: -4 }}
             transition={{ duration: 0.18 }}
           >
             <motion.div
-              className="m-2.5 h-4 w-4 rounded-full border-2 border-red-650 border-t-amber-400"
+              className="m-3 h-4 w-4 rounded-full border-2 border-blue-500 border-t-purple-300"
               animate={{ rotate: 360 }}
               transition={{ duration: 0.7, ease: "linear", repeat: Infinity }}
             />

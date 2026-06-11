@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
 import { fetchCategories, fetchProducts } from "@/lib/catalog-api";
@@ -68,15 +69,15 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="overflow-hidden rounded-md border border-neutral-200 bg-white shadow-[0_20px_80px_rgba(15,15,15,0.08)] dark:border-white/10 dark:bg-[#0b0b0b] dark:shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
+    <div className="mx-auto max-w-7xl px-4 py-10 text-white sm:px-6 lg:px-8">
+      <div className="electrox-card overflow-hidden rounded-[2rem]">
         <div className="relative px-5 py-6 sm:px-7 lg:px-8">
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-red-600 via-rose-500 to-amber-400" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-violet-600 to-purple-500" />
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-red-600 dark:text-red-400">Curated catalog</p>
-              <h1 className="mt-2 text-3xl font-black tracking-tight text-neutral-950 sm:text-4xl dark:text-white">{pageTitle}</h1>
-              <p className="mt-2 max-w-2xl text-sm font-medium text-neutral-500 dark:text-white/55">
+              <p className="text-xs font-black uppercase tracking-[0.28em] text-blue-200">Curated catalog</p>
+              <h1 className="electrox-gradient-text mt-2 text-3xl font-black tracking-tight sm:text-5xl">{pageTitle}</h1>
+              <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-400">
                 {total ?? products.length} live products from backend inventory.
               </p>
             </div>
@@ -85,8 +86,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                 href="/products"
                 className={`rounded-md border px-3.5 py-2 text-sm font-black transition ${
                   !params.category
-                    ? "border-red-500 bg-red-600 text-white shadow-lg shadow-red-600/15"
-                    : "border-neutral-200 bg-neutral-50 text-neutral-700 hover:border-red-500 hover:bg-gradient-to-r hover:from-red-50 hover:to-amber-50 hover:text-red-600 dark:border-white/10 dark:bg-white/[0.035] dark:text-white/70 dark:hover:bg-red-600/10 dark:hover:text-red-300"
+                    ? "border-blue-300/40 bg-blue-500/20 text-white shadow-lg shadow-blue-500/15"
+                    : "border-white/10 bg-white/[0.045] text-slate-300 hover:border-blue-300/50 hover:bg-blue-500/10 hover:text-white"
                 }`}
               >
                 All
@@ -97,8 +98,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                   href={getFilterUrl({ category: category.slug })}
                   className={`rounded-md border px-3.5 py-2 text-sm font-black transition ${
                     params.category === category.slug || params.category === category.id
-                      ? "border-red-500 bg-red-600 text-white shadow-lg shadow-red-600/15"
-                      : "border-neutral-200 bg-neutral-50 text-neutral-700 hover:border-red-500 hover:bg-gradient-to-r hover:from-red-50 hover:to-amber-50 hover:text-red-600 dark:border-white/10 dark:bg-white/[0.035] dark:text-white/70 dark:hover:bg-red-600/10 dark:hover:text-red-300"
+                      ? "border-blue-300/40 bg-blue-500/20 text-white shadow-lg shadow-blue-500/15"
+                      : "border-white/10 bg-white/[0.045] text-slate-300 hover:border-blue-300/50 hover:bg-blue-500/10 hover:text-white"
                   }`}
                 >
                   {category.name}
@@ -109,31 +110,31 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         </div>
       </div>
       <div className="grid gap-8 py-8 lg:grid-cols-[260px_1fr]">
-        <aside className="h-fit rounded-md border border-neutral-200 bg-white p-5 shadow-[0_18px_55px_rgba(15,15,15,0.07)] lg:sticky lg:top-24 dark:border-white/10 dark:bg-white/[0.035] dark:shadow-none">
-          <div className="flex items-center gap-2 font-black text-neutral-950 dark:text-white">
+        <aside className="electrox-card h-fit rounded-[1.5rem] p-5 lg:sticky lg:top-24">
+          <div className="flex items-center gap-2 font-black text-white">
             <SlidersHorizontal size={18} /> Filters
           </div>
-          <label className="mt-5 block text-xs font-black uppercase tracking-widest text-neutral-500 dark:text-white/50">Search</label>
+          <label className="mt-5 block text-xs font-black uppercase tracking-widest text-slate-500">Search</label>
           <form action="/products">
             {params.category && <input type="hidden" name="category" value={params.category} />}
             {params.brand && <input type="hidden" name="brand" value={params.brand} />}
             {params.gender && <input type="hidden" name="gender" value={params.gender} />}
             {params.sort && <input type="hidden" name="sort" value={params.sort} />}
             {params.max && <input type="hidden" name="max" value={params.max} />}
-            <input name="q" defaultValue={params.q ?? ""} className="mt-2 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-3 text-sm text-neutral-950 outline-none transition focus:border-red-500 focus:bg-white dark:border-white/10 dark:bg-black dark:text-white" placeholder="Search products" />
-            <button className="mt-3 w-full rounded-md bg-gradient-to-r from-red-650 via-red-500 to-amber-500 px-3 py-3 text-sm font-black text-white shadow-lg shadow-red-600/15 transition hover:shadow-red-600/25">
+            <input name="q" defaultValue={params.q ?? ""} className="mt-2 w-full rounded-2xl border border-white/10 bg-white/[0.055] px-3 py-3 text-sm text-white outline-none transition focus:border-blue-300/60" placeholder="Search products" />
+            <button className="mt-3 w-full rounded-2xl bg-gradient-to-r from-blue-500 via-violet-600 to-purple-500 px-3 py-3 text-sm font-black text-white shadow-lg shadow-blue-500/20 transition hover:shadow-blue-500/30">
               Search
             </button>
           </form>
-          <label className="mt-5 block text-xs font-black uppercase tracking-widest text-neutral-500 dark:text-white/50">Sort</label>
+          <label className="mt-5 block text-xs font-black uppercase tracking-widest text-slate-500">Sort</label>
           <div className="mt-2 grid gap-2">
             {sortLinks.map((item) => (
               <a
                 key={item.value}
-                className={`relative rounded-md border px-3 py-2 text-sm font-semibold transition after:absolute after:inset-x-3 after:bottom-1.5 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-gradient-to-r after:from-red-600 after:to-amber-400 after:transition-transform hover:border-red-500 hover:text-red-600 hover:after:scale-x-100 dark:hover:text-red-300 ${
+                className={`relative rounded-2xl border px-3 py-2 text-sm font-semibold transition after:absolute after:inset-x-3 after:bottom-1.5 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-gradient-to-r after:from-blue-500 after:to-purple-500 after:transition-transform hover:border-blue-300/50 hover:text-white hover:after:scale-x-100 ${
                   params.sort === item.value
-                    ? "border-red-500 bg-red-50 text-red-600 dark:bg-red-600/10 dark:text-red-300"
-                    : "border-neutral-200 bg-white text-neutral-700 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/70"
+                    ? "border-blue-300/50 bg-blue-500/10 text-white"
+                    : "border-white/10 bg-white/[0.035] text-slate-400"
                 }`}
                 href={getFilterUrl({ sort: item.value })}
               >
@@ -141,10 +142,12 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
               </a>
             ))}
           </div>
-          <PriceFilter currentMax={params.max} />
+          <Suspense fallback={<div className="mt-5 h-24 rounded-2xl border border-white/10 bg-white/[0.035]" />}>
+            <PriceFilter currentMax={params.max} />
+          </Suspense>
         </aside>
         <section>
-          <div className="mb-5 flex items-center justify-between rounded-md border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold text-neutral-500 shadow-sm dark:border-white/10 dark:bg-white/[0.035] dark:text-white/54">
+          <div className="mb-5 flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.045] px-4 py-3 text-sm font-semibold text-slate-400 shadow-sm backdrop-blur-xl">
             <span>{total ?? products.length} products</span>
             <span>{activeCategory?.name ?? "All categories"}</span>
           </div>
@@ -153,7 +156,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
-          {!products.length && <p className="rounded-md border border-neutral-200 bg-white p-6 text-neutral-500 dark:border-white/10 dark:bg-white/[0.035] dark:text-white/60">No products found.</p>}
+          {!products.length && <p className="rounded-2xl border border-white/10 bg-white/[0.045] p-6 text-slate-400">No products found.</p>}
         </section>
       </div>
     </div>

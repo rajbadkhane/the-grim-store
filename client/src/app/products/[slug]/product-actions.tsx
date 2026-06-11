@@ -43,7 +43,7 @@ export function ProductActions({ product }: { product: any }) {
     <div className="mt-6">
       <div className="grid grid-cols-4 gap-2">
         {["S", "M", "L", "XL"].map((size) => (
-          <button key={size} className="focus-ring rounded-md border border-white/12 py-3 font-bold hover:border-red-500 hover:bg-red-600/10">
+          <button key={size} className="focus-ring rounded-2xl border border-white/12 bg-white/[0.035] py-3 font-bold text-white transition hover:border-blue-300/60 hover:bg-blue-500/10">
             {size}
           </button>
         ))}

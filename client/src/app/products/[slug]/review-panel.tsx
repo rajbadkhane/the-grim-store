@@ -94,7 +94,7 @@ export function ReviewPanel({ product, initialReviews }: { product: StoreProduct
               <div key={rating} className="mt-3 flex items-center gap-2 text-xs">
                 <span className="w-4">{rating}</span>
                 <div className="h-2 flex-1 overflow-hidden rounded bg-white/10">
-                  <div className="h-full bg-red-600" style={{ width: `${(Number(distribution[rating]) / max) * 100}%` }} />
+                  <div className="h-full bg-blue-600" style={{ width: `${(Number(distribution[rating]) / max) * 100}%` }} />
                 </div>
               </div>
             ))}
@@ -114,7 +114,7 @@ export function ReviewPanel({ product, initialReviews }: { product: StoreProduct
               <button
                 key={key}
                 onClick={() => changeSort(key as SortKey)}
-                className={`rounded-md border px-3 py-2 text-sm font-bold ${sort === key ? "border-red-500 bg-red-600/15 text-white" : "border-white/10 text-white/65 hover:border-red-500"}`}
+                className={`rounded-md border px-3 py-2 text-sm font-bold ${sort === key ? "border-blue-500 bg-blue-600/15 text-white" : "border-white/10 text-white/65 hover:border-blue-500"}`}
               >
                 {label}
               </button>
@@ -195,7 +195,7 @@ function ReviewForm({
           <h3 className="text-xl font-black">Write a verified review</h3>
           <p className="mt-1 text-sm text-white/50">Share fit, fabric, sizing, delivery, and photos after delivery.</p>
         </div>
-        <button onClick={() => setOpen((value) => !value)} className="rounded-md bg-red-600 px-4 py-3 text-sm font-black text-white hover:bg-red-500">
+        <button onClick={() => setOpen((value) => !value)} className="rounded-md bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-500">
           {open ? "Close form" : "Write review"}
         </button>
       </div>
@@ -207,7 +207,7 @@ function ReviewForm({
           )}
           {eligibleOrders.length > 0 && (
             <>
-              <select value={form.orderId} onChange={(event) => setForm((current) => ({ ...current, orderId: event.target.value }))} className="rounded-md border border-white/10 bg-black px-3 py-3 text-sm font-bold outline-none focus:border-red-500">
+              <select value={form.orderId} onChange={(event) => setForm((current) => ({ ...current, orderId: event.target.value }))} className="rounded-md border border-white/10 bg-black px-3 py-3 text-sm font-bold outline-none focus:border-blue-500">
                 {eligibleOrders.map((order) => <option key={order.id} value={order.id}>{order.orderId}</option>)}
               </select>
               <div className="flex flex-wrap gap-2">
@@ -217,8 +217,8 @@ function ReviewForm({
                   </button>
                 ))}
               </div>
-              <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="Review title" className="rounded-md border border-white/10 bg-black px-3 py-3 text-sm font-bold outline-none focus:border-red-500" />
-              <textarea value={form.comment} onChange={(event) => setForm((current) => ({ ...current, comment: event.target.value }))} placeholder="Tell shoppers about fit, fabric, quality, and delivery..." className="min-h-32 rounded-md border border-white/10 bg-black px-3 py-3 text-sm font-bold outline-none focus:border-red-500" />
+              <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="Review title" className="rounded-md border border-white/10 bg-black px-3 py-3 text-sm font-bold outline-none focus:border-blue-500" />
+              <textarea value={form.comment} onChange={(event) => setForm((current) => ({ ...current, comment: event.target.value }))} placeholder="Tell shoppers about fit, fabric, quality, and delivery..." className="min-h-32 rounded-md border border-white/10 bg-black px-3 py-3 text-sm font-bold outline-none focus:border-blue-500" />
               <label className="text-sm font-bold text-white/60">
                 Optional image URLs
                 <div className="mt-2 flex items-center gap-2 rounded-md border border-white/10 bg-black px-3 py-3">
@@ -226,7 +226,7 @@ function ReviewForm({
                   <input value={form.imageUrls} onChange={(event) => setForm((current) => ({ ...current, imageUrls: event.target.value }))} placeholder="Comma-separated image URLs" className="w-full bg-transparent text-sm outline-none" />
                 </div>
               </label>
-              <button onClick={submit} disabled={saving} className="inline-flex min-h-11 w-fit items-center gap-2 rounded-md bg-red-600 px-5 text-sm font-black text-white disabled:opacity-60">
+              <button onClick={submit} disabled={saving} className="inline-flex min-h-11 w-fit items-center gap-2 rounded-md bg-blue-600 px-5 text-sm font-black text-white disabled:opacity-60">
                 {saving ? <Loader2 size={17} className="animate-spin" /> : <Send size={17} />} Publish review
               </button>
             </>
@@ -268,7 +268,7 @@ function ReviewCard({ review, onHelpful }: { review: StoreReview; onHelpful: (re
           ))}
         </div>
       )}
-      <button onClick={() => onHelpful(review.id)} className="mt-4 inline-flex items-center gap-2 text-sm text-white/55 hover:text-red-300">
+      <button onClick={() => onHelpful(review.id)} className="mt-4 inline-flex items-center gap-2 text-sm text-white/55 hover:text-blue-300">
         <ThumbsUp size={16} /> Helpful ({review.helpfulCount})
       </button>
     </article>

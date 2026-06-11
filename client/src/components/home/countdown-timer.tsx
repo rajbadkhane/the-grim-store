@@ -45,17 +45,17 @@ export function CountdownTimer() {
         <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-white/50">Days</span>
         <span className="text-2xl sm:text-4xl tracking-tight text-neutral-900 dark:text-white">{formatNumber(timeLeft.days)}</span>
       </div>
-      <span className="text-xl sm:text-2xl font-bold text-red-500/80 mt-4">:</span>
+      <span className="text-xl sm:text-2xl font-bold text-blue-500/80 mt-4">:</span>
       <div className="flex flex-col items-start">
         <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-white/50">Hours</span>
         <span className="text-2xl sm:text-4xl tracking-tight text-neutral-900 dark:text-white">{formatNumber(timeLeft.hours)}</span>
       </div>
-      <span className="text-xl sm:text-2xl font-bold text-red-500/80 mt-4">:</span>
+      <span className="text-xl sm:text-2xl font-bold text-blue-500/80 mt-4">:</span>
       <div className="flex flex-col items-start">
         <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-white/50">Minutes</span>
         <span className="text-2xl sm:text-4xl tracking-tight text-neutral-900 dark:text-white">{formatNumber(timeLeft.minutes)}</span>
       </div>
-      <span className="text-xl sm:text-2xl font-bold text-red-500/80 mt-4">:</span>
+      <span className="text-xl sm:text-2xl font-bold text-blue-500/80 mt-4">:</span>
       <div className="flex flex-col items-start">
         <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-white/50">Seconds</span>
         <span className="text-2xl sm:text-4xl tracking-tight text-neutral-900 dark:text-white">{formatNumber(timeLeft.seconds)}</span>

@@ -115,9 +115,11 @@ export function LoginModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/85 px-4 backdrop-blur-md transition-opacity duration-300">
-      <div className="relative w-full max-w-md overflow-hidden rounded-lg border border-red-500/20 bg-[#0d0d0d] p-7 shadow-[0_24px_80px_rgba(225,29,46,0.18)]">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-[#020617]/88 px-4 backdrop-blur-xl transition-opacity duration-300">
+      <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-blue-300/20 bg-[#081026]/95 p-7 shadow-[0_24px_90px_rgba(59,130,246,0.18)]">
+        <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-blue-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-28 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-purple-500/20 blur-3xl" />
+        <div className="relative flex items-center justify-between border-b border-white/10 pb-4">
           <div>
             <h2 className="text-xl font-black uppercase tracking-wider text-white">{step === 1 ? "Sign in" : "Enter code"}</h2>
             <p className="mt-1 text-xs font-bold text-white/50">
@@ -126,7 +128,7 @@ export function LoginModal() {
           </div>
           <button
             onClick={handleClose}
-            className="rounded-md p-1.5 text-white/40 transition hover:bg-white/5 hover:text-white"
+            className="rounded-full p-1.5 text-white/40 transition hover:bg-white/10 hover:text-white"
             aria-label="Close modal"
           >
             <X size={20} />
@@ -134,7 +136,7 @@ export function LoginModal() {
         </div>
 
         {step === 1 && (
-          <form onSubmit={handleSendCode} className="mt-5 grid gap-4">
+          <form onSubmit={handleSendCode} className="relative mt-5 grid gap-4">
             <label className="text-xs font-black uppercase tracking-wider text-white/60">
               Name
               <div className="relative mt-2 flex items-center">
@@ -145,7 +147,7 @@ export function LoginModal() {
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   placeholder="Your name"
-                  className="w-full rounded-md border border-white/10 bg-black/50 py-3 pl-11 pr-4 text-sm font-bold text-white outline-none transition placeholder:text-white/30 focus:border-red-500 focus:bg-black"
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.055] py-3 pl-11 pr-4 text-sm font-bold text-white outline-none transition placeholder:text-white/30 focus:border-blue-300/70 focus:bg-blue-500/10"
                 />
               </div>
             </label>
@@ -160,7 +162,7 @@ export function LoginModal() {
                   value={phone}
                   onChange={(event) => setPhone(event.target.value.replace(/\D/g, "").slice(0, 10))}
                   placeholder="10-digit number"
-                  className="w-full rounded-md border border-white/10 bg-black/50 py-3 pl-11 pr-4 text-sm font-bold text-white outline-none transition placeholder:text-white/30 focus:border-red-500 focus:bg-black"
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.055] py-3 pl-11 pr-4 text-sm font-bold text-white outline-none transition placeholder:text-white/30 focus:border-blue-300/70 focus:bg-blue-500/10"
                 />
               </div>
             </label>
@@ -175,7 +177,7 @@ export function LoginModal() {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="name@example.com"
-                  className="w-full rounded-md border border-white/10 bg-black/50 py-3 pl-11 pr-4 text-sm font-bold text-white outline-none transition placeholder:text-white/30 focus:border-red-500 focus:bg-black"
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.055] py-3 pl-11 pr-4 text-sm font-bold text-white outline-none transition placeholder:text-white/30 focus:border-blue-300/70 focus:bg-blue-500/10"
                 />
               </div>
             </label>
@@ -183,7 +185,7 @@ export function LoginModal() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-md bg-red-600 py-3.5 text-sm font-black text-white transition hover:bg-red-500 disabled:opacity-60"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 via-violet-600 to-purple-500 py-3.5 text-sm font-black text-white transition hover:shadow-[0_0_34px_rgba(59,130,246,0.32)] disabled:opacity-60"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               {loading ? "Sending..." : "Continue"}
@@ -192,7 +194,7 @@ export function LoginModal() {
         )}
 
         {step === 2 && (
-          <form onSubmit={handleVerifyCode} className="mt-5 grid gap-4">
+          <form onSubmit={handleVerifyCode} className="relative mt-5 grid gap-4">
             <label className="text-xs font-black uppercase tracking-wider text-white/60">
               6-digit code
               <input
@@ -203,14 +205,14 @@ export function LoginModal() {
                 value={code}
                 onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
                 placeholder="000000"
-                className="mt-2 w-full rounded-md border border-white/10 bg-black/50 py-3.5 text-center text-xl font-black tracking-[0.4em] text-white outline-none transition placeholder:text-white/20 focus:border-red-500 focus:bg-black"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-white/[0.055] py-3.5 text-center text-xl font-black tracking-[0.4em] text-white outline-none transition placeholder:text-white/20 focus:border-blue-300/70 focus:bg-blue-500/10"
               />
             </label>
 
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-md bg-red-600 py-3.5 text-sm font-black text-white transition hover:bg-red-500 disabled:opacity-60"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 via-violet-600 to-purple-500 py-3.5 text-sm font-black text-white transition hover:shadow-[0_0_34px_rgba(59,130,246,0.32)] disabled:opacity-60"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               {loading ? "Checking..." : "Sign in"}
@@ -224,7 +226,7 @@ export function LoginModal() {
                 type="button"
                 disabled={resending}
                 onClick={handleResendCode}
-                className="text-red-400 transition hover:text-red-300 disabled:opacity-50"
+                className="text-blue-300 transition hover:text-white disabled:opacity-50"
               >
                 {resending ? "Sending..." : "Resend code"}
               </button>

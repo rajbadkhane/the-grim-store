@@ -6,20 +6,26 @@ import { Suspense, useState } from "react";
 
 import { ThemeProvider } from "./theme-provider";
 import { NavigationLoading } from "./navigation-loading";
+import { ElectroXExperience } from "./electrox-experience";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [client] = useState(() => new QueryClient());
   return (
     <ThemeProvider>
       <QueryClientProvider client={client}>
-        {children}
+        <ElectroXExperience>{children}</ElectroXExperience>
         <Suspense fallback={null}>
           <NavigationLoading />
         </Suspense>
         <Toaster 
           position="top-center" 
           toastOptions={{ 
-            className: "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white border border-neutral-200 dark:border-neutral-800 font-medium text-sm rounded-md shadow-lg"
+            className: "border border-blue-300/20 bg-[#081026]/95 text-white shadow-[0_18px_60px_rgba(0,0,0,0.42)] backdrop-blur-xl font-semibold text-sm rounded-2xl",
+            style: {
+              background: "rgba(8, 16, 38, 0.96)",
+              color: "#ffffff",
+              border: "1px solid rgba(147, 197, 253, 0.22)"
+            }
           }} 
         />
       </QueryClientProvider>

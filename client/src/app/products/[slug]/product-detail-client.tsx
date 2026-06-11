@@ -170,10 +170,10 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
   }
 
   return (
-    <div className="bg-white text-neutral-950 dark:bg-[#070707] dark:text-white">
+    <div className="text-white">
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       <nav aria-label="Breadcrumb" className="mb-5 text-xs font-bold uppercase tracking-[0.16em] text-neutral-400 dark:text-white/38">
-        Home / Products / <span className="text-red-500 dark:text-red-300">{product.title}</span>
+        Home / Products / <span className="text-blue-500 dark:text-blue-300">{product.title}</span>
       </nav>
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)]">
@@ -196,8 +196,8 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
                   type="button"
                   aria-label={`Show product image ${index + 1}`}
                   onClick={() => setActiveImage(image)}
-                  className={`relative aspect-square overflow-hidden rounded-md border bg-white p-1 transition dark:bg-neutral-950 ${
-                    visibleImage === image ? "border-red-500 shadow-[0_0_0_3px_rgba(225,29,46,0.18)]" : "border-neutral-200 hover:border-neutral-400 dark:border-white/10 dark:hover:border-white/35"
+                  className={`relative aspect-square overflow-hidden rounded-2xl border bg-white/[0.045] p-1 transition ${
+                    visibleImage === image ? "border-blue-500 shadow-[0_0_0_3px_rgba(59,130,246,0.18)]" : "border-neutral-200 hover:border-neutral-400 dark:border-white/10 dark:hover:border-white/35"
                   }`}
                 >
                   <Image src={image} alt={`${product.title} thumbnail ${index + 1}`} fill sizes="88px" className="object-contain p-1" />
@@ -219,16 +219,16 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
         </section>
 
         <aside className="xl:sticky xl:top-24 xl:h-fit">
-          <div className="rounded-md border border-neutral-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.035] sm:p-6">
-          <div className="border-b border-neutral-200 pb-5 dark:border-white/10">
-            <p className="text-sm font-black uppercase tracking-[0.24em] text-red-500 dark:text-red-400">{product.brand}</p>
-            <h1 className="mt-3 text-3xl font-black leading-tight tracking-normal text-neutral-950 dark:text-white sm:text-4xl">{product.title}</h1>
+          <div className="electrox-card rounded-[1.5rem] p-5 sm:p-6">
+          <div className="border-b border-white/10 pb-5">
+            <p className="text-sm font-black uppercase tracking-[0.24em] text-blue-500 dark:text-blue-400">{product.brand}</p>
+            <h1 className="mt-3 text-3xl font-black leading-tight tracking-normal text-white sm:text-4xl">{product.title}</h1>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2.5 py-1.5 text-sm font-black text-emerald-600 dark:text-emerald-300">
                 <Star size={15} fill="currentColor" /> {product.rating.toFixed(1)}
               </span>
               <span className="text-sm font-bold text-neutral-500 dark:text-white/52">{product.reviewCount} verified reviews</span>
-              <span className={`rounded-md px-2.5 py-1.5 text-xs font-black uppercase ${canBuy ? "bg-red-500/10 text-red-600 dark:bg-red-600/16 dark:text-red-300" : "bg-neutral-100 text-neutral-500 dark:bg-white/10 dark:text-white/55"}`}>
+              <span className={`rounded-md px-2.5 py-1.5 text-xs font-black uppercase ${canBuy ? "bg-blue-500/10 text-blue-600 dark:bg-blue-600/16 dark:text-blue-300" : "bg-neutral-100 text-neutral-500 dark:bg-white/10 dark:text-white/55"}`}>
                 {canBuy ? `${selectedVariant.stock} in stock` : "Out of stock"}
               </span>
             </div>
@@ -239,10 +239,10 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
               {formatMoney(selectedVariant.salePrice)}
             </motion.span>
             {selectedVariant.price > selectedVariant.salePrice && <span className="text-lg font-bold text-neutral-400 line-through dark:text-white/35">{formatMoney(selectedVariant.price)}</span>}
-            {discount > 0 && <span className="mb-1 rounded-md bg-red-600 px-2.5 py-1 text-xs font-black">{discount}% OFF</span>}
+            {discount > 0 && <span className="mb-1 rounded-md bg-blue-600 px-2.5 py-1 text-xs font-black">{discount}% OFF</span>}
           </div>
           <p className="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-neutral-400 dark:text-white/40">SKU {selectedVariant.sku}</p>
-          <p className="mt-5 text-base leading-7 text-neutral-600 dark:text-white/66">{product.shortDescription || product.description}</p>
+          <p className="mt-5 text-base leading-7 text-slate-300">{product.shortDescription || product.description}</p>
 
           <div className="mt-6 grid gap-5">
             <VariantGroup title="Color" options={colorOptions} selected={color} onPick={pickColor} swatches />
@@ -252,7 +252,7 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <div className="inline-flex h-12 items-center rounded-md border border-neutral-200 bg-neutral-50 dark:border-white/10 dark:bg-white/[0.035]">
+            <div className="inline-flex h-12 items-center rounded-2xl border border-white/10 bg-white/[0.045]">
               <button aria-label="Decrease quantity" type="button" className="grid h-12 w-11 place-items-center" onClick={() => setQuantity((value) => Math.max(1, value - 1))}>
                 <Minus size={16} />
               </button>
@@ -281,11 +281,11 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
               onClick={toggleWishlist}
               className={`grid min-h-13 place-items-center rounded-md border px-4 transition ${
                 isWishlisted
-                  ? "border-red-500 bg-red-600/18 text-red-400 shadow-[0_0_12px_rgba(239,68,68,0.2)]"
-                  : "border-white/15 bg-white/5 text-white hover:border-red-400 hover:bg-red-500/10"
+                  ? "border-blue-500 bg-blue-600/18 text-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.2)]"
+                  : "border-white/15 bg-white/5 text-white hover:border-blue-400 hover:bg-blue-500/10"
               }`}
             >
-              <Heart size={20} className={isWishlisted ? "fill-red-500" : ""} />
+              <Heart size={20} className={isWishlisted ? "fill-blue-500" : ""} />
             </button>
           </div>
 
@@ -318,7 +318,7 @@ function optionSet(variants: StoreProductVariant[], key: keyof StoreProductVaria
 
 function GalleryFrame({ image, title, priority }: { image: string; title: string; priority?: boolean }) {
   return (
-    <div className="group relative aspect-square overflow-hidden rounded-md border border-neutral-200 bg-white shadow-sm dark:border-white/10 dark:bg-neutral-950">
+    <div className="group relative aspect-square overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.045] shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
       {image ? (
         <Image
           src={image}
@@ -340,7 +340,7 @@ function VariantGroup({ title, options, selected, onPick, swatches }: { title: s
     <div>
       <div className="mb-2 flex items-center justify-between">
         <p className="text-sm font-black uppercase tracking-[0.18em] text-neutral-500 dark:text-white/50">{title}</p>
-        {title === "Size" && <span className="inline-flex items-center gap-1 text-xs font-bold text-red-500 dark:text-red-300"><Ruler size={14} /> Size chart</span>}
+        {title === "Size" && <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-500 dark:text-blue-300"><Ruler size={14} /> Size chart</span>}
       </div>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (
@@ -350,7 +350,7 @@ function VariantGroup({ title, options, selected, onPick, swatches }: { title: s
             disabled={!option.enabled}
             onClick={() => onPick(option.label)}
             className={`relative inline-flex min-h-11 items-center justify-center gap-2 rounded-md border px-4 text-sm font-black transition ${
-              selected === option.label ? "border-red-500 bg-red-500/10 text-red-600 dark:bg-red-600/18 dark:text-white" : "border-neutral-200 bg-neutral-50 text-neutral-700 hover:border-red-400 dark:border-white/12 dark:bg-white/[0.035] dark:text-white/72"
+              selected === option.label ? "border-blue-500 bg-blue-500/10 text-blue-600 dark:bg-blue-600/18 dark:text-white" : "border-neutral-200 bg-neutral-50 text-neutral-700 hover:border-blue-400 dark:border-white/12 dark:bg-white/[0.035] dark:text-white/72"
             } disabled:cursor-not-allowed disabled:opacity-35`}
           >
             {swatches && <span className="h-4 w-4 rounded-full border border-white/30" style={{ backgroundColor: option.hex ?? option.label }} />}
@@ -364,11 +364,11 @@ function VariantGroup({ title, options, selected, onPick, swatches }: { title: s
 
 function InfoPill({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-4 dark:border-white/10 dark:bg-white/[0.035]">
-      <span className="text-red-400">{icon}</span>
+    <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.045] p-4">
+      <span className="text-blue-400">{icon}</span>
       <div>
-        <p className="text-sm font-black text-neutral-950 dark:text-white">{title}</p>
-        <p className="text-xs font-bold text-neutral-500 dark:text-white/45">{text}</p>
+        <p className="text-sm font-black text-white">{title}</p>
+        <p className="text-xs font-bold text-slate-400">{text}</p>
       </div>
     </div>
   );
@@ -379,20 +379,20 @@ function ProductSummary({ product }: { product: StoreProduct }) {
     ? product.summary
     : [
         { title: "Fabric", text: "Premium cotton rich fabric with a clean handfeel." },
-        { title: "Fit", text: "Structured streetwear silhouette made for daily rotation." },
+        { title: "Fit", text: "Structured electronics silhouette made for daily rotation." },
         { title: "Finish", text: "Bio-washed surface, reinforced seams, and durable color." }
       ];
 
   return (
-    <section className="mt-7 rounded-md border border-neutral-200 bg-neutral-50 p-5 dark:border-white/10 dark:bg-white/[0.035]">
+    <section className="mt-7 rounded-2xl border border-white/10 bg-white/[0.045] p-5">
       <div className="flex items-center gap-2">
-        <Sparkles size={18} className="text-red-400" />
+        <Sparkles size={18} className="text-blue-400" />
         <h2 className="font-black">Product Summary</h2>
       </div>
       <div className="mt-4 grid gap-3">
         {items.map((item, index) => (
           <div key={`${item.text}-${index}`} className="flex gap-3">
-            <PackageCheck size={18} className="mt-0.5 shrink-0 text-red-400" />
+            <PackageCheck size={18} className="mt-0.5 shrink-0 text-blue-400" />
             <p className="text-sm leading-6 text-neutral-600 dark:text-white/68">
               {item.title && <strong className="text-neutral-950 dark:text-white">{item.title}: </strong>}
               {item.text}
@@ -406,14 +406,14 @@ function ProductSummary({ product }: { product: StoreProduct }) {
 
 function RichDescription({ product }: { product: StoreProduct }) {
   const genericAdminHtml =
-    "<h2>Product Details</h2><p>Premium streetwear built with clean structure, soft handfeel, and durable finish.</p><ul><li>Premium fabric</li><li>Comfort-first fit</li><li>Easy everyday styling</li></ul>";
+    "<h2>Product Details</h2><p>premium electronics built with clean structure, soft handfeel, and durable finish.</p><ul><li>Premium fabric</li><li>Comfort-first fit</li><li>Easy everyday styling</li></ul>";
   const hasCustomRichDescription = product.descriptionHtml && product.descriptionHtml !== "<p></p>" && product.descriptionHtml !== genericAdminHtml;
   const descriptionHtml = textToHtml(product.description);
 
   return (
     <section className="mt-12 grid gap-6 border-t border-neutral-200 pt-10 dark:border-white/10 lg:grid-cols-[1fr_360px]">
       <article>
-        <p className="text-sm font-black uppercase tracking-[0.24em] text-red-500 dark:text-red-400">Details & care</p>
+        <p className="text-sm font-black uppercase tracking-[0.24em] text-blue-500 dark:text-blue-400">Details & care</p>
         <div className="rich-product-html mt-4" dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
         {hasCustomRichDescription && <div className="rich-product-html mt-8" dangerouslySetInnerHTML={{ __html: product.descriptionHtml }} />}
       </article>
