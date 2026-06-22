@@ -1,5 +1,6 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
-const CATALOG_REVALIDATE_SECONDS = 60;
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://the-grim-store.onrender.com/api/v1";
+const FALLBACK_API_URL = "https://the-grim-store.onrender.com/api/v1";
+const CATALOG_REVALIDATE_SECONDS = 300;
 
 export type StoreCategory = {
   id: string;
@@ -82,7 +83,7 @@ export async function fetchProducts(params: Record<string, string | number | und
     for (const [key, value] of Object.entries(params)) {
       if (value !== undefined && value !== "") query.set(key, String(value));
     }
-    const res = await fetch(`${API_URL}/products?${query.toString()}`, { next: { revalidate: CATALOG_REVALIDATE_SECONDS } });
+    const res = await fetchCatalog(`/products?${query.toString()}`, { next: { revalidate: CATALOG_REVALIDATE_SECONDS } });
     if (!res.ok) return { items: [] as StoreProduct[], total: 0, page: 1, pages: 1 };
     const data = await res.json();
     return {
@@ -97,7 +98,7 @@ export async function fetchProducts(params: Record<string, string | number | und
 
 export async function fetchProduct(slug: string): Promise<StoreProduct | null> {
   try {
-    const res = await fetch(`${API_URL}/products/${slug}`, { next: { revalidate: CATALOG_REVALIDATE_SECONDS } });
+    const res = await fetchCatalog(`/products/${slug}`, { next: { revalidate: CATALOG_REVALIDATE_SECONDS } });
     if (!res.ok) return null;
     const data = await res.json();
     return data.product ? normalizeProduct(data.product) : null;
@@ -109,7 +110,7 @@ export async function fetchProduct(slug: string): Promise<StoreProduct | null> {
 
 export async function fetchCategories(): Promise<StoreCategory[]> {
   try {
-    const res = await fetch(`${API_URL}/products/categories`, { next: { revalidate: CATALOG_REVALIDATE_SECONDS * 5 } });
+    const res = await fetchCatalog("/products/categories", { next: { revalidate: CATALOG_REVALIDATE_SECONDS * 5 } });
     if (!res.ok) return [] as StoreCategory[];
     const data = await res.json();
     return (data.categories ?? []) as StoreCategory[];
@@ -121,13 +122,49 @@ export async function fetchCategories(): Promise<StoreCategory[]> {
 
 export async function fetchProductReviews(productId: string): Promise<StoreReview[]> {
   try {
-    const res = await fetch(`${API_URL}/reviews/product/${productId}`, { cache: "no-store" });
+    const res = await fetchCatalog(`/reviews/product/${productId}`, { cache: "no-store" });
     if (!res.ok) return [];
     const data = await res.json();
     return (data.reviews ?? []) as StoreReview[];
   } catch (error) {
     console.warn(`[catalog-api] fetchProductReviews failed for product ${productId}:`, error);
     return [];
+  }
+}
+
+type NextFetchInit = RequestInit & { next?: { revalidate?: number } };
+
+async function fetchCatalog(path: string, init?: NextFetchInit) {
+  const timeoutMs = 1500; // 1.5 seconds connect timeout for local server
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(`${API_URL}${path}`, {
+      ...init,
+      signal: controller.signal
+    } as any);
+    clearTimeout(id);
+    return res;
+  } catch (error) {
+    clearTimeout(id);
+    console.warn(`[catalog-api] Local connection failed for ${path}:`, (error as any).message || error);
+    if (API_URL === FALLBACK_API_URL) throw error;
+
+    // Fallback to production API with a slightly longer timeout of 8 seconds
+    const fallbackController = new AbortController();
+    const fallbackId = setTimeout(() => fallbackController.abort(), 8000);
+    try {
+      const res = await fetch(`${FALLBACK_API_URL}${path}`, {
+        ...init,
+        signal: fallbackController.signal
+      } as any);
+      clearTimeout(fallbackId);
+      return res;
+    } catch (fallbackError) {
+      clearTimeout(fallbackId);
+      throw fallbackError;
+    }
   }
 }
 

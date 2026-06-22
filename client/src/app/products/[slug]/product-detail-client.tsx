@@ -1,9 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Heart, Minus, PackageCheck, Plus, RotateCcw, Ruler, ShieldCheck, ShoppingBag, Sparkles, Star, Truck, Zap } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Heart, Minus, PackageCheck, Plus, RotateCcw, Ruler, ShieldCheck, ShoppingBag, Sparkles, Star, Truck, Zap, ChevronDown } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -13,6 +12,8 @@ import { formatMoney } from "@/lib/utils";
 import { useCart } from "@/store/cart";
 import { useAuth } from "@/store/auth";
 import { api } from "@/lib/api";
+import { GeoProductSection } from "@/components/geo-product-section";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Option = { label: string; enabled: boolean; hex?: string };
 
@@ -44,6 +45,41 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
   const [material, setMaterial] = useState(firstAvailable.material ?? "");
   const [pattern, setPattern] = useState(firstAvailable.pattern ?? "");
   const [quantity, setQuantity] = useState(1);
+  const [visualOffset, setVisualOffset] = useState(0);
+  const [pincode, setPincode] = useState("");
+  const [estimatedDelivery, setEstimatedDelivery] = useState<string | null>(null);
+  const [pincodeChecked, setPincodeChecked] = useState(false);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 600) {
+        setShowStickyBar(true);
+      } else {
+        setShowStickyBar(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  function checkPincodeDelivery() {
+    if (!/^\d{6}$/.test(pincode)) {
+      toast.error("Please enter a valid 6-digit pincode");
+      setEstimatedDelivery(null);
+      setPincodeChecked(false);
+      return;
+    }
+    const days = 2 + (Number(pincode) % 4);
+    const deliveryDate = new Date();
+    deliveryDate.setDate(deliveryDate.getDate() + days);
+    const options: Intl.DateTimeFormatOptions = { weekday: "long", month: "short", day: "numeric" };
+    const dateStr = deliveryDate.toLocaleDateString("en-US", options);
+    setEstimatedDelivery(dateStr);
+    setPincodeChecked(true);
+    toast.success(`Serviceable! Delivery estimated by ${dateStr}`);
+  }
+
   const add = useCart((state) => state.add);
   const router = useRouter();
   const { user, refreshMe, openLoginModal } = useAuth();
@@ -70,11 +106,27 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
     variants.find((variant) => variant.color === color && variant.size === size) ??
     firstAvailable;
 
-  const gallery = selectedVariant.images.length ? selectedVariant.images : product.images.length ? product.images : [product.image].filter(Boolean);
+  const gallery = selectedVariant.images.length ? selectedVariant.images : product.images.length ? product.images : product.image ? [product.image] : [""];
   const [activeImage, setActiveImage] = useState(gallery[0] ?? "");
   const visibleImage = gallery.includes(activeImage) ? activeImage : gallery[0] ?? "";
   const discount = selectedVariant.price > selectedVariant.salePrice ? Math.round(((selectedVariant.price - selectedVariant.salePrice) / selectedVariant.price) * 100) : 0;
   const canBuy = selectedVariant.available && selectedVariant.stock > 0;
+
+  useEffect(() => {
+    function updateVisualOffset() {
+      const viewport = window.visualViewport;
+      setVisualOffset(Math.max(0, Math.round(window.innerHeight - (viewport?.height ?? window.innerHeight))));
+    }
+    updateVisualOffset();
+    window.visualViewport?.addEventListener("resize", updateVisualOffset);
+    window.visualViewport?.addEventListener("scroll", updateVisualOffset);
+    window.addEventListener("resize", updateVisualOffset);
+    return () => {
+      window.visualViewport?.removeEventListener("resize", updateVisualOffset);
+      window.visualViewport?.removeEventListener("scroll", updateVisualOffset);
+      window.removeEventListener("resize", updateVisualOffset);
+    };
+  }, []);
 
   const colorOptions = optionSet(variants, "color", selectedVariant, ["size", "material", "pattern"]);
   const sizeOptions = optionSet(variants, "size", selectedVariant, ["color", "material", "pattern"]);
@@ -123,6 +175,8 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
       slug: product.slug,
       title: product.title,
       image: gallery[0] ?? product.image,
+      brand: product.brand,
+      price: selectedVariant.price,
       salePrice: selectedVariant.salePrice,
       quantity,
       sku: selectedVariant.sku,
@@ -154,6 +208,8 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
           slug: product.slug,
           title: product.title,
           image: gallery[0] ?? product.image,
+          brand: product.brand,
+          price: selectedVariant.price,
           salePrice: selectedVariant.salePrice,
           quantity,
           sku: selectedVariant.sku,
@@ -170,10 +226,10 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
   }
 
   return (
-    <div className="text-foreground">
+    <div className="text-foreground bg-transparent">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <nav aria-label="Breadcrumb" className="mb-5 text-xs font-bold uppercase tracking-[0.16em] text-neutral-450">
-          Home / Products / <span className="text-electrox-blue">{product.title}</span>
+        <nav aria-label="Breadcrumb" className="mb-5 text-xs font-bold uppercase tracking-[0.16em] text-neutral-400">
+          Home / Products / <span className="text-[#FF6B35]">{product.title}</span>
         </nav>
 
         <div className="grid gap-8 md:grid-cols-[1.1fr_0.9fr] items-start">
@@ -189,23 +245,52 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
               </Swiper>
             </div>
 
-            {/* Desktop View 2-Column Grid (Myntra Style) */}
-            <div className={`hidden md:grid gap-4.5 ${gallery.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
-              {gallery.map((image, index) => (
-                <div key={`${image}-${index}`} className="group relative aspect-[3/4] overflow-hidden rounded-2xl border border-neutral-200/50 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/60 shadow-sm transition hover:shadow-md">
-                  <Image
-                    src={image}
-                    alt={`${product.title} view ${index + 1}`}
-                    fill
-                    sizes="(max-width: 1280px) 25vw, 400px"
-                    className="object-contain p-6 transition duration-500 group-hover:scale-103"
-                    priority={index === 0}
-                  />
+            {/* Desktop View with Left Thumbnails & Right Active Image */}
+            <div className="hidden md:flex gap-4 items-start">
+              {/* Vertical Thumbnail List */}
+              {gallery.length > 1 && (
+                <div className="flex flex-col gap-2.5 w-20 shrink-0 max-h-[550px] overflow-y-auto pr-1 scrollbar-thin">
+                  {gallery.slice(0, 6).map((image, index) => (
+                    <button
+                      key={`${image}-${index}`}
+                      onClick={() => setActiveImage(image)}
+                      onMouseEnter={() => setActiveImage(image)}
+                      className={`relative aspect-[3/4] w-full overflow-hidden rounded-lg border bg-white dark:bg-neutral-900 transition-all ${
+                        visibleImage === image
+                          ? "border-[#FF6B35] ring-2 ring-[#FF6B35]/30"
+                          : "border-neutral-200 dark:border-neutral-800 hover:border-neutral-400"
+                      }`}
+                    >
+                      <Image
+                        src={image}
+                        alt={`${product.title} thumbnail ${index + 1}`}
+                        fill
+                        sizes="80px"
+                        className="object-contain p-1.5"
+                      />
+                    </button>
+                  ))}
                 </div>
-              ))}
+              )}
+              
+              {/* Active Main Image Frame */}
+              <div className="flex-1 relative aspect-[3/4] overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 shadow-sm transition-shadow hover:shadow-md">
+                {visibleImage ? (
+                  <Image
+                    src={visibleImage}
+                    alt={product.title}
+                    fill
+                    sizes="(max-width: 1280px) 50vw, 600px"
+                    className="object-contain p-6 transition-transform duration-500 hover:scale-[1.01]"
+                    priority
+                  />
+                ) : (
+                  <div className="grid h-full place-items-center text-xs font-black uppercase text-neutral-450">No image</div>
+                )}
+              </div>
             </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="mt-5 hidden md:grid grid-cols-3 gap-1.5 sm:gap-3">
               <InfoPill icon={<Truck size={18} />} title="Fast dispatch" text="Ships in 24-48 hours" />
               <InfoPill icon={<RotateCcw size={18} />} title="Easy returns" text="7-day size exchange" />
               <InfoPill icon={<ShieldCheck size={18} />} title="Secure checkout" text="Protected payments" />
@@ -214,47 +299,73 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
 
           {/* Sticky Info Panel */}
           <aside className="md:sticky md:top-24 md:h-fit self-start">
-            <div className="rounded-2xl border border-neutral-200/50 dark:border-neutral-850 bg-white dark:bg-[#0c0c0e] p-5 sm:p-6 shadow-sm">
+            <div className="rounded border border-neutral-100 dark:border-neutral-900 bg-white dark:bg-[#111315] p-5 sm:p-6 shadow-sm">
               <div className="border-b border-neutral-200/40 dark:border-neutral-800/40 pb-5">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs font-black uppercase tracking-[0.24em] text-indigo-600 dark:text-indigo-400">{product.brand}</p>
-                  {/* Assured Checkmark badge */}
-                  <div className="inline-flex items-center gap-1 bg-blue-650 dark:bg-blue-800 px-2 py-0.5 rounded text-[9px] font-black uppercase text-white tracking-widest shadow-sm select-none">
-                    Assured <span className="text-yellow-400">★</span>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-grow">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#FF6B35] dark:text-[#FF6B35]">{product.brand || "The Grim Store"}</p>
+                    <h1 className="mt-1.5 text-xl font-black leading-tight text-neutral-900 dark:text-white uppercase tracking-tight">{product.title}</h1>
+                  </div>
+
+                  {/* Circular Rotating Gold Seal Badge */}
+                  <div className="flex items-center gap-2 shrink-0 select-none">
+                    <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-[#1a253c] border-2 border-[#d4af37] shadow-md">
+                      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full animate-[spin_20s_linear_infinite]">
+                        <path id="circlePath-gold" d="M 50,50 m -35,0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" fill="none" />
+                        <text className="fill-[#d4af37] text-[7px] font-black uppercase tracking-[0.03em]">
+                          <textPath href="#circlePath-gold">
+                            • GRIM ASSURED • 100% AUTHENTIC •
+                          </textPath>
+                        </text>
+                      </svg>
+                      <div className="z-10 flex h-7 w-7 items-center justify-center rounded-full bg-[#1a253c] border border-[#d4af37]">
+                        <span className="text-[#d4af37] text-xs font-black">✓</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <h1 className="mt-3 text-2xl font-black leading-tight tracking-normal text-foreground sm:text-3xl">{product.title}</h1>
                 
-                {/* Rating badge */}
+                {/* Price row (Moved here) */}
+                <div className="mt-5 border-t border-b border-neutral-100 dark:border-neutral-900 py-4">
+                  <div className="flex flex-wrap items-baseline gap-3">
+                    <span className="text-2xl font-bold text-neutral-900 dark:text-white">
+                      {formatMoney(selectedVariant.salePrice)}
+                    </span>
+                    {selectedVariant.price > selectedVariant.salePrice && (
+                      <>
+                        <span className="text-sm text-neutral-400 dark:text-neutral-500 line-through">{formatMoney(selectedVariant.price)}</span>
+                        <span className="text-sm font-bold text-[#FF6B35]">({discount}% OFF)</span>
+                      </>
+                    )}
+                  </div>
+                  <p className="mt-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-450 uppercase tracking-wide">Inclusive of all taxes</p>
+                </div>
+
+                {/* Rating badge (Myntra Style) */}
                 <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <span className="inline-flex items-center gap-1 rounded bg-emerald-500/10 px-2 py-1 text-xs font-black text-emerald-600 dark:text-emerald-450">
-                    <Star size={13} fill="currentColor" /> {product.rating.toFixed(1)}
+                  <span className="inline-flex items-center gap-1 rounded border border-neutral-200 dark:border-neutral-800 px-2.5 py-1 text-xs font-bold text-neutral-800 dark:text-neutral-200 bg-white/50 dark:bg-black/25">
+                    <span className="flex items-center gap-0.5">{product.rating.toFixed(1)} <Star size={12} fill="currentColor" className="text-emerald-500" /></span>
+                    <span className="text-neutral-350 dark:text-neutral-700 font-normal">|</span>
+                    <span>{product.reviewCount} Ratings</span>
                   </span>
-                  <span className="text-xs font-bold text-neutral-450">{product.reviewCount} verified reviews</span>
-                  <span className={`rounded px-2.5 py-1 text-xs font-black uppercase ${canBuy ? "bg-indigo-550/10 text-indigo-650 dark:text-indigo-400" : "bg-neutral-100 text-neutral-500 dark:bg-white/10 dark:text-white/55"}`}>
-                    {canBuy ? `${selectedVariant.stock} in stock` : "Out of stock"}
+                  <span className={`rounded px-2.5 py-1 text-xs font-bold uppercase ${canBuy ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-450" : "bg-neutral-100 text-neutral-500 dark:bg-white/10 dark:text-white/55"}`}>
+                    {canBuy ? "In Stock" : "Out of Stock"}
                   </span>
                 </div>
               </div>
 
-              {/* Price row */}
-              <div className="mt-5">
-                <div className="flex flex-wrap items-baseline gap-2.5">
-                  <motion.span key={selectedVariant.salePrice} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-3xl font-black text-foreground">
-                    {formatMoney(selectedVariant.salePrice)}
-                  </motion.span>
-                  {selectedVariant.price > selectedVariant.salePrice && (
-                    <>
-                      <span className="text-base font-bold text-neutral-450 line-through">{formatMoney(selectedVariant.price)}</span>
-                      <span className="text-base font-extrabold text-orange-500 dark:text-orange-400">({discount}% OFF)</span>
-                    </>
-                  )}
+              {/* Mobile Features block */}
+              <div className="mt-5 block md:hidden space-y-4">
+                <div className="grid grid-cols-3 gap-1.5">
+                  <InfoPill icon={<Truck size={14} />} title="Fast dispatch" text="Ships in 24h" />
+                  <InfoPill icon={<RotateCcw size={14} />} title="Easy returns" text="7-day size" />
+                  <InfoPill icon={<ShieldCheck size={14} />} title="Secure pay" text="Razorpay" />
                 </div>
-                <p className="mt-1 text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-450">Inclusive of all taxes</p>
+                <ProductSummary product={product} />
               </div>
 
               <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-neutral-450">SKU {selectedVariant.sku}</p>
-              <p className="mt-5 text-sm leading-6 text-neutral-450 font-medium">{product.shortDescription || product.description}</p>
+              <p className="mt-5 text-sm leading-6 text-neutral-400 font-medium">{product.shortDescription || product.description}</p>
 
               {/* Swatch options selection */}
               <div className="mt-6 grid gap-5">
@@ -266,7 +377,7 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
 
               {/* Quantity selector */}
               <div className="mt-6 flex flex-wrap items-center gap-3">
-                <div className="inline-flex h-11 items-center rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900">
+                <div className="inline-flex h-11 items-center rounded border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900">
                   <button aria-label="Decrease quantity" type="button" className="grid h-11 w-10 place-items-center text-neutral-450 hover:text-foreground" onClick={() => setQuantity((value) => Math.max(1, value - 1))}>
                     <Minus size={14} />
                   </button>
@@ -282,65 +393,108 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
                 </div>
               </div>
 
-              {/* Actions Buy Now / Add to Cart (Flipkart/Myntra Style CTAs) */}
-              <div className="mt-6 grid gap-3 sm:grid-cols-[1.1fr_1fr_auto]">
-                <button
-                  onClick={buyNow}
-                  disabled={!canBuy}
-                  className="flex min-h-13 items-center justify-center gap-2 rounded-xl bg-[#fb641b] hover:bg-[#e65a12] text-white font-black text-xs uppercase tracking-widest transition shadow-sm hover:shadow disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <Zap size={14} className="fill-current" /> Buy Now
-                </button>
+              {/* Actions Buy Now / Add to Cart (Solid Navy & Orange CTAs) */}
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={addSelectedToCart}
                   disabled={!canBuy}
-                  className="flex min-h-13 items-center justify-center gap-2 rounded-xl bg-indigo-650 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest transition shadow-sm hover:shadow disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 flex h-12 items-center justify-center gap-2 rounded-lg bg-[#1a253c] hover:bg-[#2c3d5c] text-white font-extrabold text-xs uppercase tracking-wider transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <ShoppingBag size={14} /> Add to Bag
                 </button>
                 <button
                   type="button"
-                  aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                  onClick={toggleWishlist}
-                  className={`grid min-h-13 w-13 place-items-center rounded-xl border transition ${
-                    isWishlisted
-                      ? "border-rose-500 bg-rose-500/5 text-rose-500 shadow-sm"
-                      : "border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 text-foreground hover:border-rose-500 hover:bg-rose-500/5 hover:text-rose-500"
-                  }`}
+                  onClick={buyNow}
+                  disabled={!canBuy}
+                  className="flex-1 flex h-12 items-center justify-center gap-2 rounded-lg bg-[#f97316] hover:bg-[#ea580c] text-white font-extrabold text-xs uppercase tracking-wider transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <Heart size={16} className={isWishlisted ? "fill-rose-500" : ""} />
+                  <Zap size={14} className="fill-current" /> Buy Now
                 </button>
               </div>
 
-              {/* Delivery Pincode Checker (Flipkart style) */}
+              {/* Delivery Pincode Checker (Myntra style) */}
               <div className="mt-6 border-t border-neutral-200/40 dark:border-neutral-800/40 pt-5">
-                <p className="text-xs font-extrabold uppercase tracking-wider text-neutral-450 mb-2.5">Delivery Options</p>
-                <div className="flex max-w-sm rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 px-3 py-1.5 items-center">
+                <p className="text-xs font-bold uppercase tracking-wider text-neutral-450 mb-2.5">Delivery Options</p>
+                <div className="flex max-w-sm rounded-sm border border-white/50 dark:border-white/5 bg-white/40 dark:bg-[#111315]/40 backdrop-blur-md px-3.5 py-2 items-center focus-within:border-[#FF6B35] dark:focus-within:border-[#FF6B35] focus-within:shadow-[0_0_12px_rgba(255,63,108,0.15)] focus-within:ring-1 focus-within:ring-[#FF6B35]/20 transition-all shadow-xs">
                   <Truck size={14} className="text-neutral-400 dark:text-neutral-500 mr-2" />
                   <input
                     type="text"
-                    placeholder="Enter Pincode"
+                    placeholder="Enter 6-digit Pincode"
                     maxLength={6}
+                    value={pincode}
+                    onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
                     className="flex-1 bg-transparent text-xs font-bold text-foreground outline-none placeholder:text-neutral-450"
                   />
                   <button
                     type="button"
-                    onClick={() => toast.success("Pincode is serviceable for fast dispatch!")}
-                    className="text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 hover:underline px-2"
+                    onClick={checkPincodeDelivery}
+                    className="text-xs font-bold uppercase tracking-wider text-[#FF6B35] hover:text-[#e6355e] transition-colors px-2"
                   >
                     Check
                   </button>
                 </div>
-                <p className="mt-2 text-[10px] text-neutral-400 dark:text-neutral-500 font-semibold">Please enter PIN code to check delivery time & COD availability.</p>
+                {pincodeChecked && estimatedDelivery && (
+                  <div className="mt-3 rounded-sm bg-emerald-500/5 border border-emerald-500/10 p-3 text-xs space-y-1.5 backdrop-blur-xs">
+                    <p className="font-bold text-emerald-600 dark:text-emerald-450 flex items-center gap-1.5">
+                      <Truck size={14} /> Get it by {estimatedDelivery}
+                    </p>
+                    <p className="text-neutral-450 dark:text-neutral-400 font-medium">• Cash on Delivery (COD) available</p>
+                    <p className="text-neutral-450 dark:text-neutral-400 font-medium">• Hassle-free 7-day returns & exchanges</p>
+                  </div>
+                )}
+                {!pincodeChecked && (
+                  <p className="mt-2 text-[10px] text-neutral-450 dark:text-neutral-500 font-semibold">Please enter PIN code to check delivery time & COD availability.</p>
+                )}
               </div>
 
-              <ProductSummary product={product} />
+              <div className="hidden md:block">
+                <ProductSummary product={product} />
+              </div>
             </div>
           </aside>
         </div>
 
-        <RichDescription product={product} />
+        <ProductSpecificationsAccordion product={product} />
+        <GeoProductSection product={product} />
       </div>
+
+      <AnimatePresence>
+        {showStickyBar && (
+          <motion.div 
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] left-0 right-0 z-40 border-t border-neutral-250 dark:border-neutral-800 bg-white/95 dark:bg-[#0b0f19]/95 px-4 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] backdrop-blur-md lg:hidden flex gap-3 items-center"
+          >
+            <div className="flex-1 flex gap-2.5 items-center min-w-0">
+              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded bg-neutral-100 dark:bg-neutral-800">
+                <Image src={gallery[0] ?? product.image} alt={product.title} fill className="object-contain p-1" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-[10px] font-bold truncate text-neutral-850 dark:text-neutral-200">{product.title}</h4>
+                <p className="text-xs font-black text-[#FF6B35]">{formatMoney(selectedVariant.salePrice)}</p>
+              </div>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={addSelectedToCart}
+                disabled={!canBuy}
+                className="flex h-10 items-center justify-center rounded-lg bg-[#1a253c] text-white px-3 text-[10px] font-extrabold uppercase tracking-wider transition disabled:opacity-40"
+              >
+                Add
+              </button>
+              <button
+                onClick={buyNow}
+                disabled={!canBuy}
+                className="flex h-10 items-center justify-center rounded-lg bg-[#f97316] text-white px-4 text-[10px] font-extrabold uppercase tracking-wider transition disabled:opacity-40"
+              >
+                Buy Now
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -363,7 +517,7 @@ function optionSet(variants: StoreProductVariant[], key: keyof StoreProductVaria
 
 function GalleryFrame({ image, title, priority }: { image: string; title: string; priority?: boolean }) {
   return (
-    <div className="group relative aspect-square overflow-hidden rounded-2xl border border-electrox-elevated bg-neutral-50 dark:bg-[#121212] shadow-sm">
+    <div className="group relative aspect-square overflow-hidden rounded border border-neutral-100 dark:border-neutral-850 bg-neutral-50 dark:bg-[#121212] shadow-sm">
       {image ? (
         <Image
           src={image}
@@ -384,8 +538,12 @@ function VariantGroup({ title, options, selected, onPick, swatches }: { title: s
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-xs font-extrabold uppercase tracking-wider text-neutral-450">{title}</p>
-        {title === "Size" && <span className="inline-flex items-center gap-1 text-[10px] font-black text-electrox-blue uppercase tracking-wider"><Ruler size={12} /> Size chart</span>}
+        <p className="text-xs font-bold uppercase tracking-wider text-neutral-450">{title}</p>
+        {title === "Size" && (
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#FF6B35] uppercase tracking-wider cursor-pointer hover:underline">
+            <Ruler size={11} /> Size chart
+          </span>
+        )}
       </div>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (
@@ -394,11 +552,13 @@ function VariantGroup({ title, options, selected, onPick, swatches }: { title: s
             type="button"
             disabled={!option.enabled}
             onClick={() => onPick(option.label)}
-            className={`relative inline-flex min-h-10 items-center justify-center gap-2 rounded border px-3 text-xs font-extrabold transition ${
-              selected === option.label ? "border-electrox-blue bg-electrox-blue/5 text-electrox-blue" : "border-electrox-elevated bg-electrox-bg-2 text-foreground hover:border-electrox-blue"
+            className={`relative inline-flex min-h-10 items-center justify-center gap-2 rounded-sm border px-4 text-xs font-bold transition-all duration-200 ${
+              selected === option.label
+                ? "border-[#FF6B35] bg-[#FF6B35]/5 text-[#FF6B35] shadow-[0_0_12px_rgba(255,63,108,0.15)] ring-1 ring-[#FF6B35]/20"
+                : "border-white/50 dark:border-white/5 bg-white/60 dark:bg-neutral-900/60 text-foreground hover:border-[#FF6B35] dark:hover:border-[#FF6B35] hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
             } disabled:cursor-not-allowed disabled:opacity-35`}
           >
-            {swatches && <span className="h-3 w-3 rounded-full border border-neutral-300 dark:border-white/20" style={{ backgroundColor: option.hex ?? option.label }} />}
+            {swatches && <span className="h-3.5 w-3.5 rounded-full border border-neutral-300 dark:border-white/20 shadow-xs" style={{ backgroundColor: option.hex ?? option.label }} />}
             {option.label}
           </button>
         ))}
@@ -409,11 +569,11 @@ function VariantGroup({ title, options, selected, onPick, swatches }: { title: s
 
 function InfoPill({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-electrox-elevated bg-electrox-surface p-4 shadow-sm">
-      <span className="text-electrox-blue">{icon}</span>
-      <div>
-        <p className="text-xs font-black text-foreground">{title}</p>
-        <p className="text-[10px] font-bold text-neutral-450">{text}</p>
+    <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-1 sm:gap-2.5 rounded border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#111315] p-2 sm:p-3 shadow-xs">
+      <span className="text-[#FF6B35] shrink-0">{icon}</span>
+      <div className="min-w-0">
+        <p className="text-[9px] sm:text-xs font-bold text-neutral-800 dark:text-neutral-200 truncate leading-tight">{title}</p>
+        <p className="mt-0.5 text-[8px] sm:text-[10px] font-semibold text-neutral-450 truncate leading-none">{text}</p>
       </div>
     </div>
   );
@@ -429,15 +589,15 @@ function ProductSummary({ product }: { product: StoreProduct }) {
       ];
 
   return (
-    <section className="mt-7 rounded-2xl border border-electrox-elevated bg-electrox-surface p-5 shadow-sm">
-      <div className="flex items-center gap-2 border-b border-electrox-elevated pb-3">
-        <Sparkles size={16} className="text-electrox-blue" />
-        <h2 className="text-xs font-black uppercase tracking-wider text-foreground">Product Summary</h2>
+    <section className="mt-7 rounded border border-neutral-200/50 dark:border-neutral-800 bg-white dark:bg-[#1a1c1e]/30 p-5 shadow-sm">
+      <div className="flex items-center gap-2 border-b border-neutral-100 dark:border-neutral-800 pb-3">
+        <Sparkles size={16} className="text-[#FF6B35]" />
+        <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">Product Summary</h2>
       </div>
       <div className="mt-4 grid gap-3">
         {items.map((item, index) => (
           <div key={`${item.text}-${index}`} className="flex gap-3">
-            <PackageCheck size={16} className="mt-0.5 shrink-0 text-electrox-blue" />
+            <PackageCheck size={16} className="mt-0.5 shrink-0 text-[#FF6B35]" />
             <p className="text-xs leading-5 text-neutral-450 font-semibold">
               {item.title && <strong className="text-foreground">{item.title}: </strong>}
               {item.text}
@@ -449,38 +609,138 @@ function ProductSummary({ product }: { product: StoreProduct }) {
   );
 }
 
-function RichDescription({ product }: { product: StoreProduct }) {
+function ProductSpecificationsAccordion({ product }: { product: StoreProduct }) {
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    description: true,
+    specifications: false,
+    delivery: false,
+    returns: false,
+  });
+
+  const toggleAccordion = (section: string) => {
+    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
+
   const genericAdminHtml =
     "<h2>Product Details</h2><p>premium electronics built with clean structure, soft handfeel, and durable finish.</p><ul><li>Premium fabric</li><li>Comfort-first fit</li><li>Easy everyday styling</li></ul>";
   const hasCustomRichDescription = product.descriptionHtml && product.descriptionHtml !== "<p></p>" && product.descriptionHtml !== genericAdminHtml;
   const descriptionHtml = textToHtml(product.description);
 
   return (
-    <section className="mt-12 grid gap-6 border-t border-electrox-elevated pt-10 lg:grid-cols-[1fr_360px]">
-      <article>
-        <p className="text-xs font-black uppercase tracking-[0.24em] text-electrox-blue">Details & care</p>
-        <div className="rich-product-html mt-4" dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
-        {hasCustomRichDescription && <div className="rich-product-html mt-8" dangerouslySetInnerHTML={{ __html: product.descriptionHtml }} />}
-      </article>
-      <aside className="grid h-fit gap-4">
-        <div className="rounded-2xl border border-electrox-elevated bg-electrox-surface p-5 shadow-sm">
-          <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Delivery</h3>
-          <p className="mt-2.5 text-xs leading-5 text-neutral-450 font-semibold">{String(product.deliveryInfo?.text ?? "Free delivery above INR 1499. Standard delivery usually takes 3-6 business days.")}</p>
+    <div className="mt-10 border-t border-neutral-200 dark:border-neutral-850 pt-8">
+      <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#FF6B35] mb-6">Product Details & Specifications</p>
+      
+      <div className="space-y-3">
+        {/* Description Accordion */}
+        <div className="border border-white/50 dark:border-white/5 bg-white/40 dark:bg-[#111315]/40 backdrop-blur-md rounded-sm overflow-hidden transition-all duration-300 hover:border-white/80 dark:hover:border-white/10">
+          <button
+            onClick={() => toggleAccordion("description")}
+            className="flex w-full items-center justify-between bg-white/60 dark:bg-neutral-900/20 px-4 py-3.5 text-left font-bold text-xs uppercase tracking-wider text-neutral-850 dark:text-neutral-200 hover:text-[#FF6B35] dark:hover:text-[#FF6B35] transition-all"
+          >
+            <span>Product Description</span>
+            <ChevronDown size={16} className={`text-neutral-400 transition-transform duration-300 ${openSections.description ? "rotate-180 text-[#FF6B35]" : ""}`} />
+          </button>
+          {openSections.description && (
+            <div className="p-4 bg-white/50 dark:bg-transparent border-t border-neutral-100/40 dark:border-neutral-850/40 text-xs leading-6 text-neutral-400 font-medium">
+              <div className="rich-product-html" dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
+              {hasCustomRichDescription && (
+                <div className="rich-product-html mt-6 border-t border-neutral-100/40 dark:border-neutral-850/40 pt-4" dangerouslySetInnerHTML={{ __html: product.descriptionHtml }} />
+              )}
+            </div>
+          )}
         </div>
-        <div className="rounded-2xl border border-electrox-elevated bg-electrox-surface p-5 shadow-sm">
-          <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Return Policy</h3>
-          <p className="mt-2.5 text-xs leading-5 text-neutral-450 font-semibold">{product.returnPolicy || "Easy 7-day exchange for size issues on unused products with original tags."}</p>
+
+        {/* Specifications Accordion */}
+        <div className="border border-white/50 dark:border-white/5 bg-white/40 dark:bg-[#111315]/40 backdrop-blur-md rounded-sm overflow-hidden transition-all duration-300 hover:border-white/80 dark:hover:border-white/10">
+          <button
+            onClick={() => toggleAccordion("specifications")}
+            className="flex w-full items-center justify-between bg-white/60 dark:bg-neutral-900/20 px-4 py-3.5 text-left font-bold text-xs uppercase tracking-wider text-neutral-850 dark:text-neutral-200 hover:text-[#FF6B35] dark:hover:text-[#FF6B35] transition-all"
+          >
+            <span>Specifications & Details</span>
+            <ChevronDown size={16} className={`text-neutral-400 transition-transform duration-300 ${openSections.specifications ? "rotate-180 text-[#FF6B35]" : ""}`} />
+          </button>
+          {openSections.specifications && (
+            <div className="p-4 bg-white/50 dark:bg-transparent border-t border-neutral-100/40 dark:border-neutral-850/40 text-xs font-medium">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                <div className="flex border-b border-neutral-100/50 dark:border-neutral-850/40 pb-2">
+                  <span className="w-1/3 text-neutral-450 font-semibold">Brand</span>
+                  <span className="w-2/3 text-neutral-800 dark:text-neutral-200 font-bold">{product.brand || "Grim Store"}</span>
+                </div>
+                <div className="flex border-b border-neutral-100/50 dark:border-neutral-850/40 pb-2">
+                  <span className="w-1/3 text-neutral-450 font-semibold">Category</span>
+                  <span className="w-2/3 text-neutral-800 dark:text-neutral-200 font-bold uppercase">{product.category || "General"}</span>
+                </div>
+                {product.variants?.[0]?.material && (
+                  <div className="flex border-b border-neutral-100/50 dark:border-neutral-850/40 pb-2">
+                    <span className="w-1/3 text-neutral-450 font-semibold">Material</span>
+                    <span className="w-2/3 text-neutral-800 dark:text-neutral-200 font-bold">{product.variants[0].material}</span>
+                  </div>
+                )}
+                {product.variants?.[0]?.pattern && (
+                  <div className="flex border-b border-neutral-100/50 dark:border-neutral-850/40 pb-2">
+                    <span className="w-1/3 text-neutral-450 font-semibold">Pattern</span>
+                    <span className="w-2/3 text-neutral-800 dark:text-neutral-200 font-bold">{product.variants[0].pattern}</span>
+                  </div>
+                )}
+                <div className="flex border-b border-neutral-100/50 dark:border-neutral-850/40 pb-2">
+                  <span className="w-1/3 text-neutral-450 font-semibold">SKU Code</span>
+                  <span className="w-2/3 text-neutral-800 dark:text-neutral-200 font-mono font-bold select-all">{product.variants?.[0]?.sku || product.slug.toUpperCase()}</span>
+                </div>
+                <div className="flex border-b border-neutral-100/50 dark:border-neutral-850/40 pb-2">
+                  <span className="w-1/3 text-neutral-450 font-semibold">Rating</span>
+                  <span className="w-2/3 text-neutral-800 dark:text-neutral-200 font-bold flex items-center gap-1">
+                    {product.rating.toFixed(1)} <Star size={12} fill="currentColor" className="text-amber-500" /> ({product.reviewCount} reviews)
+                  </span>
+                </div>
+              </div>
+
+              {product.careInstructions.length > 0 && (
+                <div className="mt-4 pt-2 border-t border-neutral-100/50 dark:border-neutral-850/40">
+                  <p className="text-neutral-450 font-bold mb-2">Care Instructions:</p>
+                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-neutral-400">
+                    {product.careInstructions.map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-1.5">• {item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-        {product.careInstructions.length > 0 && (
-          <div className="rounded-2xl border border-electrox-elevated bg-electrox-surface p-5 shadow-sm">
-            <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Care Instructions</h3>
-            <ul className="mt-3 grid gap-2 text-xs text-neutral-450">
-              {product.careInstructions.map((item) => <li key={item}>- {item}</li>)}
-            </ul>
-          </div>
-        )}
-      </aside>
-    </section>
+
+        {/* Delivery Accordion */}
+        <div className="border border-white/50 dark:border-white/5 bg-white/40 dark:bg-[#111315]/40 backdrop-blur-md rounded-sm overflow-hidden transition-all duration-300 hover:border-white/80 dark:hover:border-white/10">
+          <button
+            onClick={() => toggleAccordion("delivery")}
+            className="flex w-full items-center justify-between bg-white/60 dark:bg-neutral-900/20 px-4 py-3.5 text-left font-bold text-xs uppercase tracking-wider text-neutral-850 dark:text-neutral-200 hover:text-[#FF6B35] dark:hover:text-[#FF6B35] transition-all"
+          >
+            <span>Delivery & Shipping Info</span>
+            <ChevronDown size={16} className={`text-neutral-400 transition-transform duration-300 ${openSections.delivery ? "rotate-180 text-[#FF6B35]" : ""}`} />
+          </button>
+          {openSections.delivery && (
+            <div className="p-4 bg-white/50 dark:bg-transparent border-t border-neutral-100/40 dark:border-neutral-850/40 text-xs leading-6 text-neutral-400 font-medium">
+              <p>{String(product.deliveryInfo?.text ?? "Free delivery above INR 1499. Standard shipping takes 3-6 business days. Express shipping options are available at checkout.")}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Returns Accordion */}
+        <div className="border border-white/50 dark:border-white/5 bg-white/40 dark:bg-[#111315]/40 backdrop-blur-md rounded-sm overflow-hidden transition-all duration-300 hover:border-white/80 dark:hover:border-white/10">
+          <button
+            onClick={() => toggleAccordion("returns")}
+            className="flex w-full items-center justify-between bg-white/60 dark:bg-neutral-900/20 px-4 py-3.5 text-left font-bold text-xs uppercase tracking-wider text-neutral-850 dark:text-neutral-200 hover:text-[#FF6B35] dark:hover:text-[#FF6B35] transition-all"
+          >
+            <span>Returns & Exchanges</span>
+            <ChevronDown size={16} className={`text-neutral-400 transition-transform duration-300 ${openSections.returns ? "rotate-180 text-[#FF6B35]" : ""}`} />
+          </button>
+          {openSections.returns && (
+            <div className="p-4 bg-white/50 dark:bg-transparent border-t border-neutral-100/40 dark:border-neutral-850/40 text-xs leading-6 text-neutral-400 font-medium">
+              <p>{product.returnPolicy || "Easy 7-day size exchange or store credit returns on all unused and unwashed items with tags intact."}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 

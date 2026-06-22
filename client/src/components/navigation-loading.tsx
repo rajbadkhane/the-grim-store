@@ -168,14 +168,14 @@ export function NavigationLoading() {
           <motion.div
             key="page-load-track"
             aria-hidden="true"
-            className="pointer-events-none fixed inset-x-0 top-0 z-[220] h-1 overflow-hidden bg-blue-500/10"
+            className="pointer-events-none fixed inset-x-0 top-0 z-[220] h-1 overflow-hidden bg-[#ff3f6c]/10"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.16 }}
           >
             <motion.div
-              className="h-full rounded-r-full bg-gradient-to-r from-blue-500 via-violet-600 to-purple-500 shadow-[0_0_22px_rgba(59,130,246,0.68)]"
+              className="h-full rounded-r-full bg-gradient-to-r from-[#ff3f6c] via-[#ff527b] to-[#ff6b8f] shadow-[0_0_22px_rgba(255,63,108,0.68)]"
               initial={{ width: "8%", x: "-12%" }}
               animate={{ width: ["18%", "62%", "92%"], x: ["0%", "12%", "24%"] }}
               transition={{ duration: 1.15, ease: [0.22, 1, 0.36, 1], repeat: Infinity }}
@@ -184,14 +184,14 @@ export function NavigationLoading() {
           <motion.div
             key="page-load-glow"
             aria-hidden="true"
-            className="pointer-events-none fixed right-4 top-20 z-[220] h-10 w-10 rounded-2xl border border-blue-300/20 bg-[#050816]/78 shadow-xl shadow-blue-500/20 backdrop-blur-md"
+            className="pointer-events-none fixed right-4 top-20 z-[220] h-10 w-10 rounded-2xl border border-[#ff3f6c]/20 bg-[#050816]/78 shadow-xl shadow-[#ff3f6c]/10 backdrop-blur-md"
             initial={{ opacity: 0, scale: 0.92, y: -6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: -4 }}
             transition={{ duration: 0.18 }}
           >
             <motion.div
-              className="m-3 h-4 w-4 rounded-full border-2 border-blue-500 border-t-purple-300"
+              className="m-3 h-4 w-4 rounded-full border-2 border-[#ff3f6c] border-t-pink-200"
               animate={{ rotate: 360 }}
               transition={{ duration: 0.7, ease: "linear", repeat: Infinity }}
             />

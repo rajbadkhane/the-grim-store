@@ -1,35 +1,22 @@
-import { sitePages } from "@/lib/site-pages";
+import { NextResponse } from "next/server";
 
-export const dynamic = "force-static";
+export async function GET() {
+  const host = process.env.NEXT_PUBLIC_SITE_URL ?? "https://the-grim-store.com";
+  
+  const markdown = `# The Grim Store
 
-export function GET() {
-  const base = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
-  const lines = [
-    "# The Grim Store",
-    "",
-    "The Grim Store is a premium electronics ecommerce storefront for oversized tees, hoodies, limited drops, verified reviews, account orders, returns, refunds, shipping, and secure checkout.",
-    "",
-    "## Primary Public Pages",
-    `- Home: ${base}/`,
-    `- Products: ${base}/products`,
-    "",
-    "## Customer Help And Policy Pages",
-    ...sitePages.map((page) => `- ${page.title}: ${base}/${page.slug} - ${page.description}`),
-    "",
-    "## Machine-Readable Feeds",
-    `- Sitemap: ${base}/sitemap.xml`,
-    `- Robots: ${base}/robots.txt`,
-    "",
-    "## Indexing Notes",
-    "- Product and public information pages are intended for search indexing.",
-    "- Account, cart, checkout, wishlist, and admin pages are private utility surfaces and are marked noindex.",
-    "- Product pages include Product, Offer, Review, AggregateRating when available, and BreadcrumbList structured data."
-  ];
+> A premium, modern e-commerce platform specializing in Smart Toys, Educational Gadgets, Gaming Consoles, Wearables, and Audio Products. Built with premium Lego, Apple, and Nothing design vibes.
 
-  return new Response(`${lines.join("\n")}\n`, {
+## Links
+- [Full Product Catalog & Store Policies](${host}/llms-full.txt): Comprehensive, structured markdown dump of all 21 products, variants, specs, and logistics policies.
+- [All Products Catalog](${host}/products): Dynamic catalog index featuring search, filter by price, colors, and category.
+- [Terms & Return Policy](${host}/policies): Specific terms governing returns, shipping timelines, and exchange conditions.
+`;
+
+  return new NextResponse(markdown, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=3600, s-maxage=86400"
-    }
+      "Cache-Control": "public, max-age=3600, s-maxage=3600",
+    },
   });
 }

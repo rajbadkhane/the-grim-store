@@ -3,8 +3,10 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { recalculateProductRating } from "../services/review.service.js";
 import { execute, id, json, mapProduct, mapReview, row, rows } from "../lib/sql.js";
+import { apiCache } from "../utils/cache.js";
 
 export const createReview = asyncHandler(async (req, res) => {
+  apiCache.clear();
   const { productId, orderId, rating, title, comment, images } = req.body;
   if (hasProfanity(`${title} ${comment}`)) throw new ApiError(400, "Review content failed moderation");
   const order = await row("SELECT * FROM orders WHERE id = :orderId AND user_id = :userId AND order_status = 'delivered'", { orderId, userId: req.user!.id });
@@ -42,6 +44,13 @@ export const createReview = asyncHandler(async (req, res) => {
 export const listReviews = asyncHandler(async (req, res) => {
   const { productId } = req.params;
   const { sort = "latest", withImages } = req.query as any;
+  const cacheKey = `reviews:${productId}:${sort}:${withImages ?? "false"}`;
+  
+  const cachedData = apiCache.get(cacheKey);
+  if (cachedData) {
+    return res.json(cachedData);
+  }
+
   const sortMap: Record<string, string> = {
     latest: "created_at DESC",
     highest: "rating DESC",
@@ -50,7 +59,10 @@ export const listReviews = asyncHandler(async (req, res) => {
   };
   const imageFilter = withImages === "true" ? "AND JSON_LENGTH(images) > 0" : "";
   const reviews = await rows(`SELECT * FROM reviews WHERE product_id = :productId AND reported = FALSE ${imageFilter} ORDER BY ${sortMap[sort] || sortMap.latest}`, { productId });
-  res.json({ success: true, reviews: reviews.map(mapReview) });
+  
+  const responseData = { success: true, reviews: reviews.map(mapReview) };
+  apiCache.set(cacheKey, responseData, 60); // Cache for 60 seconds
+  res.json(responseData);
 });
 
 export const listAllReviews = asyncHandler(async (_req, res) => {
@@ -74,6 +86,7 @@ export const listAllReviews = asyncHandler(async (_req, res) => {
 });
 
 export const updateReview = asyncHandler(async (req, res) => {
+  apiCache.clear();
   const existing = await row("SELECT * FROM reviews WHERE id = :id AND user_id = :userId", { id: req.params.id, userId: req.user!.id });
   if (!existing) throw new ApiError(404, "Review not found");
   await execute("UPDATE reviews SET rating = :rating, title = :title, comment = :comment, images = :images WHERE id = :id", {
@@ -90,6 +103,7 @@ export const updateReview = asyncHandler(async (req, res) => {
 });
 
 export const deleteReview = asyncHandler(async (req, res) => {
+  apiCache.clear();
   const review = mapReview(await row("SELECT * FROM reviews WHERE id = :id AND user_id = :userId", { id: req.params.id, userId: req.user!.id }));
   if (!review) throw new ApiError(404, "Review not found");
   await execute("DELETE FROM reviews WHERE id = :id", { id: req.params.id });
@@ -98,6 +112,7 @@ export const deleteReview = asyncHandler(async (req, res) => {
 });
 
 export const helpfulReview = asyncHandler(async (req, res) => {
+  apiCache.clear();
   const review = mapReview(await row("SELECT * FROM reviews WHERE id = :id", { id: req.params.id }));
   if (!review) throw new ApiError(404, "Review not found");
   const exists = review.helpfulUsers.some((userId: string) => userId === req.user!.id);
@@ -114,6 +129,7 @@ export const helpfulReview = asyncHandler(async (req, res) => {
 });
 
 export const reportReview = asyncHandler(async (req, res) => {
+  apiCache.clear();
   await execute("UPDATE reviews SET reported = TRUE WHERE id = :id", { id: req.params.id });
   res.json({ success: true });
 });

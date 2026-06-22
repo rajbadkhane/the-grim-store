@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { AnimatePresence, motion, useScroll, useMotionValueEvent } from "framer-motion";
-import { ChevronRight, Heart, Menu, Search, ShoppingBag, User, X, Zap, Sparkles, Cpu, Sun, Moon, Home } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
+import { Box, Heart, Home, Menu, Moon, Search, ShoppingBag, Sun, User, X, Skull, ArrowRight } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/store/cart";
 import { useFlyCartStore } from "@/store/fly-cart";
 import { useTheme } from "@/components/theme-provider";
+import { useAuth } from "@/store/auth";
 
 type HeaderCategory = {
   id: string;
@@ -22,38 +23,23 @@ type SearchSuggestion = {
   category?: string;
 };
 
-type Particle = {
-  id: string;
-  angle: number;
-  speed: number;
-  color: string;
-};
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://the-grim-store.onrender.com/api/v1";
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const { theme, toggleTheme } = useTheme();
-  const [open, setOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [liveCategories, setLiveCategories] = useState<HeaderCategory[]>([]);
   const [searchSuggestions, setSearchSuggestions] = useState<SearchSuggestion[]>([]);
-  const [hidden, setHidden] = useState(false);
-  const [compact, setCompact] = useState(false);
-  const [particles, setParticles] = useState<Particle[]>([]);
+  const [visualOffset, setVisualOffset] = useState(0);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const cartCount = useCart((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
-  const router = useRouter();
-  const cartRef = useRef<HTMLDivElement>(null);
+  const cartRef = useRef<HTMLAnchorElement>(null);
   const setCartIconRect = useFlyCartStore((state) => state.setCartIconRect);
-  const arrivalTriggered = useFlyCartStore((state) => state.arrivalTriggered);
-  const { scrollY } = useScroll();
-
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    const previous = scrollY.getPrevious() ?? 0;
-    setCompact(latest > 28);
-    setHidden(latest > 120 && latest > previous);
-  });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -91,7 +77,7 @@ export function Header() {
       } catch {
         if (!controller.signal.aborted) setSearchSuggestions([]);
       }
-    }, 160);
+    }, 180);
 
     return () => {
       window.clearTimeout(timer);
@@ -100,193 +86,343 @@ export function Header() {
   }, [searchQuery]);
 
   useEffect(() => {
-    let frame = 0;
     function updateRect() {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(() => {
-        if (cartRef.current) setCartIconRect(cartRef.current.getBoundingClientRect());
-      });
+      if (cartRef.current) setCartIconRect(cartRef.current.getBoundingClientRect());
     }
     updateRect();
     window.addEventListener("resize", updateRect);
     window.addEventListener("scroll", updateRect, { passive: true });
     return () => {
-      window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", updateRect);
       window.removeEventListener("scroll", updateRect);
     };
   }, [setCartIconRect]);
 
   useEffect(() => {
-    if (arrivalTriggered === 0) return;
-    const newParticles: Particle[] = Array.from({ length: 16 }).map((_, i) => ({
-      id: `${arrivalTriggered}-${i}-${Math.random()}`,
-      angle: (Math.PI * 2 * i) / 16 + (Math.random() - 0.5) * 0.32,
-      speed: 2 + Math.random() * 4,
-      color: ["#3B82F6", "#A855F7", "#7C3AED", "#ffffff"][Math.floor(Math.random() * 4)]
-    }));
-    setParticles((prev) => [...prev, ...newParticles]);
-  }, [arrivalTriggered]);
+    function updateVisualOffset() {
+      const viewport = window.visualViewport;
+      setVisualOffset(Math.max(0, Math.round(window.innerHeight - (viewport?.height ?? window.innerHeight))));
+    }
+    updateVisualOffset();
+    window.visualViewport?.addEventListener("resize", updateVisualOffset);
+    window.visualViewport?.addEventListener("scroll", updateVisualOffset);
+    window.addEventListener("resize", updateVisualOffset);
+    return () => {
+      window.visualViewport?.removeEventListener("resize", updateVisualOffset);
+      window.visualViewport?.removeEventListener("scroll", updateVisualOffset);
+      window.removeEventListener("resize", updateVisualOffset);
+    };
+  }, []);
 
-  function submitSearch(e: React.FormEvent) {
-    e.preventDefault();
+  function submitSearch(event: React.FormEvent) {
+    event.preventDefault();
     performSearch(searchQuery);
   }
 
   function performSearch(value: string) {
     const query = value.trim();
     if (!query) return;
-    setSearchQuery(query);
-    setOpen(false);
     setSearchOpen(false);
+    setMenuOpen(false);
     router.push(`/products?q=${encodeURIComponent(query)}`);
   }
 
-  const categories = liveCategories.length ? liveCategories : [{ id: "all", name: "All Products", slug: "" }];
-  const mobileLinks = [
-    { label: "Catalog", href: "/products" },
-    ...liveCategories.slice(0, 4).map((category) => ({ label: category.name, href: `/products?category=${category.slug}` })),
-    { label: "Wishlist", href: "/wishlist" },
-    { label: "Orders", href: "/account?tab=orders" }
+  const navLinks = [
+    { label: "New Arrivals", href: "/products?sort=latest" },
+    { label: "Phones", href: "/products?q=phone" },
+    { label: "Audio", href: "/products?q=audio" },
+    { label: "Gaming", href: "/products?q=gaming" },
+    { label: "Wearables", href: "/products?q=watch" },
+    { label: "Sale", href: "/products?sort=popular" }
   ];
+
+  const isCheckoutPage = pathname.startsWith("/checkout");
+  const isCartPage = pathname.startsWith("/cart");
+
+  if (isCheckoutPage) {
+    return null;
+  }
 
   return (
     <>
-      <motion.header
-        animate={{ y: hidden ? -130 : 0 }}
-        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-        className="sticky top-0 z-50 px-3 pt-2 w-full flex flex-col gap-2"
-      >
-        {/* Top Announcement Strip */}
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between rounded-xl bg-slate-900/90 dark:bg-black/95 px-4 py-1.5 text-[10px] sm:text-xs font-black text-white/90 shadow-sm border border-neutral-200/5 dark:border-neutral-900/40 backdrop-blur-md">
-          <div className="flex-1 text-center truncate tracking-wide">
-            <span>🌐 Welcome to <strong className="text-indigo-400">thegrimstore.com</strong> | ⚡ LAUNCH OFFER: Use code <strong className="text-yellow-400">GRIM40</strong> for 40% off on premium gadgets!</span>
-          </div>
-          <div className="flex items-center gap-2.5 shrink-0 ml-2">
-            <Link href="/account?tab=orders" className="bg-indigo-650 hover:bg-indigo-700 text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded text-white transition select-none">
-              Track Order
+      <header className="sticky top-0 z-50 w-full border-b border-neutral-200/40 dark:border-neutral-800/40 bg-white/80 dark:bg-[#0B0F19]/80 backdrop-blur-md transition-all">
+        {/* Screen-wide announcements bar */}
+        <div className="w-full bg-[#111827] text-white text-[11px] font-medium tracking-wide">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 py-2.5">
+            <span className="font-heading">PLAY • LEARN • EXPLORE | Use Code <strong className="text-[#FFD93D] font-bold">GRIM40</strong></span>
+            <Link href="/account?tab=orders" className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[10px] font-semibold hover:bg-white/20 transition duration-150">
+              <Box size={12} /> Track Order
             </Link>
           </div>
         </div>
 
-        <div
-          className={`mx-auto flex w-full max-w-7xl items-center justify-between rounded-2xl border border-electrox-elevated/42 bg-electrox-bg/78 px-4 backdrop-blur-2xl transition-all duration-300 shadow-[0_8px_30px_rgba(0,0,0,0.03)] dark:shadow-[0_22px_70px_rgba(0,0,0,0.42)] ${
-            compact ? "h-14" : "h-18"
-          }`}
-        >
-          <Link href="/" className="group flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-2xl border border-electrox-elevated/50 bg-electrox-surface text-sm font-black text-foreground shadow-sm">
-              <Cpu size={18} className="text-electrox-blue dark:text-white" />
+        {/* Screen-wide navigation and search header */}
+        <div className="mx-auto flex h-16 lg:h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          <button className="grid h-10 w-10 place-items-center rounded-xl border border-neutral-250 dark:border-neutral-800 bg-white dark:bg-neutral-900 lg:hidden shadow-xs active:scale-95 transition-transform" onClick={() => setMenuOpen(true)} aria-label="Open menu">
+            <Menu size={18} />
+          </button>
+
+          {/* Logo */}
+          <Link href="/" className="flex min-w-fit items-center gap-2 px-1 hover:opacity-90 active:scale-98 transition-transform">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#FF6B35] text-white shadow-md shadow-[#FF6B35]/25">
+              <Skull size={16} className="text-white fill-current" />
             </span>
-            <span className="leading-none">
-              <span className="block text-sm font-black uppercase tracking-[0.24em] text-foreground">The Grim</span>
-              <span className="mt-1 block text-[10px] font-bold uppercase tracking-[0.34em] text-neutral-400 dark:text-neutral-450 group-hover:text-electrox-blue">Store</span>
-            </span>
+            <div className="flex flex-col">
+              <span className="text-base font-heading font-extrabold tracking-tight text-neutral-900 dark:text-white leading-none">THE GRIM STORE</span>
+              <span className="text-[9px] font-semibold uppercase tracking-widest text-[#FF6B35]">Modern Families</span>
+            </div>
           </Link>
 
-          <nav className="hidden items-center gap-1 text-sm font-bold text-neutral-450 dark:text-slate-350 lg:flex">
-            <NavLink href="/products">Catalog</NavLink>
-            <div className="group relative py-5">
-              <button className="rounded-full px-4 py-2 transition hover:bg-electrox-elevated hover:text-foreground">Categories</button>
-              <div className="invisible absolute left-1/2 top-16 grid w-[760px] -translate-x-1/2 grid-cols-3 gap-3 rounded-2xl border border-electrox-elevated/70 bg-electrox-surface/98 p-4 opacity-0 shadow-xl backdrop-blur-2xl transition group-hover:visible group-hover:opacity-100">
-                {categories.slice(0, 9).map((item, index) => (
-                  <Link
-                    key={item.id}
-                    href={item.slug ? `/products?category=${item.slug}` : "/products"}
-                    className="group/item rounded-2xl border border-electrox-elevated/40 bg-electrox-bg-2 p-4 transition hover:-translate-y-0.5 hover:border-electrox-blue/60 hover:bg-electrox-blue/5 hover:shadow-sm"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="font-black text-foreground">{item.name}</span>
-                      <span className="grid h-8 w-8 place-items-center rounded-full bg-electrox-elevated text-electrox-blue font-mono text-xs">
-                        {index + 1}
-                      </span>
+          {/* Nav links with bento megamenu triggers */}
+          <nav className="hidden items-center gap-2 text-sm font-semibold lg:flex self-stretch">
+            {navLinks.map((link) => (
+              <div key={link.href} className="relative flex h-full items-center group/nav">
+                <Link
+                  href={link.href}
+                  className="flex h-10 items-center text-neutral-700 hover:text-[#FF6B35] dark:text-neutral-300 dark:hover:text-[#FF6B35] transition-colors duration-150 text-xs font-bold uppercase tracking-wider px-3.5 rounded-lg hover:bg-neutral-100/60 dark:hover:bg-neutral-900/40"
+                >
+                  {link.label}
+                </Link>
+
+                {/* Mega Menu Dropdown */}
+                {link.label !== "Sale" && link.label !== "New Arrivals" && (
+                  <div className="absolute top-[85%] left-1/2 -translate-x-1/2 mt-1.5 w-[520px] bg-white dark:bg-[#151B26] border border-neutral-200/50 dark:border-neutral-800/80 shadow-xl rounded-2xl p-6 opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all duration-200 z-[160] grid grid-cols-2 gap-6 text-left">
+                    <div className="bg-[#FAFAFA] dark:bg-neutral-900/50 p-4 rounded-xl border border-neutral-200/30 dark:border-neutral-800/30">
+                      <h4 className="text-xs font-heading font-extrabold text-[#FF6B35] uppercase tracking-wider mb-3">Top Catalog categories</h4>
+                      <div className="flex flex-col gap-2.5 text-xs font-medium text-neutral-600 dark:text-neutral-350">
+                        <Link href={`/products?q=${link.label.toLowerCase()}&sort=popular`} className="hover:text-[#FF6B35] flex items-center justify-between group/sub">
+                          Trending {link.label} <ArrowRight size={12} className="opacity-0 -translate-x-1 group-hover/sub:opacity-100 group-hover/sub:translate-x-0 transition-all" />
+                        </Link>
+                        <Link href={`/products?q=${link.label.toLowerCase()}&sort=latest`} className="hover:text-[#FF6B35] flex items-center justify-between group/sub">
+                          New Releases <ArrowRight size={12} className="opacity-0 -translate-x-1 group-hover/sub:opacity-100 group-hover/sub:translate-x-0 transition-all" />
+                        </Link>
+                        <Link href={`/products?q=${link.label.toLowerCase()}&max=5000`} className="hover:text-[#FF6B35] flex items-center justify-between group/sub">
+                          Budget Picks (Under ₹5,000) <ArrowRight size={12} className="opacity-0 -translate-x-1 group-hover/sub:opacity-100 group-hover/sub:translate-x-0 transition-all" />
+                        </Link>
+                      </div>
                     </div>
-                    <p className="mt-2 text-xs leading-5 text-neutral-450">Verified inventory and fast dispatch checkout.</p>
-                  </Link>
-                ))}
+                    <div className="p-4">
+                      <h4 className="text-xs font-heading font-extrabold text-neutral-850 dark:text-white uppercase tracking-wider mb-3">Featured Brands</h4>
+                      <div className="flex flex-col gap-2.5 text-xs font-medium text-neutral-600 dark:text-neutral-350">
+                        <Link href="/products?brand=Sony" className="hover:text-[#FF6B35]">Sony Products</Link>
+                        <Link href="/products?brand=Apple" className="hover:text-[#FF6B35]">Apple Devices</Link>
+                        <Link href="/products?brand=Samsung" className="hover:text-[#FF6B35]">Samsung Gear</Link>
+                        <Link href="/products?brand=OnePlus" className="hover:text-[#FF6B35]">OnePlus Gadgets</Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-            <NavLink href="/products?sort=popular">Trending</NavLink>
-            <NavLink href="/account?tab=orders">Orders</NavLink>
+            ))}
           </nav>
 
-          <div className="hidden w-full max-w-sm items-center rounded-full border border-electrox-elevated/60 bg-electrox-bg-2 px-3 py-2 lg:flex">
-            <Search size={17} className="text-neutral-450" />
-            <button onClick={() => setSearchOpen(true)} className="ml-2 flex-1 text-left text-sm font-medium text-neutral-450">
-              Search phones, audio, gadgets...
-            </button>
+          {/* Search bar inside header */}
+          <div className="relative hidden lg:block flex-grow max-w-xs xl:max-w-sm">
+            <div 
+              onClick={() => setSearchOpen(true)}
+              className="flex items-center bg-neutral-100 hover:bg-neutral-200/60 dark:bg-neutral-900/60 dark:hover:bg-neutral-900 rounded-full px-4 py-2.5 text-[11px] cursor-pointer border border-transparent hover:border-neutral-200 dark:hover:border-neutral-800 transition-all"
+            >
+              <Search size={14} className="text-neutral-400 shrink-0 mr-2.5" />
+              <span className="text-neutral-450 dark:text-neutral-400 font-medium">Search for smart toys, gaming consoles...</span>
+              <kbd className="ml-auto hidden xl:inline-flex items-center gap-0.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-1.5 font-mono text-[9px] font-bold text-neutral-400">
+                /
+              </kbd>
+            </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <button aria-label="Search products" onClick={() => setSearchOpen(true)} className="grid h-10 w-10 place-items-center rounded-full text-neutral-450 hover:bg-electrox-elevated hover:text-foreground lg:hidden">
-              <Search size={19} />
-            </button>
-            
-            {/* Theme Toggle Button */}
-            <button
-              aria-label="Toggle theme"
-              onClick={toggleTheme}
-              className="grid h-10 w-10 place-items-center rounded-full text-neutral-450 hover:bg-electrox-elevated hover:text-foreground transition duration-200"
+          {/* Action icons */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Search Trigger for Mobile/Tablet */}
+            <button 
+              onClick={() => setSearchOpen(true)}
+              className="lg:hidden p-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 active:scale-95 transition-transform"
+              aria-label="Search"
             >
-              {theme === "dark" ? <Sun size={19} className="text-amber-500" /> : <Moon size={19} className="text-slate-600" />}
+              <Search size={17} />
             </button>
 
-            <IconLink href="/account" label="Account">
-              <User size={19} />
-            </IconLink>
-            <IconLink href="/wishlist" label="Wishlist">
-              <Heart size={19} />
-            </IconLink>
-            <motion.div ref={cartRef} className="relative" animate={{ scale: arrivalTriggered ? [1, 1.18, 1] : 1 }} transition={{ duration: 0.42 }}>
-              <Link aria-label="Cart" href="/cart" className="relative grid h-10 w-10 place-items-center rounded-full border border-electrox-blue/20 bg-electrox-blue/10 text-electrox-blue hover:border-electrox-blue/50 hover:shadow-sm">
-                <ShoppingBag size={19} />
-                {cartCount > 0 && <span className="absolute -right-1 -top-1 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-1.5 py-0.5 text-[10px] font-black text-white">{cartCount}</span>}
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-neutral-700 hover:text-[#FF6B35] dark:text-neutral-300 dark:hover:text-[#FF6B35] active:scale-95 transition-transform"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
+
+            {/* Profile Action with hover dropdown */}
+            <div className="relative flex group/profile self-stretch items-center">
+              <Link
+                href="/account"
+                className="flex items-center justify-center p-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-neutral-700 hover:text-[#FF6B35] dark:text-neutral-300 dark:hover:text-[#FF6B35] active:scale-95 transition-transform cursor-pointer"
+                aria-label="Profile"
+              >
+                <User size={17} />
               </Link>
-              <div className="pointer-events-none absolute inset-0 grid place-items-center">
-                {particles.map((p) => (
-                  <FlyingParticle key={p.id} particle={p} onComplete={() => setParticles((prev) => prev.filter((item) => item.id !== p.id))} />
-                ))}
+
+              {/* Profile Dropdown Menu (Desktop only) */}
+              <div className="absolute top-[80%] right-0 mt-1.5 w-64 bg-white dark:bg-[#151B26] border border-neutral-200/50 dark:border-neutral-800/80 shadow-xl rounded-2xl py-4 px-5 opacity-0 invisible group-hover/profile:opacity-100 group-hover/profile:visible transition-all duration-200 z-[160] text-left hidden lg:block">
+                {user ? (
+                  <div className="border-b border-neutral-200/40 dark:border-neutral-800/60 pb-3.5 mb-3.5">
+                    <h3 className="text-xs font-heading font-extrabold text-neutral-900 dark:text-white uppercase tracking-wider">Hello {user.name || "Customer"}</h3>
+                    <p className="text-[11px] text-neutral-450 dark:text-neutral-450 mt-1 truncate">{user.email}</p>
+                  </div>
+                ) : (
+                  <div className="border-b border-neutral-200/40 dark:border-neutral-800/60 pb-3.5 mb-3.5">
+                    <h3 className="text-xs font-heading font-extrabold text-neutral-900 dark:text-white uppercase tracking-wider">Welcome</h3>
+                    <p className="text-[11px] text-neutral-450 mt-1">Manage orders, tracking, and wishlist</p>
+                    <Link href="/login" className="mt-3.5 inline-flex items-center justify-center w-full min-h-10 rounded-xl bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white font-bold text-xs uppercase tracking-wider shadow-sm transition">
+                      Login / Signup
+                    </Link>
+                  </div>
+                )}
+                <div className="flex flex-col gap-3 text-xs font-bold text-neutral-700 dark:text-neutral-300">
+                  <Link href="/account?tab=orders" className="hover:text-[#FF6B35] transition">My Orders</Link>
+                  <Link href="/wishlist" className="hover:text-[#FF6B35] transition">Wishlist</Link>
+                  <Link href="/account?tab=addresses" className="hover:text-[#FF6B35] transition">Saved Addresses</Link>
+                  <Link href="/account?tab=profile" className="hover:text-[#FF6B35] transition">Profile Info</Link>
+                  {user && (
+                    <button
+                      onClick={async () => {
+                        await logout();
+                        window.location.href = "/";
+                      }}
+                      className="border-t border-neutral-200/40 dark:border-neutral-800/60 pt-3 text-left text-xs font-extrabold text-red-500 hover:text-red-600 transition cursor-pointer w-full"
+                    >
+                      Logout
+                    </button>
+                  )}
+                </div>
               </div>
-            </motion.div>
+            </div>
+
+            {/* Wishlist Action */}
+            <Link
+              href="/wishlist"
+              className="flex items-center justify-center p-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-neutral-700 hover:text-[#FF6B35] dark:text-neutral-300 dark:hover:text-[#FF6B35] active:scale-95 transition-transform"
+              aria-label="Wishlist"
+            >
+              <Heart size={17} />
+            </Link>
+
+            {/* Cart/Bag Action */}
+            <Link
+              ref={cartRef}
+              href="/cart"
+              className="flex items-center justify-center p-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-neutral-700 hover:text-[#FF6B35] dark:text-neutral-300 dark:hover:text-[#FF6B35] active:scale-95 transition-transform relative"
+              aria-label="Cart"
+            >
+              <div className="relative flex items-center justify-center">
+                <ShoppingBag size={17} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-2.5 -right-2.5 min-w-[17px] h-4 rounded-full bg-[#FF6B35] text-[8.5px] font-bold text-white flex items-center justify-center px-1 border-2 border-white dark:border-[#0B0F19]">
+                    {cartCount}
+                  </span>
+                )}
+              </div>
+            </Link>
           </div>
         </div>
-      </motion.header>
+      </header>
 
-      <SearchOverlay
-        open={searchOpen}
-        query={searchQuery}
-        suggestions={searchSuggestions}
-        onChange={setSearchQuery}
-        onClose={() => setSearchOpen(false)}
-        onSubmit={submitSearch}
-        onPick={performSearch}
-      />
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {menuOpen && (
+          <div className="fixed inset-0 z-[170] bg-black/40 backdrop-blur-xs lg:hidden" onClick={() => setMenuOpen(false)}>
+            <motion.aside 
+              initial={{ translateX: "-100%" }}
+              animate={{ translateX: 0 }}
+              exit={{ translateX: "-100%" }}
+              transition={{ type: "spring", damping: 26, stiffness: 220 }}
+              className="flex flex-col h-full w-[80vw] max-w-xs bg-white dark:bg-[#0B0F19] p-5 shadow-2xl border-r border-neutral-200/50 dark:border-neutral-800" 
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-neutral-200/50 dark:border-neutral-800">
+                <Link href="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-2">
+                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-[#FF6B35] text-white">
+                    <Skull size={14} className="text-white fill-current" />
+                  </span>
+                  <span className="text-sm font-heading font-extrabold uppercase tracking-wide text-neutral-900 dark:text-white">Grim Store</span>
+                </Link>
+                <button onClick={() => setMenuOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-900" aria-label="Close menu">
+                  <X size={18} />
+                </button>
+              </div>
+              
+              <div className="mt-4 flex-1 overflow-y-auto">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-2 px-1">Shop Categories</p>
+                <div className="flex flex-col">
+                  {[...navLinks, ...liveCategories.slice(0, 6).map((category) => ({ label: category.name, href: `/products?category=${category.slug}` }))].map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMenuOpen(false)}
+                      className="block py-3.5 px-1 text-xs font-bold uppercase tracking-wider text-neutral-800 dark:text-neutral-250 border-b border-neutral-100/70 dark:border-neutral-900/30 hover:text-[#FF6B35] dark:hover:text-[#FF6B35] transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
 
-      {/* Mobile App Bottom Tab Bar (Flipkart/Myntra style) */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-neutral-200/50 dark:border-neutral-900 bg-white/95 dark:bg-[#0c0c0e]/95 backdrop-blur-lg py-2.5 px-3 flex items-center justify-around lg:hidden shadow-[0_-4px_16px_rgba(0,0,0,0.04)] select-none">
-        <BottomTabLink href="/" label="Home" icon={Home} active={pathname === "/"} />
-        <BottomTabLink href="/products" label="Explore" icon={Search} active={pathname.startsWith("/products")} />
-        <BottomTabLink href="/wishlist" label="Wishlist" icon={Heart} active={pathname.startsWith("/wishlist")} />
-        <BottomTabLink href="/cart" label="Cart" icon={ShoppingBag} active={pathname.startsWith("/cart")} badge={cartCount} />
-        <BottomTabLink href="/account" label="Profile" icon={User} active={pathname.startsWith("/account")} />
-      </div>
+              {/* Sidebar Footer with Theme Toggle */}
+              <div className="mt-auto pt-4 border-t border-neutral-200/50 dark:border-neutral-800">
+                <button
+                  onClick={() => {
+                    toggleTheme();
+                    setMenuOpen(false);
+                  }}
+                  className="w-full flex items-center justify-between rounded-xl px-3 py-3 text-xs font-bold uppercase tracking-wider text-neutral-850 dark:text-neutral-250 hover:bg-neutral-100 dark:hover:bg-neutral-900/40 transition-colors"
+                >
+                  <span>Theme: {theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+                  {theme === "dark" ? <Sun size={16} className="text-amber-500" /> : <Moon size={16} className="text-indigo-500" />}
+                </button>
+              </div>
+            </motion.aside>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Global Search Overlay */}
+      <AnimatePresence>
+        {searchOpen && (
+          <SearchOverlay 
+            open={searchOpen} 
+            query={searchQuery} 
+            suggestions={searchSuggestions} 
+            onChange={setSearchQuery} 
+            onClose={() => setSearchOpen(false)} 
+            onSubmit={submitSearch} 
+            onPick={performSearch} 
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Sticky Bottom navigation */}
+      {!isCheckoutPage && (
+        <div 
+          className="fixed left-0 right-0 bottom-0 z-[1000] border-t border-black/[0.08] dark:border-white/[0.08] bg-white/95 dark:bg-[#0B0F19]/95 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] lg:hidden"
+          style={{ backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}
+        >
+          <div className="mx-auto flex max-w-md items-center justify-between">
+            <BottomTabLink href="/" label="Home" icon={Home} active={pathname === "/"} />
+            <BottomTabLink href="/products" label="Explore" icon={Box} active={pathname === "/products"} />
+            <BottomTabLink 
+              href="#" 
+              label="Search" 
+              icon={Search} 
+              active={searchOpen} 
+              onClick={(e) => {
+                e.preventDefault();
+                setSearchOpen(true);
+              }} 
+            />
+            <BottomTabLink href="/wishlist" label="Wishlist" icon={Heart} active={pathname.startsWith("/wishlist")} />
+            <BottomTabLink href="/cart" label="Cart" icon={ShoppingBag} active={pathname.startsWith("/cart")} badge={cartCount} />
+          </div>
+        </div>
+      )}
     </>
-  );
-}
-
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link href={href} className="rounded-full px-4 py-2 transition hover:bg-electrox-elevated hover:text-foreground">
-      {children}
-    </Link>
-  );
-}
-
-function IconLink({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
-  return (
-    <Link href={href} aria-label={label} className="hidden h-10 w-10 place-items-center rounded-full text-neutral-450 transition hover:bg-electrox-elevated hover:text-foreground sm:grid">
-      {children}
-    </Link>
   );
 }
 
@@ -302,109 +438,133 @@ function SearchOverlay({
   open: boolean;
   query: string;
   suggestions: SearchSuggestion[];
-  onChange: (value: string) => void;
   onClose: () => void;
   onSubmit: (event: React.FormEvent) => void;
+  onChange: (value: string) => void;
   onPick: (value: string) => void;
 }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    // Escape key closes search
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  const fallback: SearchSuggestion[] = [
+    { id: "toys", title: "Kids Smart Toys", brand: "Bestseller" },
+    { id: "gaming", title: "Gaming Consoles", brand: "Trending" },
+    { id: "audio", title: "Premium Audio Gear", brand: "New Arrival" },
+    { id: "wearables", title: "Smart Wearables", brand: "Popular" }
+  ];
+
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div className="fixed inset-0 z-[180] bg-black/60 dark:bg-black/80 p-4 backdrop-blur-xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <div className="mx-auto max-w-4xl pt-12 sm:pt-20">
-            <div className="flex items-center justify-between">
-              <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.34em] text-electrox-blue">
-                <Sparkles size={15} /> Instant Search
-              </p>
-              <button onClick={onClose} aria-label="Close search" className="grid h-10 w-10 place-items-center rounded-full border border-electrox-elevated bg-electrox-surface text-neutral-450 hover:bg-electrox-elevated hover:text-foreground">
-                <X size={20} />
-              </button>
-            </div>
-            <form onSubmit={onSubmit} className="mt-5 flex min-h-16 items-center rounded-3xl border border-electrox-blue/30 bg-electrox-surface px-5 shadow-lg">
-              <Search size={22} className="text-electrox-blue" />
-              <input
-                autoFocus
-                value={query}
-                onChange={(e) => onChange(e.target.value)}
-                placeholder="Search wireless audio, smart watches, cameras..."
-                className="ml-3 min-w-0 flex-1 bg-transparent text-lg font-bold text-foreground outline-none placeholder:text-neutral-450"
-              />
-            </form>
-            <div className="mt-5 grid gap-3">
-              {(suggestions.length ? suggestions : [
-                { id: "trending-1", title: "Wireless Neckband", brand: "Trending" },
-                { id: "trending-2", title: "Smart Watch", brand: "Popular" },
-                { id: "trending-3", title: "Gaming Accessories", brand: "Explore" }
-              ]).map((suggestion) => (
-                <button
-                  key={suggestion.id}
-                  onClick={() => onPick(suggestion.title)}
-                  className="flex items-center justify-between rounded-2xl border border-electrox-elevated bg-electrox-surface px-4 py-3 text-left transition hover:border-electrox-blue/60 hover:bg-electrox-blue/5"
-                >
-                  <span>
-                    <span className="block font-black text-foreground">{suggestion.title}</span>
-                    <span className="mt-1 block text-xs text-neutral-450">{[suggestion.brand, suggestion.category].filter(Boolean).join(" / ") || "Suggested product"}</span>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
+      className="fixed inset-0 z-[180] bg-neutral-900/60 dark:bg-black/70 backdrop-blur-md p-4 flex items-start justify-center overflow-y-auto"
+    >
+      <motion.div 
+        initial={{ y: 20, scale: 0.98 }}
+        animate={{ y: 0, scale: 1 }}
+        exit={{ y: 20, scale: 0.98 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        ref={containerRef}
+        className="mt-12 md:mt-20 w-full max-w-2xl bg-white dark:bg-[#151B26] rounded-3xl border border-neutral-200/60 dark:border-neutral-800/80 p-5 shadow-2xl overflow-hidden"
+      >
+        <div className="flex items-center gap-3">
+          <form onSubmit={onSubmit} className="flex min-h-12 flex-1 items-center rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 px-4 focus-within:ring-2 focus-within:ring-[#FF6B35]/40 focus-within:border-[#FF6B35] transition-all">
+            <Search size={18} className="text-[#FF6B35] shrink-0" />
+            <input
+              autoFocus
+              value={query}
+              onChange={(event) => onChange(event.target.value)}
+              placeholder="Search toys, consoles, audio, wearables..."
+              className="ml-3 min-w-0 flex-1 border-0 bg-transparent text-sm font-semibold outline-none text-neutral-850 dark:text-neutral-100 placeholder-neutral-400"
+            />
+          </form>
+          <button onClick={onClose} aria-label="Close search" className="grid h-12 w-12 place-items-center rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors active:scale-95">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="mt-6">
+          <h4 className="text-[10px] font-heading font-extrabold uppercase tracking-widest text-[#FF6B35] mb-3 px-1">
+            {query.trim().length >= 2 ? "Search Results" : "Trending Searches"}
+          </h4>
+          
+          <div className="grid gap-2">
+            {(suggestions.length ? suggestions : fallback).map((suggestion) => (
+              <button 
+                key={suggestion.id} 
+                onClick={() => onPick(suggestion.title)} 
+                className="flex items-center justify-between rounded-xl border border-neutral-200/50 dark:border-neutral-800/80 bg-white dark:bg-neutral-900/40 px-4 py-3 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800/80 hover:border-[#FF6B35]/40 transition-all cursor-pointer group"
+              >
+                <span>
+                  <span className="block text-xs font-bold text-neutral-900 dark:text-neutral-200 group-hover:text-[#FF6B35] transition-colors">{suggestion.title}</span>
+                  <span className="block text-[9px] font-semibold text-neutral-450 dark:text-neutral-500 uppercase tracking-wider mt-0.5">
+                    {[suggestion.brand, suggestion.category].filter(Boolean).join(" • ") || "Popular Category"}
                   </span>
-                  <ChevronRight size={16} className="text-neutral-450" />
-                </button>
-              ))}
-            </div>
+                </span>
+                <ArrowRight size={14} className="text-neutral-400 group-hover:text-[#FF6B35] group-hover:translate-x-0.5 transition-all" />
+              </button>
+            ))}
           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
-function FlyingParticle({ particle, onComplete }: { particle: Particle; onComplete: () => void }) {
-  const distance = 34 + particle.speed * 9;
-  const targetX = Math.cos(particle.angle) * distance;
-  const targetY = Math.sin(particle.angle) * distance;
-
-  return (
-    <motion.div
-      initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
-      animate={{ x: targetX, y: targetY, scale: 0.1, opacity: 0 }}
-      transition={{ duration: 0.64, ease: "easeOut" }}
-      onAnimationComplete={onComplete}
-      style={{
-        position: "absolute",
-        width: 5,
-        height: 5,
-        borderRadius: "50%",
-        backgroundColor: particle.color,
-        boxShadow: `0 0 10px ${particle.color}`
-      }}
-    />
-  );
-}
-
-function BottomTabLink({
-  href,
-  label,
-  icon: Icon,
-  active,
-  badge
-}: {
-  href: string;
-  label: string;
-  icon: any;
-  active: boolean;
+function BottomTabLink({ 
+  href, 
+  label, 
+  icon: Icon, 
+  active, 
+  badge,
+  onClick
+}: { 
+  href: string; 
+  label: string; 
+  icon: any; 
+  active: boolean; 
   badge?: number;
+  onClick?: (e: React.MouseEvent) => void;
 }) {
-  return (
-    <Link href={href} className="relative flex flex-col items-center justify-center gap-1 min-w-[54px] text-center">
-      <div className="relative">
-        <Icon size={19} className={active ? "text-indigo-650 dark:text-indigo-400" : "text-neutral-400 dark:text-neutral-500"} />
+  const content = (
+    <>
+      <div className="relative flex h-6 w-6 items-center justify-center">
+        <Icon size={19} />
         {badge !== undefined && badge > 0 && (
-          <span className="absolute -right-2 -top-1.5 rounded-full bg-rose-500 px-1 py-0.2 text-[8px] font-black text-white min-w-[14px] text-center scale-90">
+          <span className="absolute -right-2.5 -top-1.5 min-w-[15px] h-3.5 rounded-full bg-[#FF6B35] text-[8px] font-bold text-white flex items-center justify-center px-1 border border-white dark:border-[#0B0F19]">
             {badge}
           </span>
         )}
       </div>
-      <span className={`text-[8px] font-extrabold uppercase tracking-widest ${active ? "text-indigo-650 dark:text-indigo-400" : "text-neutral-400 dark:text-neutral-500"}`}>
-        {label}
-      </span>
+      <span className="text-[9px] font-bold uppercase tracking-wider leading-none">{label}</span>
+    </>
+  );
+
+  const className = `relative flex min-w-14 flex-col items-center justify-center gap-1.5 py-1 text-center transition-colors ${
+    active ? "text-[#FF6B35]" : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200"
+  }`;
+
+  if (onClick) {
+    return (
+      <button onClick={onClick} className={className}>
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <Link href={href} className={className}>
+      {content}
     </Link>
   );
 }

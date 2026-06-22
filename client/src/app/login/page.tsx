@@ -8,6 +8,7 @@ import { Loader2, Mail, Phone, User, Lock, KeyRound, Sparkles, ArrowRight, Shiel
 import toast from "react-hot-toast";
 import { api } from "@/lib/api";
 import { useAuth } from "@/store/auth";
+import { LightweightCanvas } from "@/components/layout/lightweight-canvas";
 
 type FormState = "signin-password" | "signin-otp" | "signup" | "forgot-password" | "reset-password";
 
@@ -230,317 +231,346 @@ function LoginForm() {
   }
 
   return (
-    <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-electrox-elevated/80 bg-electrox-surface p-6 shadow-xl dark:shadow-2xl sm:p-10">
+    <div className="relative w-full overflow-hidden rounded-2xl border border-neutral-200/60 dark:border-neutral-800 bg-white dark:bg-neutral-900/30 shadow-md">
       
-      {/* Glows in dark mode */}
-      <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-blue-500/10 dark:bg-blue-500/15 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-28 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-purple-500/10 dark:bg-purple-500/15 blur-3xl" />
-
-      {/* Branding header */}
-      <div className="relative text-center">
-        <Link href="/" className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-electrox-elevated bg-electrox-bg-2 shadow-sm text-electrox-blue">
-          <Cpu size={20} />
-        </Link>
-        <h1 className="mt-4 text-2xl font-black tracking-tight text-foreground uppercase">
-          The Grim Store
-        </h1>
-        <p className="mt-1.5 text-xs font-semibold text-neutral-450">
-          {mode === "signin-password" && "Welcome back! Login to your account."}
-          {mode === "signin-otp" && "Verification code login / quick registration."}
-          {mode === "signup" && "Create a secure account with us."}
-          {mode === "forgot-password" && "Recover your account password."}
-          {mode === "reset-password" && "Enter OTP and your new password."}
-        </p>
+      {/* Brand header banner gradient - matching premium Apple/Nintendo/Nothing vibes */}
+      <div className="relative w-full aspect-[2.8/1] bg-gradient-to-tr from-[#FF6B35] to-[#FFD93D] overflow-hidden flex items-center justify-center p-6 select-none border-b border-neutral-200/55 dark:border-neutral-800/60">
+        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
+        <div className="relative text-center">
+          <h2 className="text-xl sm:text-2xl font-heading font-extrabold text-neutral-950 uppercase tracking-widest leading-none">THE GRIM STORE</h2>
+          <p className="mt-1 text-[9px] font-heading font-black text-neutral-950/80 uppercase tracking-wider">Play • Learn • Explore</p>
+        </div>
       </div>
 
-      <div className="relative mt-8">
-        <AnimatePresence mode="wait">
-          
-          {/* 1. SIGN IN (PASSWORD) */}
-          {mode === "signin-password" && (
-            <motion.form
-              key="signin-pass"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              onSubmit={handlePasswordLogin}
-              className="grid gap-4"
-            >
-              <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-450">
-                Email Address
-                <div className="relative mt-2 flex items-center">
-                  <Mail size={16} className="absolute left-3.5 text-neutral-450" />
+      <div className="p-6 sm:p-8 flex flex-col gap-6">
+        {/* Branding header info */}
+        <div className="relative">
+          <h1 className="text-base font-heading font-extrabold text-neutral-900 dark:text-white uppercase tracking-wider flex items-baseline gap-1.5 border-b border-neutral-100 dark:border-neutral-800 pb-2">
+            {mode === "signin-password" && (
+              <>
+                Login <span className="text-[10px] font-normal text-neutral-600 dark:text-neutral-400 lowercase">or</span> Signin
+              </>
+            )}
+            {mode === "signin-otp" && (
+              <>
+                OTP Login <span className="text-[10px] font-normal text-neutral-600 dark:text-neutral-400 lowercase">or</span> Signup
+              </>
+            )}
+            {mode === "signup" && "Create Account"}
+            {mode === "forgot-password" && "Reset Password"}
+            {mode === "reset-password" && "Verify & Set"}
+          </h1>
+          <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-350 font-medium">
+            {mode === "signin-password" && "Enter your email and password to log in."}
+            {mode === "signin-otp" && "Verification code login / quick registration."}
+            {mode === "signup" && "Join The Grim Store for custom tech and style."}
+            {mode === "forgot-password" && "Recover your account password."}
+            {mode === "reset-password" && "Enter the 6-digit code and set your password."}
+          </p>
+        </div>
+
+        <div className="relative">
+          <AnimatePresence mode="wait">
+            
+            {/* 1. SIGN IN (PASSWORD) */}
+            {mode === "signin-password" && (
+              <motion.div
+                key="signin-pass"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+              >
+                <form
+                  onSubmit={handlePasswordLogin}
+                  className="grid gap-4"
+                >
+                <div className="grid gap-1">
+                  <label className="text-[9.5px] font-heading font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-350">
+                    Email Address
+                  </label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full rounded-2xl border border-electrox-elevated bg-electrox-bg-2 py-3 pl-11 pr-4 text-sm font-bold text-foreground outline-none focus:border-electrox-blue"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
-              </label>
 
-              <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-450">
-                <div className="flex items-center justify-between">
-                  <span>Password</span>
-                  <button
-                    type="button"
-                    onClick={() => switchMode("forgot-password")}
-                    className="text-[10px] font-black text-electrox-blue hover:underline lowercase"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
-                <div className="relative mt-2 flex items-center">
-                  <Lock size={16} className="absolute left-3.5 text-neutral-450" />
+                <div className="grid gap-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[9.5px] font-heading font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-350">
+                      Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => switchMode("forgot-password")}
+                      className="text-[10px] font-heading font-extrabold text-[#FF6B35] hover:underline uppercase tracking-wider transition-colors"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
                   <input
                     type="password"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full rounded-2xl border border-electrox-elevated bg-electrox-bg-2 py-3 pl-11 pr-4 text-sm font-bold text-foreground outline-none focus:border-electrox-blue"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
-              </label>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-650 to-purple-600 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-md hover:shadow-lg disabled:opacity-60 transition"
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-white hover:bg-[#FF6B35] dark:hover:bg-[#FF6B35] text-white dark:text-[#111827] dark:hover:text-white text-xs font-heading font-extrabold uppercase tracking-widest transition-all duration-205 disabled:opacity-60 hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-sm"
+                >
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ShieldCheck size={14} />
+                  )}
+                  {loading ? "Checking..." : "Login"}
+                </button>
+                </form>
+              </motion.div>
+            )}
+
+            {/* 2. SIGN IN (OTP) */}
+            {mode === "signin-otp" && (
+              <motion.div
+                key="signin-otp"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
               >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck size={16} />}
-                {loading ? "Checking..." : "Sign In"}
-              </button>
-            </motion.form>
-          )}
-
-          {/* 2. SIGN IN (OTP) */}
-          {mode === "signin-otp" && (
-            <motion.form
-              key="signin-otp"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              onSubmit={otpSent ? handleVerifyOtp : handleSendOtp}
-              className="grid gap-4"
-            >
-              {!otpSent ? (
-                <>
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-450">
-                    Full Name
-                    <div className="relative mt-2 flex items-center">
-                      <User size={16} className="absolute left-3.5 text-neutral-450" />
+                <form
+                  onSubmit={otpSent ? handleVerifyOtp : handleSendOtp}
+                  className="grid gap-4"
+                >
+                {!otpSent ? (
+                  <>
+                    <div className="grid gap-1">
+                      <label className="text-[9.5px] font-heading font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-350">
+                        Full Name
+                      </label>
                       <input
                         type="text"
                         required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Your name"
-                        className="w-full rounded-2xl border border-electrox-elevated bg-electrox-bg-2 py-3 pl-11 pr-4 text-sm font-bold text-foreground outline-none focus:border-electrox-blue"
+                        className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
                       />
                     </div>
-                  </label>
 
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-450">
-                    Mobile Number
-                    <div className="relative mt-2 flex items-center">
-                      <Phone size={16} className="absolute left-3.5 text-neutral-450" />
+                    <div className="grid gap-1">
+                      <label className="text-[9.5px] font-heading font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-350">
+                        Mobile Number
+                      </label>
                       <input
                         type="tel"
                         required
                         value={phone}
                         onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                        placeholder="10-digit number"
-                        className="w-full rounded-2xl border border-electrox-elevated bg-electrox-bg-2 py-3 pl-11 pr-4 text-sm font-bold text-foreground outline-none focus:border-electrox-blue"
+                        placeholder="10-digit mobile number"
+                        className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
                       />
                     </div>
-                  </label>
 
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-450">
-                    Email Address
-                    <div className="relative mt-2 flex items-center">
-                      <Mail size={16} className="absolute left-3.5 text-neutral-450" />
+                    <div className="grid gap-1">
+                      <label className="text-[9.5px] font-heading font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-350">
+                        Email Address
+                      </label>
                       <input
                         type="email"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="name@example.com"
-                        className="w-full rounded-2xl border border-electrox-elevated bg-electrox-bg-2 py-3 pl-11 pr-4 text-sm font-bold text-foreground outline-none focus:border-electrox-blue"
+                        className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
                       />
                     </div>
-                  </label>
-                </>
-              ) : (
-                <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-450">
-                  6-Digit Verification Code
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    required
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    placeholder="000000"
-                    className="mt-2 w-full rounded-2xl border border-electrox-elevated bg-electrox-bg-2 py-3 text-center text-xl font-black tracking-[0.4em] text-foreground outline-none focus:border-electrox-blue"
-                  />
-                </label>
-              )}
+                  </>
+                ) : (
+                  <div className="grid gap-1">
+                    <label className="text-[9.5px] font-heading font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-350 text-center">
+                      6-Digit Verification Code
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      required
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      placeholder="000000"
+                      className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 text-center text-xl font-extrabold tracking-[0.3em] text-[#424553] dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] transition-all placeholder:text-neutral-400"
+                    />
+                  </div>
+                )}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-650 to-purple-600 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-md hover:shadow-lg disabled:opacity-60 transition"
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-white hover:bg-[#FF6B35] dark:hover:bg-[#FF6B35] text-white dark:text-[#111827] dark:hover:text-white text-xs font-heading font-extrabold uppercase tracking-widest transition-all duration-205 disabled:opacity-60 hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-sm"
+                >
+                  {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {loading ? "Processing..." : otpSent ? "Verify & Log In" : "Send Verification Code"}
+                </button>
+                </form>
+              </motion.div>
+            )}
+
+            {/* 3. SIGN UP (CREATE ACCOUNT) */}
+            {mode === "signup" && (
+              <motion.div
+                key="signup-form"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
               >
-                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {loading ? "Processing..." : otpSent ? "Verify & Sign In" : "Send Verification Code"}
-              </button>
-            </motion.form>
-          )}
-
-          {/* 3. SIGN UP (CREATE ACCOUNT) */}
-          {mode === "signup" && (
-            <motion.form
-              key="signup-form"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              onSubmit={handleSignupSubmit}
-              className="grid gap-4"
-            >
-              <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-450">
-                Full Name
-                <div className="relative mt-2 flex items-center">
-                  <User size={16} className="absolute left-3.5 text-neutral-450" />
+                <form
+                  onSubmit={handleSignupSubmit}
+                  className="grid gap-4"
+                >
+                <div className="grid gap-1">
+                  <label className="text-[9.5px] font-heading font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-350">
+                    Full Name
+                  </label>
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Your name"
-                    className="w-full rounded-2xl border border-electrox-elevated bg-electrox-bg-2 py-3 pl-11 pr-4 text-sm font-bold text-foreground outline-none focus:border-electrox-blue"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
-              </label>
 
-              <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-450">
-                Mobile Number
-                <div className="relative mt-2 flex items-center">
-                  <Phone size={16} className="absolute left-3.5 text-neutral-450" />
+                <div className="grid gap-1">
+                  <label className="text-[9.5px] font-heading font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-350">
+                    Mobile Number
+                  </label>
                   <input
                     type="tel"
                     required
                     value={phone}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                     placeholder="10-digit number"
-                    className="w-full rounded-2xl border border-electrox-elevated bg-electrox-bg-2 py-3 pl-11 pr-4 text-sm font-bold text-foreground outline-none focus:border-electrox-blue"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
-              </label>
 
-              <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-450">
-                Email Address
-                <div className="relative mt-2 flex items-center">
-                  <Mail size={16} className="absolute left-3.5 text-neutral-450" />
+                <div className="grid gap-1">
+                  <label className="text-[9.5px] font-heading font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-350">
+                    Email Address
+                  </label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full rounded-2xl border border-electrox-elevated bg-electrox-bg-2 py-3 pl-11 pr-4 text-sm font-bold text-foreground outline-none focus:border-electrox-blue"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
-              </label>
 
-              <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-450">
-                Choose Password
-                <div className="relative mt-2 flex items-center">
-                  <Lock size={16} className="absolute left-3.5 text-neutral-450" />
+                <div className="grid gap-1">
+                  <label className="text-[9.5px] font-heading font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-350">
+                    Choose Password
+                  </label>
                   <input
                     type="password"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Min 8 characters"
-                    className="w-full rounded-2xl border border-electrox-elevated bg-electrox-bg-2 py-3 pl-11 pr-4 text-sm font-bold text-foreground outline-none focus:border-electrox-blue"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
-              </label>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-650 to-purple-600 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-md hover:shadow-lg disabled:opacity-60 transition"
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-white hover:bg-[#FF6B35] dark:hover:bg-[#FF6B35] text-white dark:text-[#111827] dark:hover:text-white text-xs font-heading font-extrabold uppercase tracking-widest transition-all duration-205 disabled:opacity-60 hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-sm"
+                >
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ArrowRight size={14} />
+                  )}
+                  {loading ? "Creating..." : "Create Account"}
+                </button>
+                </form>
+              </motion.div>
+            )}
+
+            {/* 4. FORGOT PASSWORD */}
+            {mode === "forgot-password" && (
+              <motion.div
+                key="forgot-pass"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
               >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight size={16} />}
-                {loading ? "Creating..." : "Create Account"}
-              </button>
-            </motion.form>
-          )}
-
-          {/* 4. FORGOT PASSWORD */}
-          {mode === "forgot-password" && (
-            <motion.form
-              key="forgot-pass"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              onSubmit={handleSendOtp}
-              className="grid gap-4"
-            >
-              <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-450">
-                Registered Email Address
-                <div className="relative mt-2 flex items-center">
-                  <Mail size={16} className="absolute left-3.5 text-neutral-450" />
+                <form
+                  onSubmit={handleSendOtp}
+                  className="grid gap-4"
+                >
+                <div className="grid gap-1">
+                  <label className="text-[9.5px] font-heading font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-350">
+                    Registered Email Address
+                  </label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full rounded-2xl border border-electrox-elevated bg-electrox-bg-2 py-3 pl-11 pr-4 text-sm font-bold text-foreground outline-none focus:border-electrox-blue"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
-              </label>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-650 to-purple-600 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-md hover:shadow-lg disabled:opacity-60 transition"
-              >
-                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {loading ? "Sending..." : "Request Reset OTP"}
-              </button>
-              
-              {otpSent && (
                 <button
-                  type="button"
-                  onClick={() => switchMode("reset-password")}
-                  className="mt-2 text-center text-xs font-black text-electrox-blue hover:underline"
+                  type="submit"
+                  disabled={loading}
+                  className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-white hover:bg-[#FF6B35] dark:hover:bg-[#FF6B35] text-white dark:text-[#111827] dark:hover:text-white text-xs font-heading font-extrabold uppercase tracking-widest transition-all duration-205 disabled:opacity-60 hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-sm"
                 >
-                  Code already received? Click here to set password.
+                  {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {loading ? "Sending..." : "Request Reset OTP"}
                 </button>
-              )}
-            </motion.form>
-          )}
+                
+                {otpSent && (
+                  <button
+                    type="button"
+                    onClick={() => switchMode("reset-password")}
+                    className="mt-2 text-center text-xs font-heading font-extrabold text-[#FF6B35] hover:underline uppercase tracking-wider"
+                  >
+                    Code already received? Click here to set password.
+                  </button>
+                )}
+                </form>
+              </motion.div>
+            )}
 
-          {/* 5. RESET PASSWORD */}
-          {mode === "reset-password" && (
-            <motion.form
-              key="reset-pass"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              onSubmit={handleResetPassword}
-              className="grid gap-4"
-            >
-              <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-450">
-                Verification Code (Sent to email)
-                <div className="relative mt-2 flex items-center">
-                  <KeyRound size={16} className="absolute left-3.5 text-neutral-450" />
+            {/* 5. RESET PASSWORD */}
+            {mode === "reset-password" && (
+              <motion.div
+                key="reset-pass"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+              >
+                <form
+                  onSubmit={handleResetPassword}
+                  className="grid gap-4"
+                >
+                <div className="grid gap-1">
+                  <label className="text-[9.5px] font-heading font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-350">
+                    Verification Code (Sent to email)
+                  </label>
                   <input
                     type="text"
                     maxLength={6}
@@ -548,138 +578,162 @@ function LoginForm() {
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                     placeholder="000000"
-                    className="w-full rounded-2xl border border-electrox-elevated bg-electrox-bg-2 py-3 pl-11 pr-4 text-sm font-bold text-foreground outline-none focus:border-electrox-blue"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
-              </label>
 
-              <label className="text-xs font-extrabold uppercase tracking-wider text-neutral-450">
-                New Password
-                <div className="relative mt-2 flex items-center">
-                  <Lock size={16} className="absolute left-3.5 text-neutral-450" />
+                <div className="grid gap-1">
+                  <label className="text-[9.5px] font-heading font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-350">
+                    New Password
+                  </label>
                   <input
                     type="password"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Min 8 characters"
-                    className="w-full rounded-2xl border border-electrox-elevated bg-electrox-bg-2 py-3 pl-11 pr-4 text-sm font-bold text-foreground outline-none focus:border-electrox-blue"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
-              </label>
 
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-white hover:bg-[#FF6B35] dark:hover:bg-[#FF6B35] text-white dark:text-[#111827] dark:hover:text-white text-xs font-heading font-extrabold uppercase tracking-widest transition-all duration-205 disabled:opacity-60 hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-sm"
+                >
+                  {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {loading ? "Resetting..." : "Complete Password Reset"}
+                </button>
+                </form>
+              </motion.div>
+            )}
+
+          </AnimatePresence>
+        </div>
+
+        {/* Separator line */}
+        <div className="relative flex items-center justify-center">
+          <hr className="w-full border-neutral-200 dark:border-neutral-800" />
+          <span className="absolute bg-white dark:bg-[#151B26] px-3 text-[9px] font-heading font-extrabold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">
+            Or
+          </span>
+        </div>
+
+        {/* Social Authentication Options */}
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={loading}
+          className="flex min-h-[44px] w-full items-center justify-center gap-3 rounded-xl border border-neutral-250 dark:border-neutral-850 bg-white dark:bg-neutral-900/30 px-6 text-xs font-heading font-extrabold uppercase tracking-widest text-neutral-900 dark:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+        >
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" className="flex-shrink-0">
+            <path
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              fill="#4285F4"
+            />
+            <path
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              fill="#34A853"
+            />
+            <path
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+              fill="#FBBC05"
+            />
+            <path
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              fill="#EA4335"
+            />
+          </svg>
+          Continue with Google
+        </button>
+
+        {/* Auth mode switches */}
+        <div className="text-center text-xs font-semibold text-neutral-600 dark:text-neutral-400">
+          {mode === "signin-password" && (
+            <p>
+              Don't have an account?{" "}
               <button
-                type="submit"
-                disabled={loading}
-                className="mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-650 to-purple-600 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-md hover:shadow-lg disabled:opacity-60 transition"
+                onClick={() => switchMode("signup")}
+                className="font-heading font-black text-[#FF6B35] hover:underline uppercase tracking-wider"
               >
-                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {loading ? "Resetting..." : "Complete Password Reset"}
+                Sign up
+              </button>{" "}
+              or{" "}
+              <button
+                onClick={() => switchMode("signin-otp")}
+                className="font-heading font-black text-[#FF6B35] hover:underline uppercase tracking-wider"
+              >
+                Use OTP
               </button>
-            </motion.form>
+            </p>
+          )}
+          
+          {mode === "signin-otp" && (
+            <p>
+              Already registered?{" "}
+              <button
+                onClick={() => switchMode("signin-password")}
+                className="font-heading font-black text-[#FF6B35] hover:underline uppercase tracking-wider"
+              >
+                Use Password
+              </button>{" "}
+              or{" "}
+              <button
+                onClick={() => switchMode("signup")}
+                className="font-heading font-black text-[#FF6B35] hover:underline uppercase tracking-wider"
+              >
+                Create Account
+              </button>
+            </p>
           )}
 
-        </AnimatePresence>
-      </div>
+          {mode === "signup" && (
+            <p>
+              Already have an account?{" "}
+              <button
+                onClick={() => switchMode("signin-password")}
+                className="font-heading font-black text-[#FF6B35] hover:underline uppercase tracking-wider"
+              >
+                Sign in
+              </button>
+            </p>
+          )}
 
-      {/* Separator line */}
-      <div className="relative my-6 flex items-center justify-center">
-        <hr className="w-full border-electrox-elevated" />
-        <span className="absolute bg-electrox-surface px-3 text-[10px] font-extrabold uppercase tracking-wider text-neutral-400">
-          Or
-        </span>
-      </div>
-
-      {/* Social Authentication Options */}
-      <button
-        type="button"
-        onClick={handleGoogleLogin}
-        disabled={loading}
-        className="flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl border border-electrox-elevated bg-electrox-bg-2 px-6 text-xs font-black uppercase tracking-wider text-foreground hover:bg-electrox-elevated transition shadow-sm"
-      >
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-          <path
-            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            fill="#4285F4"
-          />
-          <path
-            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            fill="#34A853"
-          />
-          <path
-            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-            fill="#FBBC05"
-          />
-          <path
-            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-            fill="#EA4335"
-          />
-        </svg>
-        Continue with Google
-      </button>
-
-      {/* Auth mode switches */}
-      <div className="mt-8 text-center text-xs font-semibold text-neutral-450">
-        {mode === "signin-password" && (
-          <p>
-            Don't have an account?{" "}
-            <button onClick={() => switchMode("signup")} className="font-extrabold text-electrox-blue hover:underline">
-              Sign up
-            </button>{" "}
-            or{" "}
-            <button onClick={() => switchMode("signin-otp")} className="font-extrabold text-electrox-blue hover:underline">
-              Use OTP
+          {(mode === "forgot-password" || mode === "reset-password") && (
+            <button
+              onClick={() => switchMode("signin-password")}
+              className="font-heading font-black text-[#FF6B35] hover:underline uppercase tracking-wider"
+            >
+              Back to login page
             </button>
-          </p>
-        )}
-        
-        {mode === "signin-otp" && (
-          <p>
-            Already registered?{" "}
-            <button onClick={() => switchMode("signin-password")} className="font-extrabold text-electrox-blue hover:underline">
-              Use Password
-            </button>{" "}
-            or{" "}
-            <button onClick={() => switchMode("signup")} className="font-extrabold text-electrox-blue hover:underline">
-              Create Account
-            </button>
-          </p>
-        )}
+          )}
+        </div>
 
-        {mode === "signup" && (
-          <p>
-            Already have an account?{" "}
-            <button onClick={() => switchMode("signin-password")} className="font-extrabold text-electrox-blue hover:underline">
-              Sign in
-            </button>
-          </p>
-        )}
-
-        {(mode === "forgot-password" || mode === "reset-password") && (
-          <button
-            onClick={() => switchMode("signin-password")}
-            className="font-extrabold text-electrox-blue hover:underline"
-          >
-            Back to login page
-          </button>
-        )}
       </div>
-
     </div>
   );
 }
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-[calc(100vh-4.5rem)] items-center justify-center px-4 py-12 transition-colors duration-300">
+    <div className="relative overflow-hidden mobile-bottom-safe flex min-h-[calc(100vh-4.5rem)] items-center justify-center bg-transparent px-4 py-12 transition-colors duration-300">
+      <LightweightCanvas />
       <Suspense fallback={
-        <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-electrox-elevated/80 bg-electrox-surface p-6 shadow-xl text-center py-20">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-electrox-blue" />
-          <p className="mt-4 text-xs font-semibold text-neutral-450">Loading verification portal...</p>
+        <div className="relative w-full max-w-[420px] overflow-hidden rounded-2xl store-shell p-6 text-center py-20 animate-pulse">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#FF6B35]" />
+          <p className="mt-4 text-xs font-semibold text-neutral-600 dark:text-neutral-350">Loading verification portal...</p>
         </div>
       }>
-        <LoginForm />
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-[420px]"
+        >
+          <LoginForm />
+        </motion.div>
       </Suspense>
     </div>
   );
 }
+

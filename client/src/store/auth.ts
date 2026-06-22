@@ -36,11 +36,24 @@ export const useAuth = create<AuthState>((set, get) => ({
     try {
       const res = await api.get("/auth/me");
       const user = (res.data?.user ?? null) as AuthUser | null;
-      set({
-        user,
-        status: user ? "authenticated" : "unauthenticated"
-      });
+      if (user) {
+        if (typeof window !== "undefined") {
+          document.cookie = "grim_auth_status=true; path=/; max-age=259200; SameSite=Lax";
+        }
+        set({
+          user,
+          status: "authenticated"
+        });
+      } else {
+        if (typeof window !== "undefined") {
+          document.cookie = "grim_auth_status=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        }
+        set({ user: null, status: "unauthenticated" });
+      }
     } catch {
+      if (typeof window !== "undefined") {
+        document.cookie = "grim_auth_status=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      }
       set({ user: null, status: "unauthenticated" });
       throw new Error("Unauthenticated");
     }
@@ -50,6 +63,9 @@ export const useAuth = create<AuthState>((set, get) => ({
     try {
       await api.post("/auth/logout");
     } finally {
+      if (typeof window !== "undefined") {
+        document.cookie = "grim_auth_status=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      }
       set({ user: null, status: "unauthenticated" });
     }
   }

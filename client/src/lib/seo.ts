@@ -9,15 +9,16 @@ export function siteUrl(path = "/") {
 export function productMetadata(product: { title: string; description: string; slug: string; image: string; seoTitle?: string; seoDescription?: string }): Metadata {
   const title = product.seoTitle || product.title;
   const description = product.seoDescription || product.description;
+  const url = siteUrl(`/products/${product.slug}`);
   return {
     title,
     description,
-    alternates: { canonical: `/products/${product.slug}` },
+    alternates: { canonical: url },
     robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
     openGraph: {
       title,
       description,
-      url: `/products/${product.slug}`,
+      url,
       images: product.image ? [{ url: product.image, alt: product.title }] : [],
       type: "website"
     },
@@ -99,4 +100,163 @@ export function storefrontJsonLd() {
       }
     }
   ];
+}
+
+export function organizationJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": siteUrl("/#organization"),
+    name: "The Grim Store",
+    url: siteUrl("/"),
+    logo: siteUrl("/logo.png"),
+    description: "Premium kids smart toys, educational gadgets, gaming consoles, wearables, and electronics designed for modern families.",
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: "+91-9999999999",
+      contactType: "customer service",
+      areaServed: "IN",
+      availableLanguage: "en"
+    },
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "MG Road",
+      addressLocality: "Indore",
+      addressRegion: "MP",
+      postalCode: "452001",
+      addressCountry: "IN"
+    },
+    sameAs: [
+      "https://facebook.com/thegrimstore",
+      "https://instagram.com/thegrimstore",
+      "https://twitter.com/thegrimstore"
+    ]
+  };
+}
+
+export function websiteJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": siteUrl("/#website"),
+    name: "The Grim Store",
+    url: siteUrl("/"),
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${siteUrl("/products")}?q={search_term_string}`
+      },
+      "query-input": "required name=search_term_string"
+    }
+  };
+}
+
+export function breadcrumbJsonLd(crumbs: Array<{ name: string; url: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: crumbs.map((crumb, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: crumb.name,
+      item: siteUrl(crumb.url)
+    }))
+  };
+}
+
+export function collectionPageJsonLd(categoryName: string, products: any[]) {
+  const listItems = products.slice(0, 20).map((product, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    url: siteUrl(`/products/${product.slug}`),
+    name: product.title,
+    image: product.image || product.images?.[0]
+  }));
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: categoryName,
+    url: siteUrl(`/products?category=${categoryName.toLowerCase().replace(/\s+/g, "-")}`),
+    description: `Shop the best premium selection of ${categoryName} at The Grim Store. Check verified ratings, availability, and exclusive offers.`,
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: products.length,
+      itemListElement: listItems
+    }
+  };
+}
+
+export function cartPageJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Shopping Cart | The Grim Store",
+    description: "Review and edit items in your shopping cart before checking out at The Grim Store.",
+    url: siteUrl("/cart"),
+    publisher: {
+      "@type": "Organization",
+      name: "The Grim Store",
+      logo: {
+        "@type": "ImageObject",
+        url: siteUrl("/logo.png")
+      }
+    }
+  };
+}
+
+export function checkoutPageJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CheckoutPage",
+    name: "Checkout | The Grim Store",
+    description: "Complete your order securely using Razorpay UPI, Cards, or Cash on Delivery at The Grim Store.",
+    url: siteUrl("/checkout"),
+    publisher: {
+      "@type": "Organization",
+      name: "The Grim Store",
+      logo: {
+        "@type": "ImageObject",
+        url: siteUrl("/logo.png")
+      }
+    }
+  };
+}
+
+export function productFaqJsonLd(product: any) {
+  const brandName = product.brand || "The Grim Store";
+  const name = product.title;
+  const cat = product.category || "electronics product";
+  
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": `What is ${name}?`,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": `${name} is a premium ${cat} by ${brandName}. ${product.shortDescription || product.description || ""}`
+        }
+      },
+      {
+        "@type": "Question",
+        "name": `Who is ${name} for?`,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": `${name} is designed for families and tech enthusiasts looking for high-quality, durable, and highly functional ${cat}s.`
+        }
+      },
+      {
+        "@type": "Question",
+        "name": `Why should someone buy ${name}?`,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": `Buy ${name} to get industry-leading build quality, verified user reviews, and comprehensive return/refund protection backed by The Grim Store.`
+        }
+      }
+    ]
+  };
 }

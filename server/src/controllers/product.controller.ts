@@ -2,32 +2,41 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { makeSlug } from "../helpers/slug.js";
 import { ApiError } from "../utils/ApiError.js";
 import { execute, id, json, mapProduct, parseJson, row, rows } from "../lib/sql.js";
+import { apiCache } from "../utils/cache.js";
 
 const PUBLIC_CATALOG_CACHE = "public, max-age=30, stale-while-revalidate=300";
 const SUGGESTION_CACHE = "public, max-age=15, stale-while-revalidate=120";
 
 export const listProducts = asyncHandler(async (req, res) => {
   const { q, category, brand, gender, min, max, sort = "latest", page = 1, limit = 12 } = req.query as any;
+  const cacheKey = `products:${JSON.stringify({ q, category, brand, gender, min, max, sort, page, limit })}`;
+  
+  const cachedData = apiCache.get(cacheKey);
+  if (cachedData) {
+    res.set("Cache-Control", PUBLIC_CATALOG_CACHE);
+    return res.json(cachedData);
+  }
+
   const clauses: string[] = [];
   const params: Record<string, unknown> = { offset: (Number(page) - 1) * Number(limit), limit: Number(limit) };
   if (q) {
     clauses.push(`(
-      MATCH(title, brand, description) AGAINST (:q IN NATURAL LANGUAGE MODE)
-      OR title LIKE :likeQ
-      OR brand LIKE :likeQ
-      OR description LIKE :likeQ
-      OR short_description LIKE :likeQ
-      OR sku LIKE :likeQ
-      OR JSON_SEARCH(tags, 'one', :likeQ) IS NOT NULL
+      to_tsvector('english', coalesce(title, '') || ' ' || coalesce(brand, '') || ' ' || coalesce(description, '')) @@ plainto_tsquery('english', :q)
+      OR title ILIKE :likeQ
+      OR brand ILIKE :likeQ
+      OR description ILIKE :likeQ
+      OR short_description ILIKE :likeQ
+      OR sku ILIKE :likeQ
+      OR tags::text ILIKE :likeQ
       OR EXISTS (
         SELECT 1 FROM categories
         WHERE categories.id = products.category_id
-          AND (categories.name LIKE :likeQ OR categories.slug LIKE :likeQ)
+          AND (categories.name ILIKE :likeQ OR categories.slug ILIKE :likeQ)
       )
       OR EXISTS (
         SELECT 1 FROM subcategories
         WHERE subcategories.id = products.subcategory_id
-          AND (subcategories.name LIKE :likeQ OR subcategories.slug LIKE :likeQ)
+          AND (subcategories.name ILIKE :likeQ OR subcategories.slug ILIKE :likeQ)
       )
     )`);
     params.q = q;
@@ -63,15 +72,19 @@ export const listProducts = asyncHandler(async (req, res) => {
   };
   const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
   const productSelect = q
-    ? "products.*, MATCH(title, brand, description) AGAINST (:q IN NATURAL LANGUAGE MODE) AS search_score"
+    ? "products.*, ts_rank(to_tsvector('english', coalesce(title, '') || ' ' || coalesce(brand, '') || ' ' || coalesce(description, '')), plainto_tsquery('english', :q)) AS search_score"
     : "products.*";
   const orderBy = q && sort === "latest" ? "search_score DESC, created_at DESC" : (sortMap[sort] ?? sortMap.latest);
   const [items, total] = await Promise.all([
     rows(`SELECT ${productSelect} FROM products ${where} ORDER BY ${orderBy} LIMIT :limit OFFSET :offset`, params),
     row<{ total: number }>(`SELECT COUNT(*) AS total FROM products ${where}`, params)
   ]);
+  
+  const responseData = { success: true, items: items.map(mapProduct), total: total?.total ?? 0, page: Number(page), pages: Math.ceil((total?.total ?? 0) / Number(limit)) };
+  apiCache.set(cacheKey, responseData, 60); // Cache for 60 seconds
+  
   res.set("Cache-Control", PUBLIC_CATALOG_CACHE);
-  res.json({ success: true, items: items.map(mapProduct), total: total?.total ?? 0, page: Number(page), pages: Math.ceil((total?.total ?? 0) / Number(limit)) });
+  res.json(responseData);
 });
 
 export const listProductSuggestions = asyncHandler(async (req, res) => {
@@ -80,6 +93,13 @@ export const listProductSuggestions = asyncHandler(async (req, res) => {
   if (q.length < 2) {
     res.set("Cache-Control", SUGGESTION_CACHE);
     return res.json({ success: true, suggestions: [] });
+  }
+
+  const cacheKey = `suggestions:${q}:${limit}`;
+  const cachedData = apiCache.get(cacheKey);
+  if (cachedData) {
+    res.set("Cache-Control", SUGGESTION_CACHE);
+    return res.json(cachedData);
   }
 
   const params = {
@@ -101,14 +121,14 @@ export const listProductSuggestions = asyncHandler(async (req, res) => {
       products.price, products.sale_price, categories.name AS category
     FROM products
     LEFT JOIN categories ON categories.id = products.category_id
-    WHERE products.title LIKE :likeQ
-      OR products.brand LIKE :likeQ
-      OR products.sku LIKE :likeQ
-      OR categories.name LIKE :likeQ
+    WHERE products.title ILIKE :likeQ
+      OR products.brand ILIKE :likeQ
+      OR products.sku ILIKE :likeQ
+      OR categories.name ILIKE :likeQ
     ORDER BY
       CASE
-        WHEN products.title LIKE :prefixQ THEN 0
-        WHEN products.brand LIKE :prefixQ THEN 1
+        WHEN products.title ILIKE :prefixQ THEN 0
+        WHEN products.brand ILIKE :prefixQ THEN 1
         ELSE 2
       END,
       products.bestseller DESC,
@@ -119,8 +139,7 @@ export const listProductSuggestions = asyncHandler(async (req, res) => {
     params
   );
 
-  res.set("Cache-Control", SUGGESTION_CACHE);
-  res.json({
+  const responseData = {
     success: true,
     suggestions: suggestions.map((product) => {
       const images = parseJson<any[]>(product.images, []);
@@ -136,16 +155,30 @@ export const listProductSuggestions = asyncHandler(async (req, res) => {
         salePrice: Number(product.sale_price)
       };
     })
-  });
+  };
+
+  apiCache.set(cacheKey, responseData, 30); // Cache for 30 seconds
+  res.set("Cache-Control", SUGGESTION_CACHE);
+  res.json(responseData);
 });
 
 export const getProduct = asyncHandler(async (req, res) => {
+  const cacheKey = `product:${req.params.slug}`;
+  const cachedData = apiCache.get(cacheKey);
+  if (cachedData) {
+    return res.json(cachedData);
+  }
+  
   const product = mapProduct(await row("SELECT * FROM products WHERE slug = :slug", { slug: req.params.slug }));
   if (!product) throw new ApiError(404, "Product not found");
-  res.json({ success: true, product });
+  
+  const responseData = { success: true, product };
+  apiCache.set(cacheKey, responseData, 60); // Cache for 60 seconds
+  res.json(responseData);
 });
 
 export const createProduct = asyncHandler(async (req, res) => {
+  apiCache.clear();
   const body = req.body;
   body.slug = body.slug ? makeSlug(body.slug) : makeSlug(body.title);
   body.discountPercentage = body.price ? Math.round(((body.price - body.salePrice) / body.price) * 100) : 0;
@@ -192,6 +225,7 @@ export const createProduct = asyncHandler(async (req, res) => {
 });
 
 export const updateProduct = asyncHandler(async (req, res) => {
+  apiCache.clear();
   if (req.body.title && !req.body.slug) req.body.slug = makeSlug(req.body.title);
   const existing = await row("SELECT * FROM products WHERE id = :id", { id: req.params.id });
   if (!existing) throw new ApiError(404, "Product not found");
@@ -234,11 +268,13 @@ export const updateProduct = asyncHandler(async (req, res) => {
 });
 
 export const deleteProduct = asyncHandler(async (req, res) => {
+  apiCache.clear();
   await execute("DELETE FROM products WHERE id = :id", { id: req.params.id });
   res.json({ success: true });
 });
 
 export const createCategory = asyncHandler(async (req, res) => {
+  apiCache.clear();
   const category = { id: id(), ...req.body, slug: makeSlug(req.body.slug || req.body.name) };
   await execute("INSERT INTO categories (id, name, slug, image, banner) VALUES (:id, :name, :slug, :image, :banner)", {
     ...category,
@@ -249,14 +285,26 @@ export const createCategory = asyncHandler(async (req, res) => {
 });
 
 export const listCategories = asyncHandler(async (_req, res) => {
+  const cacheKey = "categories";
+  const cachedData = apiCache.get(cacheKey);
+  if (cachedData) {
+    res.set("Cache-Control", PUBLIC_CATALOG_CACHE);
+    return res.json(cachedData);
+  }
+
   const categories = await rows(`SELECT categories.*, COUNT(products.id) AS product_count
     FROM categories LEFT JOIN products ON products.category_id = categories.id
     GROUP BY categories.id ORDER BY categories.name ASC`);
+  
+  const responseData = { success: true, categories };
+  apiCache.set(cacheKey, responseData, 300); // Cache for 5 mins
+  
   res.set("Cache-Control", PUBLIC_CATALOG_CACHE);
-  res.json({ success: true, categories });
+  res.json(responseData);
 });
 
 export const updateCategory = asyncHandler(async (req, res) => {
+  apiCache.clear();
   const existing = await row("SELECT * FROM categories WHERE id = :id", { id: req.params.id });
   if (!existing) throw new ApiError(404, "Category not found");
   const next = {
@@ -274,6 +322,7 @@ export const updateCategory = asyncHandler(async (req, res) => {
 });
 
 export const deleteCategory = asyncHandler(async (req, res) => {
+  apiCache.clear();
   const usage = await row<{ total: number }>("SELECT COUNT(*) AS total FROM products WHERE category_id = :id", { id: req.params.id });
   if ((usage?.total ?? 0) > 0) throw new ApiError(409, "Category is used by products. Move or delete those products first.");
   await execute("DELETE FROM subcategories WHERE category_id = :id", { id: req.params.id });
@@ -282,20 +331,32 @@ export const deleteCategory = asyncHandler(async (req, res) => {
 });
 
 export const createSubCategory = asyncHandler(async (req, res) => {
+  apiCache.clear();
   const subCategory = { id: id(), ...req.body, slug: makeSlug(req.body.slug || req.body.name) };
   await execute("INSERT INTO subcategories (id, name, slug, category_id) VALUES (:id, :name, :slug, :categoryId)", subCategory);
   res.status(201).json({ success: true, subCategory });
 });
 
 export const listSubCategories = asyncHandler(async (req, res) => {
+  const { categoryId } = req.query as any;
+  const cacheKey = `subcategories:${categoryId ?? "all"}`;
+  const cachedData = apiCache.get(cacheKey);
+  if (cachedData) {
+    return res.json(cachedData);
+  }
+
   const params: Record<string, unknown> = {};
-  const where = req.query.categoryId ? "WHERE category_id = :categoryId" : "";
-  if (req.query.categoryId) params.categoryId = req.query.categoryId;
+  const where = categoryId ? "WHERE category_id = :categoryId" : "";
+  if (categoryId) params.categoryId = categoryId;
   const subCategories = await rows(`SELECT * FROM subcategories ${where} ORDER BY name ASC`, params);
-  res.json({ success: true, subCategories });
+  
+  const responseData = { success: true, subCategories };
+  apiCache.set(cacheKey, responseData, 300); // Cache for 5 mins
+  res.json(responseData);
 });
 
 export const updateSubCategory = asyncHandler(async (req, res) => {
+  apiCache.clear();
   const existing = await row("SELECT * FROM subcategories WHERE id = :id", { id: req.params.id });
   if (!existing) throw new ApiError(404, "Subcategory not found");
   const next = {
@@ -312,6 +373,7 @@ export const updateSubCategory = asyncHandler(async (req, res) => {
 });
 
 export const deleteSubCategory = asyncHandler(async (req, res) => {
+  apiCache.clear();
   await execute("UPDATE products SET subcategory_id = NULL WHERE subcategory_id = :id", { id: req.params.id });
   await execute("DELETE FROM subcategories WHERE id = :id", { id: req.params.id });
   res.json({ success: true });

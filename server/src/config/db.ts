@@ -1,18 +1,20 @@
 import postgres from "postgres";
 import { env } from "./env.js";
 
+// Supabase pooler always requires SSL; local dev (127.0.0.1/localhost) does not
+const isRemoteHost = env.sqlHost !== "127.0.0.1" && env.sqlHost !== "localhost";
+const sslMode = env.nodeEnv === "production" || isRemoteHost ? "require" : false;
+
 // PostgreSQL client for Supabase or direct PostgreSQL
 export const sql = env.databaseUrl
-  ? postgres(env.databaseUrl, {
-      ssl: env.nodeEnv === "production" ? "require" : false
-    })
+  ? postgres(env.databaseUrl, { ssl: sslMode })
   : postgres({
       host: env.sqlHost,
       port: env.sqlPort,
       username: env.sqlUser,
       password: env.sqlPassword || "",
       database: env.sqlDatabase,
-      ssl: env.nodeEnv === "production" ? "require" : false
+      ssl: sslMode
     });
 
 export async function connectDatabase() {
@@ -208,6 +210,8 @@ async function initializeSqlSchema() {
     await sql`CREATE UNIQUE INDEX IF NOT EXISTS uniq_review ON reviews(user_id, product_id, order_db_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_reviews_product ON reviews(product_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_products_search ON products USING gin(to_tsvector('english', coalesce(title, '') || ' ' || coalesce(brand, '') || ' ' || coalesce(description, '')))`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_products_sale_price ON products(sale_price)`;
 
     await sql`
       CREATE TABLE IF NOT EXISTS pages (

@@ -24,9 +24,9 @@ export function PriceFilter({ currentMax }: { currentMax?: string }) {
 
   return (
     <form onSubmit={handleApply} className="mt-5">
-      <div className="flex items-center justify-between text-sm text-slate-400">
+      <div className="flex items-center justify-between text-sm text-neutral-450">
         <span>Max Price</span>
-        <span className="font-black text-blue-200">Rs. {val}</span>
+        <span className="font-black text-electrox-blue">Rs. {val}</span>
       </div>
       <input
         type="range"
@@ -35,10 +35,11 @@ export function PriceFilter({ currentMax }: { currentMax?: string }) {
         value={val}
         onChange={(e) => setVal(Number(e.target.value))}
         className="mt-3 w-full cursor-pointer accent-blue-500"
+        style={{ caretColor: "transparent" }}
       />
       <button
         type="submit"
-        className="mt-3 w-full rounded-2xl border border-white/10 bg-white/[0.045] py-2.5 text-xs font-black text-slate-100 transition hover:border-blue-300/60 hover:bg-blue-500/10 hover:text-white hover:shadow-[0_0_26px_rgba(59,130,246,0.2)]"
+        className="mt-3 w-full rounded-2xl border border-electrox-elevated bg-electrox-bg-2 py-2.5 text-xs font-black text-foreground hover:border-electrox-blue hover:bg-electrox-surface"
       >
         Apply Price Limit
       </button>

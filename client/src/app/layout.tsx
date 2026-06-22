@@ -3,28 +3,37 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Providers } from "@/components/providers";
 import { storefrontJsonLd } from "@/lib/seo";
+import { Space_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-space-grotesk",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://thegrimstore.com"),
   title: {
-    default: "The Grim Store | Premium Electronics Ecommerce",
+    default: "The Grim Store | Premium Smart Toys & Electronics",
     template: "%s | The Grim Store"
   },
-  description: "Premium electronics, smart gadgets, secure checkout, live delivery tracking, and a futuristic dark-mode shopping experience.",
+  description: "Premium kids smart toys, educational gadgets, gaming consoles, wearables, and electronics designed for modern families.",
   applicationName: "The Grim Store",
   keywords: [
     "The Grim Store",
     "thegrimstore.com",
-    "the grim store",
-    "the grimstore",
-    "premium electronics",
-    "buy smart gadgets online",
-    "wireless gadgets",
+    "kids smart toys",
+    "educational gadgets",
+    "gaming consoles",
+    "wearables",
     "electronics ecommerce store",
-    "Razorpay secure orders",
-    "track order The Grim Store",
-    "official the grim store website"
+    "premium electronics"
   ],
   alternates: { canonical: "/" },
   category: "electronics ecommerce",
@@ -33,7 +42,7 @@ export const metadata: Metadata = {
     url: "/",
     siteName: "The Grim Store",
     title: "The Grim Store",
-    description: "Premium electronics ecommerce for modern gadget shoppers.",
+    description: "Premium smart toys, gaming gadgets, and electronics.",
     images: ["/og-image.jpg"]
   },
   twitter: { card: "summary_large_image", title: "The Grim Store" },
@@ -43,7 +52,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#050816"
+  themeColor: "#FAFAFA"
 };
 
 import { LoginModal } from "@/components/layout/login-modal";
@@ -72,11 +81,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           }}
         />
       </head>
-      <body>
+      <body className={`${spaceGrotesk.variable} ${inter.variable} antialiased`}>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(storefrontJsonLd()) }} />
         <Providers>
           <Header />
-          <main className="pb-16 lg:pb-0">{children}</main>
+          <main className="w-full flex-grow">{children}</main>
           <Footer />
           <LoginModal />
           <FlyCartContainer />

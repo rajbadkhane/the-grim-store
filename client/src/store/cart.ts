@@ -8,6 +8,8 @@ type CartItem = {
   slug: string;
   title: string;
   image: string;
+  brand?: string;
+  price?: number;
   salePrice: number;
   quantity: number;
   sku?: string;

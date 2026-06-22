@@ -40,7 +40,7 @@ export const env = {
   sqlPassword: supabaseDb?.password || process.env.SQL_PASSWORD || "",
   sqlDatabase: process.env.SQL_DATABASE ?? "postgres",
   clientUrl: process.env.CLIENT_URL ?? "http://localhost:3000",
-  adminUrl: process.env.ADMIN_URL ?? "http://localhost:3001",
+  adminUrl: process.env.ADMIN_URL ?? "http://localhost:3002",
   corsOrigins: (process.env.CORS_ORIGINS ?? "")
     .split(",")
     .map((origin) => origin.trim())
