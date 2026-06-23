@@ -114,7 +114,7 @@ export async function fetchProduct(slug: string): Promise<StoreProduct | null> {
 
 export async function fetchCategories(): Promise<StoreCategory[]> {
   try {
-    const res = await fetchCatalog("/products/categories", { next: { revalidate: CATALOG_REVALIDATE_SECONDS * 5 } });
+    const res = await fetchCatalog("/products/categories", { next: { revalidate: CATALOG_REVALIDATE_SECONDS } });
     if (!res.ok) return [] as StoreCategory[];
     const data = await res.json();
     return (data.categories ?? []) as StoreCategory[];

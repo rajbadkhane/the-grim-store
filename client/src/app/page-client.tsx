@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { formatMoney } from "@/lib/utils";
 import { useCart } from "@/store/cart";
+import type { StoreCategory } from "@/lib/catalog-api";
 
 type Testimonial = {
   name: string;
@@ -49,6 +50,7 @@ type HomepageClientProps = {
   finalSmart: any[];
   finalTrending: any[];
   finalBestsellers: any[];
+  categories: StoreCategory[];
   testimonials: Testimonial[];
   totalProducts: number;
 };
@@ -108,7 +110,8 @@ export function HomepageClient({
   finalGaming,
   finalSmart,
   finalTrending,
-  finalBestsellers
+  finalBestsellers,
+  categories
 }: HomepageClientProps) {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const products = Array.from(
@@ -125,6 +128,7 @@ export function HomepageClient({
     pickProduct(products, ["headphone", "audio", "earbud"])
   ];
   const brands = buildBrandStrip(products);
+  const storefrontCategories = buildCategoryTiles(categories);
 
   return (
     <div className="bg-[#f9f9f9] text-[#1a1c1c] dark:bg-[#0A0A0A] dark:text-white">
@@ -225,7 +229,7 @@ export function HomepageClient({
 
         <div className="mobile-marquee -mx-5 sm:hidden">
           <div className="mobile-marquee-track mobile-marquee-ltr px-5">
-            {[...categoryTiles, ...categoryTiles].map((category, index) => {
+            {[...storefrontCategories, ...storefrontCategories].map((category, index) => {
               const Icon = category.icon;
               return (
                 <Link key={`${category.label}-${index}`} href={category.href} className="group mr-5 flex w-[76px] shrink-0 flex-col items-center text-center">
@@ -247,7 +251,7 @@ export function HomepageClient({
         </div>
 
         <div className="hidden grid-cols-4 gap-3 sm:grid sm:grid-cols-5 lg:grid-cols-[repeat(9,minmax(0,1fr))] lg:gap-5">
-          {categoryTiles.map((category, index) => {
+          {storefrontCategories.map((category, index) => {
             const Icon = category.icon;
             return (
               <Link key={category.label} href={category.href} className="group flex flex-col items-center text-center">
@@ -465,6 +469,35 @@ function buildBrandStrip(products: any[]) {
     if (!merged.some((item) => item.name.toLowerCase() === brand.name.toLowerCase())) merged.push(brand);
   }
   return merged.slice(0, 8);
+}
+
+function buildCategoryTiles(categories: StoreCategory[]) {
+  if (!categories.length) return categoryTiles;
+
+  const iconForCategory = (category: StoreCategory) => {
+    const text = `${category.name} ${category.slug}`.toLowerCase();
+    if (text.includes("audio") || text.includes("headphone") || text.includes("earbud")) return Headphones;
+    if (text.includes("game") || text.includes("console")) return Gamepad2;
+    if (text.includes("watch")) return Watch;
+    if (text.includes("camera") || text.includes("drone")) return Camera;
+    if (text.includes("mobile") || text.includes("phone")) return Smartphone;
+    if (text.includes("computer") || text.includes("laptop")) return Monitor;
+    if (text.includes("home")) return Home;
+    return ShoppingBag;
+  };
+
+  const liveCategories = categories.slice(0, 7).map((category) => ({
+    label: category.name,
+    href: `/products?category=${encodeURIComponent(category.slug || category.id)}`,
+    icon: iconForCategory(category),
+    image: category.image || category.banner || ""
+  }));
+
+  return [
+    ...liveCategories,
+    { label: "Custom Outfits", href: "#custom-outfits", icon: ShoppingBag },
+    { label: "More Categories", href: "/products", icon: Grid2X2, image: "/category-icons/more-categories.png" }
+  ];
 }
 
 function BrandLogo({ brand }: { brand: { name: string; logo?: string } }) {
@@ -846,4 +879,3 @@ function VaultProductCard({ product }: { product: any }) {
     </Link>
   );
 }
-

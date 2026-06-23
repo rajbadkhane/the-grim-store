@@ -11,7 +11,7 @@ export const listProducts = asyncHandler(async (req, res) => {
   const { q, category, brand, gender, min, max, sort = "latest", page = 1, limit = 12 } = req.query as any;
   const cacheKey = `products:${JSON.stringify({ q, category, brand, gender, min, max, sort, page, limit })}`;
   
-  const cachedData = apiCache.get(cacheKey);
+  const cachedData = await apiCache.get(cacheKey);
   if (cachedData) {
     res.set("Cache-Control", PUBLIC_CATALOG_CACHE);
     return res.json(cachedData);
@@ -81,7 +81,7 @@ export const listProducts = asyncHandler(async (req, res) => {
   ]);
   
   const responseData = { success: true, items: items.map(mapProduct), total: total?.total ?? 0, page: Number(page), pages: Math.ceil((total?.total ?? 0) / Number(limit)) };
-  apiCache.set(cacheKey, responseData, 60); // Cache for 60 seconds
+  await apiCache.set(cacheKey, responseData, 60); // Cache for 60 seconds
   
   res.set("Cache-Control", PUBLIC_CATALOG_CACHE);
   res.json(responseData);
@@ -96,7 +96,7 @@ export const listProductSuggestions = asyncHandler(async (req, res) => {
   }
 
   const cacheKey = `suggestions:${q}:${limit}`;
-  const cachedData = apiCache.get(cacheKey);
+  const cachedData = await apiCache.get(cacheKey);
   if (cachedData) {
     res.set("Cache-Control", SUGGESTION_CACHE);
     return res.json(cachedData);
@@ -157,14 +157,14 @@ export const listProductSuggestions = asyncHandler(async (req, res) => {
     })
   };
 
-  apiCache.set(cacheKey, responseData, 30); // Cache for 30 seconds
+  await apiCache.set(cacheKey, responseData, 30); // Cache for 30 seconds
   res.set("Cache-Control", SUGGESTION_CACHE);
   res.json(responseData);
 });
 
 export const getProduct = asyncHandler(async (req, res) => {
   const cacheKey = `product:${req.params.slug}`;
-  const cachedData = apiCache.get(cacheKey);
+  const cachedData = await apiCache.get(cacheKey);
   if (cachedData) {
     return res.json(cachedData);
   }
@@ -173,12 +173,12 @@ export const getProduct = asyncHandler(async (req, res) => {
   if (!product) throw new ApiError(404, "Product not found");
   
   const responseData = { success: true, product };
-  apiCache.set(cacheKey, responseData, 60); // Cache for 60 seconds
+  await apiCache.set(cacheKey, responseData, 60); // Cache for 60 seconds
   res.json(responseData);
 });
 
 export const createProduct = asyncHandler(async (req, res) => {
-  apiCache.clear();
+  await apiCache.clear();
   const body = req.body;
   body.slug = body.slug ? makeSlug(body.slug) : makeSlug(body.title);
   body.discountPercentage = body.price ? Math.round(((body.price - body.salePrice) / body.price) * 100) : 0;
@@ -225,7 +225,7 @@ export const createProduct = asyncHandler(async (req, res) => {
 });
 
 export const updateProduct = asyncHandler(async (req, res) => {
-  apiCache.clear();
+  await apiCache.clear();
   if (req.body.title && !req.body.slug) req.body.slug = makeSlug(req.body.title);
   const existing = await row("SELECT * FROM products WHERE id = :id", { id: req.params.id });
   if (!existing) throw new ApiError(404, "Product not found");
@@ -268,13 +268,13 @@ export const updateProduct = asyncHandler(async (req, res) => {
 });
 
 export const deleteProduct = asyncHandler(async (req, res) => {
-  apiCache.clear();
+  await apiCache.clear();
   await execute("DELETE FROM products WHERE id = :id", { id: req.params.id });
   res.json({ success: true });
 });
 
 export const createCategory = asyncHandler(async (req, res) => {
-  apiCache.clear();
+  await apiCache.clear();
   const category = { id: id(), ...req.body, slug: makeSlug(req.body.slug || req.body.name) };
   await execute("INSERT INTO categories (id, name, slug, image, banner) VALUES (:id, :name, :slug, :image, :banner)", {
     ...category,
@@ -286,7 +286,7 @@ export const createCategory = asyncHandler(async (req, res) => {
 
 export const listCategories = asyncHandler(async (_req, res) => {
   const cacheKey = "categories";
-  const cachedData = apiCache.get(cacheKey);
+  const cachedData = await apiCache.get(cacheKey);
   if (cachedData) {
     res.set("Cache-Control", PUBLIC_CATALOG_CACHE);
     return res.json(cachedData);
@@ -297,14 +297,14 @@ export const listCategories = asyncHandler(async (_req, res) => {
     GROUP BY categories.id ORDER BY categories.name ASC`);
   
   const responseData = { success: true, categories };
-  apiCache.set(cacheKey, responseData, 300); // Cache for 5 mins
+  await apiCache.set(cacheKey, responseData, 300); // Cache for 5 mins
   
   res.set("Cache-Control", PUBLIC_CATALOG_CACHE);
   res.json(responseData);
 });
 
 export const updateCategory = asyncHandler(async (req, res) => {
-  apiCache.clear();
+  await apiCache.clear();
   const existing = await row("SELECT * FROM categories WHERE id = :id", { id: req.params.id });
   if (!existing) throw new ApiError(404, "Category not found");
   const next = {
@@ -322,7 +322,7 @@ export const updateCategory = asyncHandler(async (req, res) => {
 });
 
 export const deleteCategory = asyncHandler(async (req, res) => {
-  apiCache.clear();
+  await apiCache.clear();
   const usage = await row<{ total: number }>("SELECT COUNT(*) AS total FROM products WHERE category_id = :id", { id: req.params.id });
   if ((usage?.total ?? 0) > 0) throw new ApiError(409, "Category is used by products. Move or delete those products first.");
   await execute("DELETE FROM subcategories WHERE category_id = :id", { id: req.params.id });
@@ -331,7 +331,7 @@ export const deleteCategory = asyncHandler(async (req, res) => {
 });
 
 export const createSubCategory = asyncHandler(async (req, res) => {
-  apiCache.clear();
+  await apiCache.clear();
   const subCategory = { id: id(), ...req.body, slug: makeSlug(req.body.slug || req.body.name) };
   await execute("INSERT INTO subcategories (id, name, slug, category_id) VALUES (:id, :name, :slug, :categoryId)", subCategory);
   res.status(201).json({ success: true, subCategory });
@@ -340,7 +340,7 @@ export const createSubCategory = asyncHandler(async (req, res) => {
 export const listSubCategories = asyncHandler(async (req, res) => {
   const { categoryId } = req.query as any;
   const cacheKey = `subcategories:${categoryId ?? "all"}`;
-  const cachedData = apiCache.get(cacheKey);
+  const cachedData = await apiCache.get(cacheKey);
   if (cachedData) {
     return res.json(cachedData);
   }
@@ -351,12 +351,12 @@ export const listSubCategories = asyncHandler(async (req, res) => {
   const subCategories = await rows(`SELECT * FROM subcategories ${where} ORDER BY name ASC`, params);
   
   const responseData = { success: true, subCategories };
-  apiCache.set(cacheKey, responseData, 300); // Cache for 5 mins
+  await apiCache.set(cacheKey, responseData, 300); // Cache for 5 mins
   res.json(responseData);
 });
 
 export const updateSubCategory = asyncHandler(async (req, res) => {
-  apiCache.clear();
+  await apiCache.clear();
   const existing = await row("SELECT * FROM subcategories WHERE id = :id", { id: req.params.id });
   if (!existing) throw new ApiError(404, "Subcategory not found");
   const next = {
@@ -373,7 +373,7 @@ export const updateSubCategory = asyncHandler(async (req, res) => {
 });
 
 export const deleteSubCategory = asyncHandler(async (req, res) => {
-  apiCache.clear();
+  await apiCache.clear();
   await execute("UPDATE products SET subcategory_id = NULL WHERE subcategory_id = :id", { id: req.params.id });
   await execute("DELETE FROM subcategories WHERE id = :id", { id: req.params.id });
   res.json({ success: true });

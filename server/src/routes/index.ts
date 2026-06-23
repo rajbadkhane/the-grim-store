@@ -4,6 +4,7 @@ import { authRoutes } from "./auth.routes.js";
 import { orderRoutes } from "./order.routes.js";
 import { productRoutes } from "./product.routes.js";
 import { reviewRoutes } from "./review.routes.js";
+import { sellerRoutes } from "./seller.routes.js";
 import { userRoutes } from "./user.routes.js";
 import { uploadRoutes } from "./upload.routes.js";
 
@@ -21,6 +22,7 @@ apiRoutes.get("/", (_req, res) =>
       users: "/api/v1/users",
       orders: "/api/v1/orders",
       reviews: "/api/v1/reviews",
+      sellerRequests: "/api/v1/seller-requests",
       uploads: "/api/v1/uploads",
       admin: "/api/v1/admin"
     }
@@ -32,5 +34,6 @@ apiRoutes.use("/products", productRoutes);
 apiRoutes.use("/users", userRoutes);
 apiRoutes.use("/orders", orderRoutes);
 apiRoutes.use("/reviews", reviewRoutes);
+apiRoutes.use("/seller-requests", sellerRoutes);
 apiRoutes.use("/uploads", uploadRoutes);
 apiRoutes.use("/admin", adminRoutes);

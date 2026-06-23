@@ -17,6 +17,24 @@ export const sql = env.databaseUrl
       ssl: sslMode
     });
 
+const defaultAdminUsers = [
+  {
+    name: "Store Admin",
+    email: "admin@thegrimstore.com",
+    passwordHash: "$2b$12$eXPSdPgByrsAq0GvihhM4uLne18pffdGqhiwPUWvpaxPaJmumdhMq"
+  },
+  {
+    name: "Store Manager",
+    email: "manager@thegrimstore.com",
+    passwordHash: "$2b$12$Y237N44hblD0awcegVNpTOrQddcjIOUWdLjURxg/ClpEy3lpOQjNe"
+  },
+  {
+    name: "Store Operations",
+    email: "ops@thegrimstore.com",
+    passwordHash: "$2b$12$C2yePrKNh/Jq2J/Hp0Kjp.IfFNN6Mx7zJ9L8e5YORXeGAvn97qzHa"
+  }
+];
+
 export async function connectDatabase() {
   try {
     const result = await sql`SELECT NOW()`;
@@ -191,7 +209,7 @@ async function initializeSqlSchema() {
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID NOT NULL REFERENCES users(id),
         product_id UUID NOT NULL REFERENCES products(id),
-        order_db_id UUID NOT NULL REFERENCES orders(id),
+        order_db_id UUID REFERENCES orders(id),
         user_name VARCHAR(160) NOT NULL,
         user_avatar TEXT,
         rating INT NOT NULL,
@@ -207,6 +225,7 @@ async function initializeSqlSchema() {
       )
     `;
 
+    await sql`ALTER TABLE reviews ALTER COLUMN order_db_id DROP NOT NULL`;
     await sql`CREATE UNIQUE INDEX IF NOT EXISTS uniq_review ON reviews(user_id, product_id, order_db_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_reviews_product ON reviews(product_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating)`;
@@ -227,6 +246,33 @@ async function initializeSqlSchema() {
       )
     `;
 
+    await sql`
+      CREATE TABLE IF NOT EXISTS seller_requests (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        business_name VARCHAR(180) NOT NULL,
+        owner_name VARCHAR(160) NOT NULL,
+        email VARCHAR(190) NOT NULL,
+        phone VARCHAR(32) NOT NULL,
+        city VARCHAR(120) NOT NULL,
+        pincode VARCHAR(16) NOT NULL,
+        category VARCHAR(160) NOT NULL,
+        product_count VARCHAR(80) DEFAULT '',
+        monthly_sales VARCHAR(120) DEFAULT '',
+        gst_number VARCHAR(80) DEFAULT '',
+        website TEXT DEFAULT '',
+        message TEXT DEFAULT '',
+        status VARCHAR(24) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'reviewing', 'approved', 'rejected')),
+        admin_note TEXT DEFAULT '',
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_seller_requests_status ON seller_requests(status)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_seller_requests_created ON seller_requests(created_at DESC)`;
+
+    await ensureDefaultAdminUsers();
+
     console.log("[db] Schema initialized successfully");
   } catch (error: any) {
     if (error.message.includes("already exists")) {
@@ -234,5 +280,21 @@ async function initializeSqlSchema() {
     } else {
       console.error("[db] Schema initialization error:", error);
     }
+  }
+}
+
+async function ensureDefaultAdminUsers() {
+  for (const admin of defaultAdminUsers) {
+    await sql`
+      INSERT INTO users (name, email, role, email_verified, password_hash, wishlist, cart, addresses)
+      VALUES (${admin.name}, ${admin.email}, 'admin', TRUE, ${admin.passwordHash}, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb)
+      ON CONFLICT (email) DO UPDATE SET
+        name = EXCLUDED.name,
+        role = 'admin',
+        email_verified = TRUE,
+        password_hash = EXCLUDED.password_hash,
+        is_blocked = FALSE,
+        updated_at = CURRENT_TIMESTAMP
+    `;
   }
 }

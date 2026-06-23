@@ -4,6 +4,21 @@ import { notFound } from "next/navigation";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { pageMap, sitePages } from "@/lib/site-pages";
 
+const founders = [
+  {
+    name: "Er. Harshit Koshti",
+    image: "/harshit.jpeg",
+    detail:
+      "Co-founder of The Grim Store, focused on product direction, customer experience, and building a sharp ecommerce brand around useful everyday technology."
+  },
+  {
+    name: "Er.Abhishek Rajput",
+    image: "/abhisek.jpeg",
+    detail:
+      "Co-founder of The Grim Store, focused on operations, platform growth, and keeping the store reliable from catalog planning to customer support."
+  }
+];
+
 export const dynamicParams = false;
 
 export function generateStaticParams() {
@@ -23,7 +38,8 @@ export async function generateMetadata({ params }: { params: Promise<{ pageSlug:
       title: `${page.title} | The Grim Store`,
       description: page.description,
       type: "article",
-      url: `/${page.slug}`
+      url: `/${page.slug}`,
+      images: ["/logo.png"]
     }
   };
 }
@@ -103,6 +119,27 @@ export default async function SiteInfoPage({ params }: { params: Promise<{ pageS
               )}
             </div>
           ))}
+          {page.slug === "about-us" && (
+            <div className="rounded-2xl border border-[#282c3f]/10 bg-white p-5 shadow-xs dark:border-white/5 dark:bg-[#171a1d] sm:p-6">
+              <h2 className="text-xl font-black text-neutral-850 dark:text-white">About the founders</h2>
+              <p className="mt-4 text-sm leading-7 text-neutral-600 dark:text-neutral-300">
+                The Grim Store is shaped by two engineer-founders who combine practical product thinking with a clean, customer-first ecommerce approach.
+              </p>
+              <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                {founders.map((founder) => (
+                  <article key={founder.name} className="rounded-2xl border border-[#282c3f]/10 bg-neutral-50 p-5 text-center dark:border-white/5 dark:bg-neutral-950/40">
+                    <img
+                      src={founder.image}
+                      alt={founder.name}
+                      className="mx-auto h-32 w-32 rounded-full border border-[#FF3B30]/25 object-cover object-[center_28%] shadow-sm sm:h-36 sm:w-36"
+                    />
+                    <h3 className="mt-4 text-lg font-black text-neutral-850 dark:text-white">{founder.name}</h3>
+                    <p className="mt-3 text-sm leading-7 text-neutral-600 dark:text-neutral-300">{founder.detail}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
         </article>
 
         <aside className="h-fit rounded-xl border border-[#FF3B30]/20 bg-[#FF3B30]/5 p-5 shadow-xs dark:border-[#FF3B30]/30 dark:bg-[#FF3B30]/10">

@@ -1,7 +1,7 @@
 import { cookieOptions } from "../constants/http.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { verifyRefreshToken, signAccessToken, signRefreshToken } from "../utils/jwt.js";
-import { issueOtp, resetPassword, verifyOtpAndLogin, loginOrCreateSocialUser, registerWithPassword, loginWithPasswordService } from "../services/auth.service.js";
+import { issueOtp, resetPassword, verifyOtpAndLogin, loginOrCreateSocialUser, registerWithPassword, loginWithPasswordService, loginAdminWithPasswordService } from "../services/auth.service.js";
 import { ApiError } from "../utils/ApiError.js";
 import { getUserById, publicUser, saveUserState } from "../lib/sql.js";
 import { env } from "../config/env.js";
@@ -16,6 +16,14 @@ export const verifyOtp = asyncHandler(async (req, res) => {
   const { email, code, purpose, name, phone } = req.body;
   if (purpose === "reset") throw new ApiError(400, "Use password reset to verify this code");
   const { user, accessToken, refreshToken } = await verifyOtpAndLogin(email, code, purpose, name, phone);
+  res.cookie("accessToken", accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
+  res.cookie("refreshToken", refreshToken, cookieOptions);
+  res.json({ success: true, user: publicUser(user) });
+});
+
+export const adminLogin = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+  const { user, accessToken, refreshToken } = await loginAdminWithPasswordService(email, password);
   res.cookie("accessToken", accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
   res.cookie("refreshToken", refreshToken, cookieOptions);
   res.json({ success: true, user: publicUser(user) });

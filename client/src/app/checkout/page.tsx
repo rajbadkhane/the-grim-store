@@ -599,6 +599,15 @@ export default function CheckoutPage() {
     }
   }, [isAuthed, useNewAddress, savedAddresses, selectedAddressId]);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || useNewAddress) return;
+    const selected = savedAddresses.find((entry) => entry.id === selectedAddressId);
+    const city = selected?.city?.trim();
+    const pincode = selected?.pincode?.trim();
+    if (!city || !pincode) return;
+    window.localStorage.setItem("grim_delivery_location", `${city} ${pincode}`);
+  }, [savedAddresses, selectedAddressId, useNewAddress]);
+
   // If cart becomes empty, reset address UI
   useEffect(() => {
     if (!items.length) {

@@ -54,6 +54,11 @@ export const metadata: Metadata = {
     "electronic accessories"
   ],
   alternates: { canonical: "/" },
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png"
+  },
   category: "electronics ecommerce",
   openGraph: {
     type: "website",
@@ -61,9 +66,9 @@ export const metadata: Metadata = {
     siteName: "The Grim Store",
     title: "The Grim Store",
     description: "Electronic items, kids cameras, game sticks, audio, grooming tools, and accessories.",
-    images: ["/og-image.jpg"]
+    images: ["/logo.png"]
   },
-  twitter: { card: "summary_large_image", title: "The Grim Store" },
+  twitter: { card: "summary_large_image", title: "The Grim Store", images: ["/logo.png"] },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } }
 };
 

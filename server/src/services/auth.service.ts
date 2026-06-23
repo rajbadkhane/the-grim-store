@@ -164,3 +164,24 @@ export async function loginWithPasswordService(email: string, password: string) 
 
   return { user, accessToken, refreshToken };
 }
+
+export async function loginAdminWithPasswordService(email: string, password: string) {
+  const normalizedEmail = normalizeEmail(email);
+  const user = await getUserByEmail(normalizedEmail);
+  if (!user || user.role !== "admin" || !user.passwordHash) {
+    throw new ApiError(400, "Invalid admin email or password");
+  }
+
+  const isOk = await bcrypt.compare(password, user.passwordHash);
+  if (!isOk) throw new ApiError(400, "Invalid admin email or password");
+  if (user.isBlocked) throw new ApiError(403, "This account is blocked");
+
+  user.emailVerified = true;
+  user.lastLogin = new Date();
+  const accessToken = signAccessToken({ id: user.id, role: user.role });
+  const refreshToken = signRefreshToken({ id: user.id, role: user.role });
+  user.refreshToken = refreshToken;
+  await saveUserState(user);
+
+  return { user, accessToken, refreshToken };
+}

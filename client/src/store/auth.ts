@@ -38,7 +38,7 @@ export const useAuth = create<AuthState>((set, get) => ({
       const user = (res.data?.user ?? null) as AuthUser | null;
       if (user) {
         if (typeof window !== "undefined") {
-          document.cookie = "grim_auth_status=true; path=/; max-age=259200; SameSite=Lax";
+          document.cookie = "grim_auth_status=true; path=/; max-age=172800; SameSite=Lax";
         }
         set({
           user,

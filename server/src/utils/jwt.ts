@@ -6,7 +6,7 @@ export function signAccessToken(payload: object) {
 }
 
 export function signRefreshToken(payload: object) {
-  return jwt.sign(payload, env.jwtRefreshSecret, { expiresIn: "72h" });
+  return jwt.sign(payload, env.jwtRefreshSecret, { expiresIn: "48h" });
 }
 
 export function verifyAccessToken<T>(token: string) {

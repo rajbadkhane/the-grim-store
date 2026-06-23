@@ -92,6 +92,9 @@ export function Footer() {
 
           <div className="mt-12 flex flex-col gap-4 border-t border-[#eadede] pt-6 text-[10px] font-semibold uppercase tracking-wide text-[#756666] dark:border-[#3a1f1f] dark:text-white/60 md:flex-row md:items-center md:justify-between">
             <p>Copyright &copy; {new Date().getFullYear()} The Grim Store. Electronic items, gadgets &amp; accessories.</p>
+            <Link href="https://gautamenterprises.org" target="_blank" rel="noopener noreferrer" className="text-center font-black text-[#111] hover:text-[#FF3B30] dark:text-white dark:hover:text-[#FF3B30]">
+              Powered by Gautam Tech Studio
+            </Link>
             <div className="flex gap-5">
               <CreditCard size={16} />
               <ShieldCheck size={16} />

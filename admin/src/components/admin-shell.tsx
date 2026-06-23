@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell, Boxes, LayoutDashboard, LogOut, Menu, Percent, Search, Settings, ShoppingBag, Star, Tags, Users, X } from "lucide-react";
+import { Bell, Boxes, Handshake, LayoutDashboard, LogOut, Menu, Percent, Search, Settings, ShoppingBag, Star, Tags, Users, X } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ const nav = [
   [Boxes, "Products", "/products"],
   [Tags, "Categories", "/categories"],
   [ShoppingBag, "Orders", "/orders"],
+  [Handshake, "Seller Requests", "/seller-requests"],
   [Star, "Reviews", "/reviews"],
   [Users, "Users", "/users"],
   [Percent, "Coupons", "/coupons"],

@@ -119,6 +119,7 @@ export default async function HomePage() {
         finalSmart={finalSmart}
         finalTrending={finalTrending}
         finalBestsellers={finalBestsellers}
+        categories={categories}
         testimonials={testimonials}
         totalProducts={total || products.length}
       />

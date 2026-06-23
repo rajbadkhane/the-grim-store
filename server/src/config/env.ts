@@ -77,5 +77,7 @@ export const env = {
   nimbuspostAutoPickup: process.env.NIMBUSPOST_AUTO_PICKUP ?? "yes",
   shiprocketEmail: process.env.SHIPROCKET_EMAIL ?? "",
   shiprocketPassword: process.env.SHIPROCKET_PASSWORD ?? "",
-  googleClientId: process.env.GOOGLE_CLIENT_ID ?? ""
+  googleClientId: process.env.GOOGLE_CLIENT_ID ?? "",
+  redisRestUrl: process.env.REDIS_REST_URL ?? process.env.UPSTASH_REDIS_REST_URL ?? "",
+  redisRestToken: process.env.REDIS_REST_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN ?? ""
 };

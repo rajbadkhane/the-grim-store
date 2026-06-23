@@ -31,3 +31,10 @@ export const googleLoginSchema = z.object({
     idToken: z.string().min(20, "Google ID token is required")
   })
 });
+
+export const adminLoginSchema = z.object({
+  body: z.object({
+    email: z.string().email(),
+    password: z.string().min(8)
+  })
+});

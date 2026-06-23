@@ -10,7 +10,6 @@ import {
   Car,
   ChevronDown,
   CircleHelp,
-  Download,
   Flame,
   Gamepad2,
   Gift,
@@ -66,7 +65,7 @@ const utilityLinks = [
   { label: "Help Center", href: "/contact-us", icon: CircleHelp },
   { label: "Returns & Refunds", href: "/returns-and-exchange-policy", icon: RotateCcw },
   { label: "Gift Cards", href: "/products?sort=latest", icon: Gift },
-  { label: "Sell on Innovate", href: "/contact-us" }
+  { label: "Become a Seller", href: "/become-a-seller" }
 ];
 
 const categoryRail = [
@@ -100,6 +99,95 @@ const audioMenu = [
   { title: "Refurbished Audio", desc: "Quality checked, great deals", icon: RefreshCw }
 ];
 
+const megaMenus = {
+  categories: {
+    title: "Audio & Headphones",
+    query: "headphones",
+    items: audioMenu
+  },
+  electronic: {
+    title: "Electronic Items",
+    query: "electronic items",
+    items: [
+      { title: "Smart Wearables", desc: "Watches, bands, trackers", icon: Watch },
+      { title: "Mobile Accessories", desc: "Chargers, holders, cables", icon: Smartphone },
+      { title: "Computer Accessories", desc: "Keyboards, mouse, adapters", icon: Monitor },
+      { title: "Smart Home Devices", desc: "Useful everyday gadgets", icon: Home },
+      { title: "Drones & Cameras", desc: "Creators and kids cameras", icon: Camera },
+      { title: "Car Accessories", desc: "Travel-ready essentials", icon: Car },
+      { title: "Audio Gear", desc: "Headphones and speakers", icon: Headphones },
+      { title: "Grooming Tools", desc: "Trimmers and personal care", icon: ShieldCheck }
+    ]
+  },
+  games: {
+    title: "Game Sticks",
+    query: "game stick",
+    items: [
+      { title: "Retro Game Sticks", desc: "Plug and play consoles", icon: Gamepad2 },
+      { title: "Wireless Controllers", desc: "Comfort grip gameplay", icon: Gamepad2 },
+      { title: "HDMI Consoles", desc: "TV-ready game systems", icon: Monitor },
+      { title: "Kids Gaming", desc: "Simple fun picks", icon: Box },
+      { title: "Gaming Headsets", desc: "Sound and mic combos", icon: Headphones },
+      { title: "Gaming Deals", desc: "Best value bundles", icon: BadgePercent }
+    ]
+  },
+  arrivals: {
+    title: "New Arrivals",
+    query: "new arrivals",
+    items: [
+      { title: "Latest Drops", desc: "Freshly added gadgets", icon: Flame },
+      { title: "Trending Tech", desc: "Hot picks right now", icon: BadgePercent },
+      { title: "New Audio", desc: "Fresh headphones and earbuds", icon: Headphones },
+      { title: "New Smart Devices", desc: "Everyday useful tech", icon: Watch },
+      { title: "New Accessories", desc: "Cables, holders, add-ons", icon: Smartphone },
+      { title: "Custom Outfits", desc: "Print your own design", icon: ShoppingBag }
+    ]
+  },
+  brands: {
+    title: "Brands",
+    query: "brands",
+    items: [
+      { title: "Grim Originals", desc: "Our curated collection", icon: ShieldCheck },
+      { title: "boAt", desc: "Audio and wearables", icon: Headphones },
+      { title: "JBL", desc: "Speakers and sound", icon: Speaker },
+      { title: "Samsung", desc: "Smart tech picks", icon: Smartphone },
+      { title: "Sony", desc: "Audio essentials", icon: Headphones },
+      { title: "Apple", desc: "Premium accessories", icon: Watch }
+    ]
+  },
+  accessories: {
+    title: "Accessories",
+    query: "accessories",
+    items: [
+      { title: "Mobile Accessories", desc: "Cases, chargers, mounts", icon: Smartphone },
+      { title: "Computer Accessories", desc: "Desk and laptop gear", icon: Monitor },
+      { title: "Audio Accessories", desc: "Cables, pads, cases", icon: Headphones },
+      { title: "Travel Accessories", desc: "Useful daily carry", icon: Car },
+      { title: "Smart Home Add-ons", desc: "Small home upgrades", icon: Home },
+      { title: "Deals & Offers", desc: "Value accessories", icon: BadgePercent }
+    ]
+  }
+};
+
+type MegaKey = keyof typeof megaMenus;
+
+const desktopNavItems: Array<{ label: string; href: string; key?: MegaKey; hasChevron?: boolean; isNew?: boolean }> = [
+  { label: "Electronic Items", href: "/products?category=electronic-items", key: "electronic", hasChevron: true },
+  { label: "Game Sticks", href: "/products?q=game", key: "games", hasChevron: true },
+  { label: "New Arrivals", href: "/products?sort=latest", key: "arrivals", hasChevron: true, isNew: true },
+  { label: "Best Sellers", href: "/products?sort=popular" },
+  { label: "Brands", href: "/products?brand=Grim%20Originals", key: "brands", hasChevron: true },
+  { label: "Accessories", href: "/products?q=accessories", key: "accessories", hasChevron: true },
+  { label: "Blog", href: "/about-us" },
+  { label: "Contact Us", href: "/contact-us" }
+];
+
+function deliveryTextFromAddress(address: any) {
+  const city = String(address?.city ?? "").trim();
+  const pincode = String(address?.pincode ?? address?.pinCode ?? address?.postalCode ?? "").trim();
+  return city && pincode ? `${city} ${pincode}` : "";
+}
+
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
@@ -109,10 +197,56 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchSuggestions, setSearchSuggestions] = useState<SearchSuggestion[]>([]);
   const [condensed, setCondensed] = useState(false);
+  const [deliveryLabel, setDeliveryLabel] = useState("Delhi 110060");
+  const [activeMega, setActiveMega] = useState<MegaKey>("categories");
   const { theme, toggleTheme } = useTheme();
   const cartCount = useCart((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
   const cartRef = useRef<HTMLAnchorElement>(null);
   const setCartIconRect = useFlyCartStore((state) => state.setCartIconRect);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = window.localStorage.getItem("grim_delivery_location");
+    if (saved) setDeliveryLabel(saved);
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      const saved = typeof window !== "undefined" ? window.localStorage.getItem("grim_delivery_location") : "";
+      setDeliveryLabel(saved || "Delhi 110060");
+      return;
+    }
+
+    const controller = new AbortController();
+    async function loadDeliveryLocation() {
+      try {
+        const response = await fetch(`${API_URL}/users/addresses`, {
+          credentials: "include",
+          signal: controller.signal
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        const addresses = Array.isArray(data.addresses) ? data.addresses : [];
+        const selectedStored = typeof window !== "undefined" ? window.localStorage.getItem("grim_delivery_location") : "";
+        const defaultAddress = addresses.find((address: any) => address.isDefault) ?? addresses[0];
+        const label = selectedStored || deliveryTextFromAddress(defaultAddress);
+        if (label) setDeliveryLabel(label);
+      } catch {
+        // Keep the visible fallback/location instead of flashing empty text.
+      }
+    }
+
+    loadDeliveryLocation();
+    return () => controller.abort();
+  }, [user]);
+
+  useEffect(() => {
+    function onStorage(event: StorageEvent) {
+      if (event.key === "grim_delivery_location" && event.newValue) setDeliveryLabel(event.newValue);
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   useEffect(() => {
     const query = searchQuery.trim();
@@ -187,7 +321,7 @@ export function Header() {
             <div className="mx-auto flex h-7 max-w-[1480px] items-center justify-between px-6 text-[10px] font-semibold text-[#4c3838] dark:text-white/82">
               <Link href="/contact-us" className="inline-flex items-center gap-1.5 hover:text-[#FF3B30]">
                 <MapPin size={13} />
-                Deliver to New York 10001
+                Deliver to {deliveryLabel}
               </Link>
               <div className="flex items-center gap-7">
                 {utilityLinks.map((item) => {
@@ -203,15 +337,6 @@ export function Header() {
                   <Flame size={12} fill="currentColor" />
                   Deals of the Day
                 </Link>
-                <Link href="/contact-us" className="inline-flex items-center gap-1.5 hover:text-[#FF3B30]">
-                  <Download size={12} />
-                  Download App
-                </Link>
-                <button className="inline-flex items-center gap-2 hover:text-[#FF3B30]" aria-label="Language">
-                  <span className="text-xs">🇺🇸</span>
-                  EN
-                  <ChevronDown size={12} />
-                </button>
               </div>
             </div>
           </div>
@@ -311,25 +436,21 @@ export function Header() {
 
           <div className="group/mega relative border-t border-[#eadede] bg-white dark:border-white/10 dark:bg-[#090909]">
             <nav className="mx-auto flex h-9 max-w-[1480px] items-stretch px-6" aria-label="Primary">
-              <button className="flex w-[192px] items-center gap-2.5 bg-[#E31B23] px-4 text-[11px] font-black uppercase text-white">
+              <button onMouseEnter={() => setActiveMega("categories")} className="flex w-[192px] items-center gap-2.5 bg-[#E31B23] px-4 text-[11px] font-black uppercase text-white">
                 <Menu size={15} />
                 All Categories
               </button>
               <div className="flex min-w-0 flex-1 items-center justify-between border-b border-[#eadede] bg-white px-5 dark:border-white/10 dark:bg-[#0B0B0B]">
-                {[
-                  ["Electronic Items", "/products?category=electronic-items", true],
-                  ["Game Sticks", "/products?q=game", true],
-                  ["New Arrivals", "/products?sort=latest", true],
-                  ["Best Sellers", "/products?sort=popular", false],
-                  ["Brands", "/products?brand=Grim%20Originals", true],
-                  ["Accessories", "/products?q=accessories", true],
-                  ["Blog", "/about-us", true],
-                  ["Contact Us", "/contact-us", false]
-                ].map(([label, href, hasChevron]) => (
-                  <Link key={label as string} href={href as string} className="inline-flex h-full items-center gap-1 text-[10px] font-black uppercase text-[#111111] hover:text-[#FF3B30] dark:text-white">
-                    <span className={label === "New Arrivals" ? "underline underline-offset-4" : ""}>{label}</span>
-                    {label === "New Arrivals" && <span className="rounded-full bg-[#E31B23] px-1.5 py-0.5 text-[7px] text-white">New</span>}
-                    {hasChevron && <ChevronDown size={11} />}
+                {desktopNavItems.map((item) => (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onMouseEnter={() => item.key && setActiveMega(item.key)}
+                    className="inline-flex h-full items-center gap-1 text-[10px] font-black uppercase text-[#111111] hover:text-[#FF3B30] dark:text-white"
+                  >
+                    <span className={item.isNew ? "underline underline-offset-4" : ""}>{item.label}</span>
+                    {item.isNew && <span className="rounded-full bg-[#E31B23] px-1.5 py-0.5 text-[7px] text-white">New</span>}
+                    {item.hasChevron && <ChevronDown size={11} />}
                   </Link>
                 ))}
               </div>
@@ -350,9 +471,9 @@ export function Header() {
                 </aside>
 
                 <div className="px-6 py-4">
-                  <h3 className="font-heading text-sm uppercase tracking-wide text-[#FF3B30]">Audio &amp; Headphones</h3>
+                  <h3 className="font-heading text-sm uppercase tracking-wide text-[#FF3B30]">{megaMenus[activeMega].title}</h3>
                   <div className="mt-3 grid grid-cols-2 gap-x-8 gap-y-3">
-                    {audioMenu.map((item) => {
+                    {megaMenus[activeMega].items.map((item) => {
                       const Icon = item.icon;
                       return (
                         <Link key={item.title} href={`/products?q=${encodeURIComponent(item.title)}`} className="group/item flex gap-2.5">
@@ -368,7 +489,7 @@ export function Header() {
                 </div>
 
                 <div className="border-l border-[#eadede] p-4 dark:border-white/10">
-                  <Link href="/products?q=headphones" className="relative block h-[176px] overflow-hidden rounded-md border border-[#e3d0d0] bg-[radial-gradient(circle_at_72%_40%,rgba(227,27,35,0.16),transparent_36%),linear-gradient(120deg,#ffffff,#fff7f7)] p-5 dark:border-white/12 dark:bg-[radial-gradient(circle_at_72%_40%,rgba(227,27,35,0.34),transparent_35%),linear-gradient(120deg,#111,#1a0809)]">
+                  <Link href={`/products?q=${encodeURIComponent(megaMenus[activeMega].query)}`} className="relative block h-[176px] overflow-hidden rounded-md border border-[#e3d0d0] bg-[radial-gradient(circle_at_72%_40%,rgba(227,27,35,0.16),transparent_36%),linear-gradient(120deg,#ffffff,#fff7f7)] p-5 dark:border-white/12 dark:bg-[radial-gradient(circle_at_72%_40%,rgba(227,27,35,0.34),transparent_35%),linear-gradient(120deg,#111,#1a0809)]">
                     <div className="relative z-10 max-w-[185px]">
                       <p className="font-heading text-base uppercase text-[#111111] dark:text-white">Premium Sound</p>
                       <p className="mt-0.5 font-heading text-base uppercase text-[#FF3B30]">Perfected</p>
@@ -413,7 +534,7 @@ export function Header() {
           </button>
           <Link href="/" className="relative flex items-center gap-1 min-[360px]:gap-1.5 min-[400px]:gap-2 overflow-visible" aria-label="The Grim Store home">
             <span className="relative -my-3 h-[48px] w-[48px] min-[360px]:h-[56px] min-[360px]:w-[56px] min-[400px]:h-[66px] min-[400px]:w-[66px] overflow-visible">
-              <video src="/logo1.mp4" className="h-full w-full object-contain" autoPlay muted loop playsInline aria-hidden="true" />
+              <img src="/logo.png" className="h-full w-full object-contain" alt="" aria-hidden="true" />
             </span>
             <span className="grim-wordmark grim-wordmark-inline text-[12px] min-[350px]:text-[14px] min-[375px]:text-[16px] min-[400px]:text-[18px] min-[440px]:text-[20px]" aria-hidden="true">
               <span className="grim-wordmark-kicker">The</span>
@@ -459,7 +580,7 @@ export function Header() {
               <div className="flex items-center justify-between border-b border-[#eadede] pb-4 dark:border-white/10">
                 <Link href="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 text-[#111111] dark:text-white">
                   <span className="relative h-8 w-8 overflow-hidden rounded bg-white">
-                    <video src="/logo1.mp4" className="h-full w-full object-cover" autoPlay muted loop playsInline aria-hidden="true" />
+                    <img src="/logo.png" className="h-full w-full object-contain" alt="" aria-hidden="true" />
                   </span>
                   <span className="grim-wordmark grim-wordmark-inline text-[18px]">
                     <span className="grim-wordmark-kicker">The</span>
@@ -636,3 +757,4 @@ function SearchOverlay({
     </motion.div>
   );
 }
+

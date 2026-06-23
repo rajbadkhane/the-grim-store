@@ -2,7 +2,7 @@ import { execute, json, rows } from "../lib/sql.js";
 
 export async function recalculateProductRating(productId: string) {
   const ratingRows = await rows<{ rating: number; count: number }>(
-    "SELECT rating, COUNT(*) AS count FROM reviews WHERE product_id = :productId AND reported = FALSE GROUP BY rating",
+    "SELECT rating::int AS rating, COUNT(*)::int AS count FROM reviews WHERE product_id = :productId AND reported = FALSE GROUP BY rating",
     { productId }
   );
   const distribution: Record<string, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };

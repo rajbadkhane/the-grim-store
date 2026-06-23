@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Download, FileSpreadsheet, ImagePlus, Loader2, PackagePlus, Plus, Search, Trash2, Upload, X, XCircle } from "lucide-react";
+import { Check, Download, Edit3, FileSpreadsheet, ImagePlus, Loader2, PackagePlus, Plus, Search, Trash2, Upload, X, XCircle } from "lucide-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import ImageExtension from "@tiptap/extension-image";
@@ -25,6 +25,23 @@ type Product = {
   price: number;
   salePrice: number;
   images: { url: string; alt: string }[];
+  category?: string;
+  gender?: string;
+  tags?: string[];
+  shortDescription?: string;
+  description?: string;
+  descriptionHtml?: string;
+  summary?: Array<{ title?: string; text: string; icon?: string }>;
+  colors?: Array<{ name: string; hex: string }>;
+  sizes?: Array<{ label: string; stock: number }>;
+  variants?: Array<Record<string, any>>;
+  careInstructions?: string[];
+  sizeChart?: Record<string, string>[];
+  deliveryInfo?: Record<string, any>;
+  returnPolicy?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  metaKeywords?: string[];
   featured: boolean;
   trending: boolean;
   bestseller: boolean;
@@ -72,6 +89,7 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -99,6 +117,27 @@ export default function ProductsPage() {
     return products.filter((product) => [product.title, product.brand, product.sku].join(" ").toLowerCase().includes(value));
   }, [products, query]);
 
+  function addProduct() {
+    setEditingProduct(null);
+    setOpen(true);
+  }
+
+  function editProduct(product: Product) {
+    setEditingProduct(product);
+    setOpen(true);
+  }
+
+  async function deleteProduct(product: Product) {
+    if (!confirm(`Delete product "${product.title}"?`)) return;
+    try {
+      await api.delete(`/products/${product.id}`);
+      toast.success("Product deleted");
+      load();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message ?? "Unable to delete product");
+    }
+  }
+
   return (
     <div>
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -111,7 +150,7 @@ export default function ProductsPage() {
           <button onClick={() => setImportOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 shadow-sm hover:bg-slate-50">
             <FileSpreadsheet size={18} /> Import Excel
           </button>
-          <button onClick={() => setOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm hover:bg-indigo-500">
+          <button onClick={addProduct} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm hover:bg-indigo-500">
             <Plus size={18} /> Add Product
           </button>
         </div>
@@ -136,12 +175,13 @@ export default function ProductsPage() {
                 <th>Price</th>
                 <th>Sale</th>
                 <th>Status</th>
+                <th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-slate-500">
+                  <td colSpan={7} className="py-10 text-center text-slate-500">
                     <Loader2 className="mx-auto mb-2 animate-spin" /> Loading products
                   </td>
                 </tr>
@@ -168,11 +208,21 @@ export default function ProductsPage() {
                   <td>
                     <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">Active</span>
                   </td>
+                  <td>
+                    <div className="flex justify-end gap-1">
+                      <button onClick={() => editProduct(product)} aria-label={`Edit ${product.title}`} className="rounded-xl p-2 text-slate-500 hover:bg-indigo-50 hover:text-indigo-700">
+                        <Edit3 size={17} />
+                      </button>
+                      <button onClick={() => deleteProduct(product)} aria-label={`Delete ${product.title}`} className="rounded-xl p-2 text-slate-500 hover:bg-red-50 hover:text-red-600">
+                        <Trash2 size={17} />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
               {!loading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-slate-500">No products found.</td>
+                  <td colSpan={7} className="py-10 text-center text-slate-500">No products found.</td>
                 </tr>
               )}
             </tbody>
@@ -180,16 +230,78 @@ export default function ProductsPage() {
         </div>
       </section>
 
-      {open && <ProductModal categories={categories} onClose={() => setOpen(false)} onCreated={() => { setOpen(false); load(); }} />}
+      {open && <ProductModal product={editingProduct} categories={categories} onClose={() => setOpen(false)} onSaved={() => { setOpen(false); setEditingProduct(null); load(); }} />}
       {importOpen && <BulkImportModal onClose={() => setImportOpen(false)} onImported={() => { setImportOpen(false); load(); }} />}
     </div>
   );
 }
 
-function ProductModal({ categories, onClose, onCreated }: { categories: Category[]; onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ ...initialForm, category: categories[0]?.id ?? "" });
-  const [files, setFiles] = useState<File[]>([]);
-  const [variants, setVariants] = useState<VariantDraft[]>([
+function imageUrl(image: any) {
+  return typeof image === "string" ? image : image?.url ?? "";
+}
+
+function normalizeImages(images: any[] | undefined, fallbackAlt: string) {
+  return (Array.isArray(images) ? images : [])
+    .map((image) => {
+      const url = imageUrl(image);
+      if (!url) return null;
+      return {
+        url,
+        alt: typeof image === "string" ? fallbackAlt : image.alt || fallbackAlt,
+        publicId: typeof image === "string" ? undefined : image.publicId
+      };
+    })
+    .filter(Boolean) as { url: string; alt: string; publicId?: string }[];
+}
+
+function variantImageUrls(images: any[] | undefined) {
+  return (Array.isArray(images) ? images : []).map(imageUrl).filter(Boolean).join(", ");
+}
+
+function productToForm(product: Product | null, categories: Category[]) {
+  if (!product) return { ...initialForm, category: categories[0]?.id ?? "" };
+  return {
+    ...initialForm,
+    title: product.title ?? "",
+    brand: product.brand ?? "Grim Originals",
+    sku: product.sku ?? "",
+    category: product.category ?? categories[0]?.id ?? "",
+    gender: product.gender ?? "unisex",
+    price: String(product.price ?? ""),
+    salePrice: String(product.salePrice ?? ""),
+    stock: String(product.stock ?? ""),
+    shortDescription: product.shortDescription ?? "",
+    description: product.description ?? "",
+    summary: Array.isArray(product.summary) ? product.summary.map((item) => item.text ?? "").filter(Boolean).join("\n") : initialForm.summary,
+    seoTitle: product.seoTitle ?? "",
+    seoDescription: product.seoDescription ?? "",
+    deliveryText: String(product.deliveryInfo?.text ?? initialForm.deliveryText),
+    returnPolicy: product.returnPolicy ?? initialForm.returnPolicy,
+    tags: Array.isArray(product.tags) ? product.tags.join(", ") : "",
+    featured: Boolean(product.featured),
+    trending: Boolean(product.trending),
+    bestseller: Boolean(product.bestseller)
+  };
+}
+
+function productToVariants(product: Product | null): VariantDraft[] {
+  if (product?.variants?.length) {
+    return product.variants.map((variant) => ({
+      color: String(variant.color ?? "Black"),
+      colorHex: String(variant.colorHex ?? variant.hex ?? "#111111"),
+      size: String(variant.size ?? "M"),
+      material: String(variant.material ?? "Premium cotton"),
+      pattern: String(variant.pattern ?? "Solid"),
+      sku: String(variant.sku ?? ""),
+      stock: String(variant.stock ?? product.stock ?? ""),
+      price: String(variant.price ?? product.price ?? ""),
+      salePrice: String(variant.salePrice ?? product.salePrice ?? ""),
+      imageUrls: variantImageUrls(variant.images),
+      available: variant.available !== false
+    }));
+  }
+
+  return [
     {
       color: "Black",
       colorHex: "#111111",
@@ -197,14 +309,22 @@ function ProductModal({ categories, onClose, onCreated }: { categories: Category
       material: "Premium cotton",
       pattern: "Solid",
       sku: "",
-      stock: "",
-      price: "",
-      salePrice: "",
-      imageUrls: "",
+      stock: product ? String(product.stock ?? "") : "",
+      price: product ? String(product.price ?? "") : "",
+      salePrice: product ? String(product.salePrice ?? "") : "",
+      imageUrls: variantImageUrls(product?.images),
       available: true
     }
-  ]);
-  const [descriptionHtml, setDescriptionHtml] = useState("");
+  ];
+}
+
+function ProductModal({ product, categories, onClose, onSaved }: { product: Product | null; categories: Category[]; onClose: () => void; onSaved: () => void }) {
+  const isEditing = Boolean(product);
+  const [form, setForm] = useState(() => productToForm(product, categories));
+  const [files, setFiles] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState(() => normalizeImages(product?.images, product?.title ?? "Product image"));
+  const [variants, setVariants] = useState<VariantDraft[]>(() => productToVariants(product));
+  const [descriptionHtml, setDescriptionHtml] = useState(product?.descriptionHtml ?? "");
   const [saving, setSaving] = useState(false);
   const previews = useMemo(() => files.map((file) => ({ name: file.name, url: URL.createObjectURL(file) })), [files]);
 
@@ -251,13 +371,14 @@ function ProductModal({ categories, onClose, onCreated }: { categories: Category
     }
     setSaving(true);
     try {
-      let images: { url: string; alt: string; publicId?: string }[] = [];
+      let uploadedImages: { url: string; alt: string; publicId?: string }[] = [];
       if (files.length) {
         const body = new FormData();
         files.forEach((file) => body.append("images", file));
         const { data } = await api.post("/uploads/images", body, { headers: { "Content-Type": "multipart/form-data" } });
-        images = data.images ?? [];
+        uploadedImages = data.images ?? [];
       }
+      const images = [...existingImages, ...uploadedImages];
 
       const variantPayload = variantDrafts.map((variant, index) => ({
         color: variant.color,
@@ -276,7 +397,7 @@ function ProductModal({ categories, onClose, onCreated }: { categories: Category
         available: variant.available
       }));
 
-      await api.post("/products", {
+      const payload = {
         title: form.title,
         brand: form.brand,
         sku: form.sku,
@@ -309,10 +430,13 @@ function ProductModal({ categories, onClose, onCreated }: { categories: Category
         seoTitle: form.seoTitle || form.title,
         seoDescription: form.seoDescription || form.shortDescription || form.description || form.title,
         metaKeywords: form.tags.split(",").map((tag) => tag.trim()).filter(Boolean)
-      });
+      };
 
-      toast.success("Product created");
-      onCreated();
+      if (product) await api.patch(`/products/${product.id}`, payload);
+      else await api.post("/products", payload);
+
+      toast.success(product ? "Product updated" : "Product created");
+      onSaved();
     } catch (error: any) {
       const fieldErrors = error.response?.data?.errors?.fieldErrors;
       const firstError = fieldErrors ? Object.entries(fieldErrors)[0] : null;
@@ -327,8 +451,8 @@ function ProductModal({ categories, onClose, onCreated }: { categories: Category
       <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-5">
           <div>
-            <h3 className="text-xl font-black text-slate-950">Add Product</h3>
-            <p className="text-sm text-slate-500">Upload multiple images and publish to the SQL database.</p>
+            <h3 className="text-xl font-black text-slate-950">{isEditing ? "Edit Product" : "Add Product"}</h3>
+            <p className="text-sm text-slate-500">{isEditing ? "Update details, variants, and product images." : "Upload multiple images and publish to the SQL database."}</p>
           </div>
           <button onClick={onClose} aria-label="Close" className="rounded-xl p-2 text-slate-500 hover:bg-slate-100">
             <X />
@@ -443,6 +567,19 @@ function ProductModal({ categories, onClose, onCreated }: { categories: Category
               <input type="file" accept="image/*" multiple className="hidden" onChange={(event) => setFiles(Array.from(event.target.files ?? []))} />
             </label>
             <div className="mt-4 grid grid-cols-2 gap-3">
+              {existingImages.map((image) => (
+                <div key={image.url} className="group relative">
+                  <img src={image.url} alt={image.alt} className="aspect-square rounded-2xl object-cover ring-1 ring-slate-200" />
+                  <button
+                    type="button"
+                    onClick={() => setExistingImages((current) => current.filter((entry) => entry.url !== image.url))}
+                    className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-red-600 opacity-0 shadow-sm transition group-hover:opacity-100"
+                    aria-label="Remove image"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+              ))}
               {previews.map((preview) => (
                 <img key={preview.url} src={preview.url} alt={preview.name} className="aspect-square rounded-2xl object-cover ring-1 ring-slate-200" />
               ))}
@@ -453,7 +590,7 @@ function ProductModal({ categories, onClose, onCreated }: { categories: Category
         <div className="flex justify-end gap-3 border-t border-slate-200 px-6 py-5">
           <button onClick={onClose} className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-black text-slate-700">Cancel</button>
           <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white disabled:opacity-60">
-            {saving ? <Loader2 className="animate-spin" size={18} /> : <PackagePlus size={18} />} Save Product
+            {saving ? <Loader2 className="animate-spin" size={18} /> : <PackagePlus size={18} />} {isEditing ? "Update Product" : "Save Product"}
           </button>
         </div>
       </div>
