@@ -228,6 +228,12 @@ async function resolveCheckoutProducts(items: any[] = []) {
   const resolved: any[] = [];
 
   for (const item of items) {
+    const customOutfit = resolveCustomOutfit(item);
+    if (customOutfit) {
+      resolved.push(customOutfit);
+      continue;
+    }
+
     const productId = String(item.product ?? item.productId ?? item.id ?? "").split(":")[0];
     const slug = item.slug ? String(item.slug) : "";
     const product = mapProduct(
@@ -280,6 +286,45 @@ async function resolveCheckoutProducts(items: any[] = []) {
   }
 
   return resolved;
+}
+
+function resolveCustomOutfit(item: any) {
+  const idValue = String(item.id ?? "");
+  const slug = String(item.slug ?? "");
+  const brand = String(item.brand ?? "");
+  const title = String(item.title ?? "");
+  const isCustomOutfit =
+    slug === "custom-outfits" ||
+    idValue.startsWith("custom-outfit:") ||
+    brand.toLowerCase() === "custom outfits" ||
+    title.toLowerCase().startsWith("custom printed ");
+
+  if (!isCustomOutfit) return null;
+
+  const normalized = `${idValue} ${slug} ${title}`.toLowerCase();
+  const outfitKey = normalized.includes("hoodie") ? "hoodie" : normalized.includes("shirt") && !normalized.includes("t-shirt") ? "shirt" : "t-shirt";
+  const labels: Record<string, string> = { "t-shirt": "T-Shirt", shirt: "Shirt", hoodie: "Hoodie" };
+  const prices: Record<string, number> = { "t-shirt": 299, shirt: 399, hoodie: 499 };
+  const quantity = Number(item.quantity ?? 1);
+  if (!Number.isInteger(quantity) || quantity < 1) throw new ApiError(400, "Invalid custom outfit quantity");
+
+  return {
+    id: idValue || `custom-outfit:${outfitKey}:${Date.now()}`,
+    product: "custom-outfits",
+    slug: "custom-outfits",
+    title: `Custom Printed ${labels[outfitKey]}`,
+    image: typeof item.image === "string" ? item.image : "",
+    price: prices[outfitKey],
+    salePrice: prices[outfitKey],
+    quantity,
+    sku: String(item.sku ?? idValue ?? `custom-outfit:${outfitKey}`),
+    size: String(item.size ?? "M"),
+    color: String(item.color ?? "Custom Print"),
+    material: String(item.material ?? "Premium Print"),
+    pattern: String(item.pattern ?? "Uploaded Artwork"),
+    custom: true,
+    customType: outfitKey
+  };
 }
 
 function normalizeCouponCode(code: string) {

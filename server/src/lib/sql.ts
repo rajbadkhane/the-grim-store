@@ -45,7 +45,7 @@ function convertNamedParamsToPositional(sqlStr: string, params: Record<string, u
   const paramMap: Record<string, number> = {};
 
   // Find all named parameters in order of appearance
-  const paramRegex = /:(\w+)/g;
+  const paramRegex = /(?<!:):(\w+)/g;
   let match;
   const paramNames = new Set<string>();
   
@@ -54,7 +54,7 @@ function convertNamedParamsToPositional(sqlStr: string, params: Record<string, u
     if (!paramNames.has(paramName)) {
       paramNames.add(paramName);
       paramMap[paramName] = paramIndex;
-      paramValues.push(params[paramName]);
+      paramValues.push(params[paramName] ?? null);
       paramIndex++;
     }
   }
@@ -62,7 +62,7 @@ function convertNamedParamsToPositional(sqlStr: string, params: Record<string, u
   // Replace named parameters with positional ones
   let convertedSql = sqlStr;
   for (const [paramName, index] of Object.entries(paramMap)) {
-    convertedSql = convertedSql.replace(new RegExp(`:${paramName}\\b`, "g"), `$${index}`);
+    convertedSql = convertedSql.replace(new RegExp(`(?<!:):${paramName}\\b`, "g"), `$${index}`);
   }
 
   return { sql: convertedSql, values: paramValues };
@@ -119,6 +119,7 @@ export function mapUser(db: any): SqlUser | null {
 
 export function mapProduct(db: any) {
   if (!db) return null;
+  const tags = parseJson<string[]>(db.tags, []);
   return {
     id: db.id,
     _id: db.id,
@@ -130,7 +131,8 @@ export function mapProduct(db: any) {
     category: db.category_id,
     subCategory: db.subcategory_id,
     gender: db.gender,
-    tags: parseJson<string[]>(db.tags, []),
+    tags,
+    brandMeta: brandMetaFromTags(db.brand, tags),
     price: Number(db.price),
     salePrice: Number(db.sale_price),
     discountPercentage: Number(db.discount_percentage),
@@ -160,6 +162,19 @@ export function mapProduct(db: any) {
     createdAt: db.created_at,
     updatedAt: db.updated_at
   };
+}
+
+function brandMetaFromTags(brand: string, tags: string[]) {
+  const meta = { name: brand ?? "", logo: "" };
+  for (const tag of tags) {
+    const [rawKey, ...rawValue] = String(tag).split(":");
+    const key = rawKey.trim().toLowerCase();
+    const value = rawValue.join(":").trim();
+    if (!value) continue;
+    if (key === "brandname" || key === "brand-name" || key === "branddisplay") meta.name = value;
+    if (key === "brandlogo" || key === "brand-logo" || key === "brandimage" || key === "brand-image") meta.logo = value;
+  }
+  return meta;
 }
 
 export function mapOrder(db: any) {

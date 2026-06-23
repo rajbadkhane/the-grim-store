@@ -115,7 +115,7 @@ export default function WishlistPage() {
         {!loading && products.length === 0 && (
           <div className="relative overflow-hidden flex flex-col items-center justify-center py-20 text-center border border-dashed border-neutral-250 dark:border-neutral-800/80 rounded-2xl bg-neutral-50/40 dark:bg-neutral-900/20 px-6 max-w-xl mx-auto mt-8">
             <LightweightCanvas />
-            <div className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full bg-rose-50 dark:bg-rose-950/20 text-[#FF6B35] mb-6 animate-pulse">
+            <div className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full bg-rose-50 dark:bg-rose-950/20 text-[var(--accent)] mb-6 animate-pulse">
               <Heart className="w-10 h-10 fill-current" />
             </div>
             <h2 className="relative z-10 text-lg font-black text-neutral-850 dark:text-neutral-200 uppercase tracking-wider">Your Wishlist is Empty</h2>
@@ -124,7 +124,7 @@ export default function WishlistPage() {
             </p>
             <Link
               href="/products"
-              className="relative z-10 mt-8 inline-flex min-h-11 items-center justify-center rounded-xl bg-[#FF6B35] hover:bg-[#e05626] px-8 text-xs font-black uppercase tracking-wider text-white transition-all shadow-md shadow-[#FF6B35]/20 hover:scale-[1.02] cursor-pointer"
+              className="relative z-10 mt-8 inline-flex min-h-11 items-center justify-center rounded-xl bg-[var(--accent)] hover:bg-[#e05626] px-8 text-xs font-black uppercase tracking-wider text-white transition-all shadow-md shadow-[var(--accent)]/20 hover:scale-[1.02] cursor-pointer"
             >
               Start Shopping
             </Link>
@@ -172,7 +172,7 @@ export default function WishlistPage() {
                     </p>
                     <Link
                       href={`/products/${product.slug}`}
-                      className="mt-0.5 line-clamp-1 text-[11px] text-neutral-500 dark:text-neutral-450 font-normal hover:text-[#FF6B35] transition-colors"
+                      className="mt-0.5 line-clamp-1 text-[11px] text-neutral-500 dark:text-neutral-450 font-normal hover:text-[var(--accent)] transition-colors"
                     >
                       {product.title}
                     </Link>
@@ -191,7 +191,7 @@ export default function WishlistPage() {
                   {/* Move to Bag button */}
                   <button
                     onClick={(event) => handleMoveToBag(product, event)}
-                    className="mt-3 w-full h-10 flex items-center justify-center gap-1.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35] text-[#FF6B35] hover:text-white rounded-lg transition-colors text-xs font-extrabold uppercase"
+                    className="mt-3 w-full h-10 flex items-center justify-center gap-1.5 bg-[var(--accent)]/10 hover:bg-[var(--accent)] text-[var(--accent)] hover:text-white rounded-lg transition-colors text-xs font-extrabold uppercase"
                   >
                     <ShoppingBag size={12} />
                     Move to Bag

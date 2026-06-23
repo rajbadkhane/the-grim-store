@@ -205,7 +205,7 @@ function ReviewForm({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-base font-bold uppercase tracking-wider text-neutral-900 dark:text-white">Write a verified review</h3>
-          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">Share fit, fabric, sizing, delivery, and photos after delivery.</p>
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">Share product quality, function, packaging, delivery, and photos after delivery.</p>
         </div>
         <button
           onClick={() => setOpen((value) => !value)}
@@ -255,7 +255,7 @@ function ReviewForm({
               <textarea
                 value={form.comment}
                 onChange={(event) => setForm((current) => ({ ...current, comment: event.target.value }))}
-                placeholder="Tell shoppers about fit, fabric, quality, and delivery..."
+                placeholder="Tell shoppers about product quality, function, packaging, and delivery..."
                 className="min-h-32 rounded border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 px-3 py-2.5 text-xs font-bold outline-none focus:border-[#ff3f6c]"
               />
               <label className="text-xs font-bold text-neutral-500 dark:text-neutral-450">
@@ -297,7 +297,7 @@ function ReviewCard({ review, onHelpful }: { review: StoreReview; onHelpful: (re
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="font-bold text-sm text-neutral-900 dark:text-white">{review.title}</p>
-          <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-450 uppercase tracking-wider">
+          <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">
             <BadgeCheck size={14} /> {review.verifiedPurchase ? "Verified buyer" : "Customer review"}
           </p>
           <p className="mt-1.5 text-xs text-neutral-450 dark:text-neutral-500 font-semibold">

@@ -244,7 +244,7 @@ class FocusBracket extends AnimElement {
     if (!this.isFocused) {
       if (Math.abs(this.x - this.trackX) < 1 && Math.abs(this.y - this.trackY) < 1) {
         this.isFocused = true;
-        this.color = "#10b981"; // Snap to green!
+        this.color = "#ff3b30";
         this.focusTimer = 60; // Stay focused for 60 frames
       }
     } else {
@@ -649,8 +649,8 @@ export default function ProductCanvasBackground({ activeSlide }: ProductCanvasBa
         audio: "#ff3f6c",
         gaming: "#a855f7",
         camera: "#fbbf24",
-        phone: "#06b6d4",
-        computer: "#10b981",
+        phone: "#ff3b30",
+        computer: "#ff3b30",
         general: "#ff3f6c"
       };
       const color = themeColors[theme] || "#ff3f6c";
@@ -710,9 +710,9 @@ export default function ProductCanvasBackground({ activeSlide }: ProductCanvasBa
 
     // Colors matching brand palette
     const pink = "#ff3f6c";
-    const purple = "#a855f7";
-    const cyan = "#06b6d4";
-    const yellow = "#fbbf24";
+    const purple = "#D71920";
+    const white = "#ffffff";
+    const yellow = "#ff6b6b";
 
     // Spawn elements tailored to current theme
     if (theme === "audio") {
@@ -723,7 +723,7 @@ export default function ProductCanvasBackground({ activeSlide }: ProductCanvasBa
             Math.random() * width,
             Math.random() * height,
             100 + Math.random() * 120,
-            i % 2 === 0 ? pink : cyan
+            i % 2 === 0 ? pink : white
           )
         );
       }
@@ -761,7 +761,7 @@ export default function ProductCanvasBackground({ activeSlide }: ProductCanvasBa
             Math.random() * width,
             Math.random() * height,
             8 + Math.random() * 16,
-            i % 3 === 0 ? pink : i % 3 === 1 ? purple : cyan
+            i % 3 === 0 ? pink : i % 3 === 1 ? purple : white
           )
         );
       }
@@ -774,7 +774,7 @@ export default function ProductCanvasBackground({ activeSlide }: ProductCanvasBa
             Math.random() * width,
             Math.random() * height,
             36 + Math.random() * 8,
-            cyan
+            white
           )
         );
       }
@@ -799,7 +799,7 @@ export default function ProductCanvasBackground({ activeSlide }: ProductCanvasBa
             Math.random() * width,
             Math.random() * height - height/2,
             10 + Math.random() * 4,
-            "#10b981" // Tech green binary streams
+            "#ff3b30"
           )
         );
       }
@@ -903,7 +903,7 @@ function drawThemeBackground(
     ctx.globalAlpha = 0.18;
 
     const waveCount = 3;
-    const colors = ["#ff3f6c", "#06b6d4", "#a855f7"];
+    const colors = ["#ff3f6c", "#ffffff", "#D71920"];
     const speeds = [1, 1.4, 0.7];
     const amplitudes = [22, 14, 28];
     const frequencies = [0.006, 0.012, 0.004];
@@ -995,7 +995,7 @@ function drawThemeBackground(
 
   } else if (theme === "phone") {
     // Draws circular expanding radio transmitter waves (WiFi signal source)
-    ctx.strokeStyle = "rgba(6, 182, 212, 0.08)";
+    ctx.strokeStyle = "rgba(255, 59, 48, 0.08)";
     ctx.lineWidth = 1.5;
     
     // Wave transmitter point at top right corner
@@ -1049,13 +1049,13 @@ function maintainThemeElements(theme: ThemeType, elements: AnimElement[], width:
   const activeCount = elements.filter(el => el.targetAlpha > 0).length;
 
   const pink = "#ff3f6c";
-  const purple = "#a855f7";
-  const cyan = "#06b6d4";
-  const yellow = "#fbbf24";
+  const purple = "#D71920";
+  const white = "#ffffff";
+  const yellow = "#ff6b6b";
 
   if (theme === "audio") {
     if (activeCount < 4) {
-      elements.push(new SoundRing(Math.random() * width, Math.random() * height, 100 + Math.random() * 120, Math.random() > 0.5 ? pink : cyan));
+      elements.push(new SoundRing(Math.random() * width, Math.random() * height, 100 + Math.random() * 120, Math.random() > 0.5 ? pink : white));
     }
   } else if (theme === "gaming") {
     const maxGaming = Math.min(12, Math.floor(width / 90));
@@ -1065,7 +1065,7 @@ function maintainThemeElements(theme: ThemeType, elements: AnimElement[], width:
   } else if (theme === "camera") {
     const maxBokeh = Math.min(15, Math.floor(width / 80));
     if (activeCount < maxBokeh) {
-      elements.push(new BokehBubble(Math.random() * width, height + 20, 8 + Math.random() * 16, Math.random() > 0.5 ? pink : cyan));
+      elements.push(new BokehBubble(Math.random() * width, height + 20, 8 + Math.random() * 16, Math.random() > 0.5 ? pink : white));
     }
     if (elements.filter(el => el instanceof FocusBracket && el.targetAlpha > 0).length < 2) {
       elements.push(new FocusBracket(width * 0.2 + Math.random() * (width * 0.6), height * 0.2 + Math.random() * (height * 0.6), 22 + Math.random() * 10, yellow));
@@ -1073,7 +1073,7 @@ function maintainThemeElements(theme: ThemeType, elements: AnimElement[], width:
   } else if (theme === "phone") {
     const maxApps = Math.min(6, Math.floor(width / 180));
     if (elements.filter(el => el instanceof AppIcon && el.targetAlpha > 0).length < maxApps) {
-      elements.push(new AppIcon(Math.random() * width, Math.random() * height, 36 + Math.random() * 8, cyan));
+      elements.push(new AppIcon(Math.random() * width, Math.random() * height, 36 + Math.random() * 8, white));
     }
     const maxNodes = Math.min(20, Math.floor(width / 60));
     if (elements.filter(el => el instanceof NetworkNode && el.targetAlpha > 0).length < maxNodes) {
@@ -1083,7 +1083,7 @@ function maintainThemeElements(theme: ThemeType, elements: AnimElement[], width:
     // Computer / general
     const maxStreams = Math.min(18, Math.floor(width / 70));
     if (elements.filter(el => el instanceof BinaryStream && el.targetAlpha > 0).length < maxStreams) {
-      elements.push(new BinaryStream(Math.random() * width, -60, 10 + Math.random() * 4, "#10b981"));
+      elements.push(new BinaryStream(Math.random() * width, -60, 10 + Math.random() * 4, "#ff3b30"));
     }
     if (elements.filter(el => el instanceof CircuitPath && el.targetAlpha > 0).length < 4) {
       elements.push(new CircuitPath(Math.random() * width, Math.random() * height, pink));
@@ -1095,7 +1095,7 @@ function maintainThemeElements(theme: ThemeType, elements: AnimElement[], width:
 function drawNetworkLinks(ctx: CanvasRenderingContext2D, elements: AnimElement[], mouseX: number, mouseY: number) {
   const nodes = elements.filter(el => el instanceof NetworkNode) as NetworkNode[];
   ctx.save();
-  ctx.strokeStyle = "rgba(6, 182, 212, 0.08)";
+  ctx.strokeStyle = "rgba(255, 59, 48, 0.08)";
   ctx.lineWidth = 1;
 
   for (let i = 0; i < nodes.length; i++) {
@@ -1109,7 +1109,7 @@ function drawNetworkLinks(ctx: CanvasRenderingContext2D, elements: AnimElement[]
       const dist = Math.hypot(dx, dy);
 
       if (dist < 85) {
-        ctx.strokeStyle = `rgba(6, 182, 212, ${0.1 * (1 - dist / 85) * Math.min(nodeA.alpha, nodeB.alpha)})`;
+        ctx.strokeStyle = `rgba(255, 59, 48, ${0.1 * (1 - dist / 85) * Math.min(nodeA.alpha, nodeB.alpha)})`;
         ctx.beginPath();
         ctx.moveTo(nodeA.x, nodeA.y);
         ctx.lineTo(nodeB.x, nodeB.y);
@@ -1154,4 +1154,3 @@ function getSlideTheme(slide: CarouselSlide): ThemeType {
   }
   return "general";
 }
-

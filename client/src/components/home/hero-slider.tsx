@@ -66,7 +66,7 @@ export function HeroSlider({ products = [] }: { products?: StoreProduct[] }) {
   const IconComp = slide.icon;
 
   return (
-    <div className={`relative w-full h-[340px] sm:h-[400px] rounded-md overflow-hidden ${slide.bg} border border-white/5`}>
+    <div className={`relative h-[290px] w-full overflow-hidden rounded-md ${slide.bg} border border-white/5 sm:h-[340px]`}>
       <AnimatePresence mode="wait">
         <motion.div
           key={current}
@@ -74,22 +74,22 @@ export function HeroSlider({ products = [] }: { products?: StoreProduct[] }) {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.4 }}
-          className="absolute inset-0 flex flex-col md:flex-row items-center justify-between p-8 sm:p-12"
+          className="absolute inset-0 flex flex-col items-center justify-between p-6 sm:p-8 md:flex-row"
         >
           {/* Text Left */}
           <div className="flex flex-col items-start justify-center text-white max-w-md z-10">
             <div className="flex items-center gap-3">
-              <IconComp size={20} className="text-blue-500" />
-              <span className="text-sm font-semibold tracking-wider text-white/80">{slide.brandText}</span>
+              <IconComp size={18} className="text-[#FF3B30]" />
+              <span className="text-xs font-semibold tracking-wider text-white/80">{slide.brandText}</span>
             </div>
             
-            <h2 className="mt-4 text-3xl sm:text-5xl font-black leading-tight tracking-tight">
+            <h2 className="mt-3 text-2xl font-black leading-tight tracking-tight sm:text-4xl">
               {slide.heading}
             </h2>
 
             <Link
               href={slide.link}
-              className="mt-6 inline-flex items-center gap-2 text-sm font-black border-b-2 border-white/40 pb-1 hover:border-blue-500 hover:text-blue-400 transition-all duration-200"
+              className="mt-5 inline-flex items-center gap-2 border-b-2 border-white/40 pb-1 text-xs font-black transition-all duration-200 hover:border-[#FF3B30] hover:text-[#FF3B30]"
             >
               Shop Now
               <ArrowRight size={16} />
@@ -97,9 +97,9 @@ export function HeroSlider({ products = [] }: { products?: StoreProduct[] }) {
           </div>
 
           {/* Image Right */}
-          <div className="relative w-full md:w-1/2 h-[200px] md:h-full mt-6 md:mt-0 flex items-center justify-center">
+          <div className="relative mt-4 flex h-[170px] w-full items-center justify-center md:mt-0 md:h-full md:w-1/2">
             <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black via-transparent to-transparent z-10 md:hidden" />
-            <div className="relative w-full h-full max-h-[300px] aspect-video md:aspect-square">
+            <div className="relative h-full max-h-[260px] w-full aspect-video md:aspect-square">
               <Image
                 src={slide.image}
                 alt={slide.title}
@@ -121,7 +121,7 @@ export function HeroSlider({ products = [] }: { products?: StoreProduct[] }) {
             onClick={() => setCurrent(idx)}
             aria-label={`Go to slide ${idx + 1}`}
             className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-              idx === current ? "bg-blue-500 scale-125 shadow-md shadow-blue-500/50" : "bg-white/30 hover:bg-white/50"
+              idx === current ? "bg-[#FF3B30] scale-125 shadow-md shadow-[#FF3B30]/50" : "bg-white/30 hover:bg-white/50"
             }`}
           />
         ))}

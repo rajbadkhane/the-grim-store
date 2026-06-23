@@ -69,7 +69,7 @@ export function FiltersSidebar({ categories, brands, currentParams }: FiltersSid
       <div className="border-b border-electrox-elevated pb-4">
         <button
           onClick={() => toggleSection("categories")}
-          className="flex w-full items-center justify-between py-2 text-left font-bold text-sm text-foreground hover:text-[#FF6B35] transition-colors"
+          className="flex w-full items-center justify-between py-2 text-left font-bold text-sm text-foreground hover:text-[var(--accent)] transition-colors"
         >
           <span>CATEGORIES</span>
           {openSections.categories ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -83,7 +83,7 @@ export function FiltersSidebar({ categories, brands, currentParams }: FiltersSid
             >
               <div
                 className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border border-neutral-600 transition-all ${
-                  !currentParams.category ? "bg-[#FF6B35] border-[#FF6B35] text-white" : ""
+                  !currentParams.category ? "bg-[var(--accent)] border-[var(--accent)] text-white" : ""
                 }`}
               >
                 {!currentParams.category && (
@@ -104,7 +104,7 @@ export function FiltersSidebar({ categories, brands, currentParams }: FiltersSid
                 >
                   <div
                     className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border border-neutral-600 transition-all ${
-                      isActive ? "bg-[#FF6B35] border-[#FF6B35] text-white" : ""
+                      isActive ? "bg-[var(--accent)] border-[var(--accent)] text-white" : ""
                     }`}
                   >
                     {isActive && (
@@ -125,7 +125,7 @@ export function FiltersSidebar({ categories, brands, currentParams }: FiltersSid
       <div className="border-b border-electrox-elevated pb-4">
         <button
           onClick={() => toggleSection("brands")}
-          className="flex w-full items-center justify-between py-2 text-left font-bold text-sm text-foreground hover:text-[#FF6B35] transition-colors"
+          className="flex w-full items-center justify-between py-2 text-left font-bold text-sm text-foreground hover:text-[var(--accent)] transition-colors"
         >
           <span>BRANDS</span>
           {openSections.brands ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -135,7 +135,7 @@ export function FiltersSidebar({ categories, brands, currentParams }: FiltersSid
           <div className="mt-2 space-y-3">
             {/* Search Input inside brands list */}
             {brands.length > 5 && (
-              <div className="relative flex items-center rounded-lg bg-electrox-bg-2 border border-electrox-elevated px-2 py-1.5 focus-within:border-[#FF6B35]">
+              <div className="relative flex items-center rounded-lg bg-electrox-bg-2 border border-electrox-elevated px-2 py-1.5 focus-within:border-[var(--accent)]">
                 <Search size={14} className="text-neutral-400" />
                 <input
                   type="text"
@@ -154,7 +154,7 @@ export function FiltersSidebar({ categories, brands, currentParams }: FiltersSid
               >
                 <div
                   className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border border-neutral-600 transition-all ${
-                    !currentParams.brand ? "bg-[#FF6B35] border-[#FF6B35] text-white" : ""
+                    !currentParams.brand ? "bg-[var(--accent)] border-[var(--accent)] text-white" : ""
                   }`}
                 >
                   {!currentParams.brand && (
@@ -175,7 +175,7 @@ export function FiltersSidebar({ categories, brands, currentParams }: FiltersSid
                   >
                     <div
                       className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border border-neutral-600 transition-all ${
-                        isActive ? "bg-[#FF6B35] border-[#FF6B35] text-white" : ""
+                        isActive ? "bg-[var(--accent)] border-[var(--accent)] text-white" : ""
                       }`}
                     >
                       {isActive && (
@@ -200,7 +200,7 @@ export function FiltersSidebar({ categories, brands, currentParams }: FiltersSid
       <div className="border-b border-electrox-elevated pb-4">
         <button
           onClick={() => toggleSection("price")}
-          className="flex w-full items-center justify-between py-2 text-left font-bold text-sm text-foreground hover:text-[#FF6B35] transition-colors"
+          className="flex w-full items-center justify-between py-2 text-left font-bold text-sm text-foreground hover:text-[var(--accent)] transition-colors"
         >
           <span>PRICE LIMIT</span>
           {openSections.price ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -210,7 +210,7 @@ export function FiltersSidebar({ categories, brands, currentParams }: FiltersSid
           <form onSubmit={handlePriceSubmit} className="mt-2 space-y-3">
             <div className="flex items-center justify-between text-xs text-neutral-400">
               <span>Max Price Limit</span>
-              <span className="font-black text-[#FF6B35]">{formatMoney(maxPrice)}</span>
+              <span className="font-black text-[var(--accent)]">{formatMoney(maxPrice)}</span>
             </div>
             <input
               type="range"
@@ -219,12 +219,12 @@ export function FiltersSidebar({ categories, brands, currentParams }: FiltersSid
               step="100"
               value={maxPrice}
               onChange={(e) => setMaxPrice(Number(e.target.value))}
-              className="w-full cursor-pointer accent-[#FF6B35]"
+              className="w-full cursor-pointer accent-[var(--accent)]"
               style={{ caretColor: "transparent" }}
             />
             <button
               type="submit"
-              className="w-full rounded-xl border border-electrox-elevated bg-electrox-bg-2 py-2 text-xs font-black text-foreground hover:border-[#FF6B35] hover:bg-electrox-surface transition"
+              className="w-full rounded-xl border border-electrox-elevated bg-electrox-bg-2 py-2 text-xs font-black text-foreground hover:border-[var(--accent)] hover:bg-electrox-surface transition"
             >
               Apply Price
             </button>
@@ -236,7 +236,7 @@ export function FiltersSidebar({ categories, brands, currentParams }: FiltersSid
       <div className="border-b border-electrox-elevated pb-4">
         <button
           onClick={() => toggleSection("ratings")}
-          className="flex w-full items-center justify-between py-2 text-left font-bold text-sm text-foreground hover:text-[#FF6B35] transition-colors"
+          className="flex w-full items-center justify-between py-2 text-left font-bold text-sm text-foreground hover:text-[var(--accent)] transition-colors"
         >
           <span>CUSTOMER RATINGS</span>
           {openSections.ratings ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -254,7 +254,7 @@ export function FiltersSidebar({ categories, brands, currentParams }: FiltersSid
                 >
                   <div
                     className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border border-neutral-600 transition-all ${
-                      isActive ? "bg-[#FF6B35] border-[#FF6B35] text-white" : ""
+                      isActive ? "bg-[var(--accent)] border-[var(--accent)] text-white" : ""
                     }`}
                   >
                     {isActive && (
@@ -285,7 +285,7 @@ export function FiltersSidebar({ categories, brands, currentParams }: FiltersSid
       <div className="border-b border-electrox-elevated pb-4">
         <button
           onClick={() => toggleSection("materials")}
-          className="flex w-full items-center justify-between py-2 text-left font-bold text-sm text-foreground hover:text-[#FF6B35] transition-colors"
+          className="flex w-full items-center justify-between py-2 text-left font-bold text-sm text-foreground hover:text-[var(--accent)] transition-colors"
         >
           <span>MATERIALS</span>
           {openSections.materials ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -303,7 +303,7 @@ export function FiltersSidebar({ categories, brands, currentParams }: FiltersSid
                 >
                   <div
                     className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border border-neutral-600 transition-all ${
-                      isActive ? "bg-[#FF6B35] border-[#FF6B35] text-white" : ""
+                      isActive ? "bg-[var(--accent)] border-[var(--accent)] text-white" : ""
                     }`}
                   >
                     {isActive && (
@@ -324,7 +324,7 @@ export function FiltersSidebar({ categories, brands, currentParams }: FiltersSid
       <div>
         <button
           onClick={() => toggleSection("availability")}
-          className="flex w-full items-center justify-between py-2 text-left font-bold text-sm text-foreground hover:text-[#FF6B35] transition-colors"
+          className="flex w-full items-center justify-between py-2 text-left font-bold text-sm text-foreground hover:text-[var(--accent)] transition-colors"
         >
           <span>AVAILABILITY</span>
           {openSections.availability ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -344,7 +344,7 @@ export function FiltersSidebar({ categories, brands, currentParams }: FiltersSid
               <div
                 className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border border-neutral-600 transition-all ${
                   currentParams.availability === "in-stock"
-                    ? "bg-[#FF6B35] border-[#FF6B35] text-white"
+                    ? "bg-[var(--accent)] border-[var(--accent)] text-white"
                     : ""
                 }`}
               >

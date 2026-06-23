@@ -16,17 +16,17 @@ export default function CartPage() {
   const shipping = subtotal > 1499 || subtotal === 0 ? 0 : 79;
 
   return (
-    <main className="mobile-bottom-safe min-h-screen bg-transparent text-foreground">
+    <main className="min-h-screen bg-[#f9f9f9] text-[#1a1c1c] dark:bg-[#0A0A0A] dark:text-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(cartPageJsonLd()) }} />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         
         {/* Stage Progress Timeline */}
         <div className="mb-10 mx-auto max-w-lg flex items-center justify-center gap-4 border-b border-neutral-200/50 dark:border-neutral-800 pb-6">
           <div className="flex items-center gap-2">
-            <span className="grid h-6 w-6 place-items-center rounded-lg bg-[#FF6B35] text-white text-[10px] font-heading font-black">1</span>
-            <span className="text-[10px] font-heading font-extrabold uppercase tracking-wider text-[#FF6B35]">Bag</span>
+            <span className="grid h-6 w-6 place-items-center rounded-lg bg-[var(--accent)] text-white text-[10px] font-heading font-black">1</span>
+            <span className="text-[10px] font-heading font-extrabold uppercase tracking-wider text-[var(--accent)]">Bag</span>
           </div>
-          <span className="h-[2px] w-12 sm:w-20 bg-[#FF6B35]/20 shrink-0" />
+          <span className="h-[2px] w-12 sm:w-20 bg-[var(--accent)]/20 shrink-0" />
           <div className="flex items-center gap-2">
             <span className="grid h-6 w-6 place-items-center rounded-lg bg-neutral-200 dark:bg-neutral-800 text-neutral-500 text-[10px] font-heading font-black">2</span>
             <span className="text-[10px] font-heading font-extrabold uppercase tracking-wider text-neutral-400">Address</span>
@@ -43,16 +43,16 @@ export default function CartPage() {
           {/* Cart Items List */}
           <section className="flex flex-col gap-4">
             {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-5 rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-800 p-12 py-16 text-center bg-white dark:bg-neutral-900/30 shadow-xs">
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[#FF6B35]/10 text-[#FF6B35]">
+              <div className="flex flex-col items-center justify-center gap-5 border border-dashed border-[#e5bdb8] bg-white p-12 py-16 text-center shadow-sm dark:border-[#3a1f1f] dark:bg-[#130b0b]">
+                <div className="flex h-14 w-14 items-center justify-center bg-[#FF3B30]/10 text-[#FF3B30]">
                   <ShoppingBag size={22} className="stroke-[2.5]" />
                 </div>
-                <h2 className="text-sm font-heading font-extrabold text-neutral-900 dark:text-white uppercase tracking-wider">Your bag is empty</h2>
-                <p className="max-w-sm text-xs font-semibold text-neutral-500 leading-relaxed">
-                  Browse our high quality smart toys, retro gaming gear, and tech wearables to fill your shopping bag.
+                <h2 className="text-sm font-heading font-extrabold uppercase tracking-wider text-[#1a1c1c] dark:text-white">Your bag is empty</h2>
+                <p className="max-w-sm text-xs font-semibold leading-relaxed text-[#5c403c] dark:text-white/60">
+                  Browse the vault and add live catalog products to your shopping bag.
                 </p>
                 <Link href="/products" className="mt-2">
-                  <button className="px-6 py-2.5 rounded-xl bg-[#FF6B35] hover:bg-[#FF6B35]/90 text-white font-heading font-extrabold uppercase text-xs tracking-widest shadow-sm transition active:scale-95 cursor-pointer">
+                  <button className="bg-[#FF3B30] px-6 py-2.5 text-xs font-heading font-extrabold uppercase tracking-widest text-white shadow-sm transition active:scale-95">
                     Explore Shop
                   </button>
                 </Link>
@@ -67,7 +67,7 @@ export default function CartPage() {
                 return (
                   <article
                     key={lineKey}
-                    className="relative flex gap-4 rounded-2xl border border-neutral-200/50 dark:border-neutral-800 bg-white dark:bg-neutral-900/30 p-4 shadow-xs"
+                    className="relative flex gap-4 border border-[#e5bdb8] bg-white p-4 shadow-sm dark:border-[#3a1f1f] dark:bg-[#130b0b]"
                   >
                     {/* Item Image */}
                     <div className="relative flex aspect-[4/5] w-20 sm:w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#FAFAFA] dark:bg-neutral-900 border border-neutral-200/40 dark:border-transparent">
@@ -82,11 +82,11 @@ export default function CartPage() {
                     <div className="flex flex-1 flex-col justify-between pr-8">
                       <div>
                         {item.brand && (
-                          <span className="text-[9px] font-heading font-black uppercase tracking-widest text-[#FF6B35]">
+                          <span className="text-[9px] font-heading font-black uppercase tracking-widest text-[var(--accent)]">
                             {item.brand}
                           </span>
                         )}
-                        <Link href={`/products/${item.slug}`} className="mt-0.5 block line-clamp-1 text-xs text-neutral-850 dark:text-white font-bold hover:text-[#FF6B35] transition">
+                        <Link href={`/products/${item.slug}`} className="mt-0.5 block line-clamp-1 text-xs text-neutral-850 dark:text-white font-bold hover:text-[var(--accent)] transition">
                           {item.title}
                         </Link>
                         
@@ -122,7 +122,7 @@ export default function CartPage() {
                           {hasDiscount && (
                             <>
                               <span className="text-[10px] text-neutral-400 line-through font-medium">{formatMoney(itemPrice * item.quantity)}</span>
-                              <span className="text-[10px] font-bold text-[#FF6B35]">({discountPercentage}% OFF)</span>
+                              <span className="text-[10px] font-bold text-[var(--accent)]">({discountPercentage}% OFF)</span>
                             </>
                           )}
                         </div>
@@ -151,18 +151,18 @@ export default function CartPage() {
             
             {/* Promo Code input */}
             <div className="mt-4 border-b border-neutral-200/40 dark:border-neutral-800/60 pb-4">
-              <label htmlFor="coupon" className="text-[10px] font-heading font-black uppercase tracking-widest text-[#FF6B35]">
+              <label htmlFor="coupon" className="text-[10px] font-heading font-black uppercase tracking-widest text-[var(--accent)]">
                 Apply Coupons
               </label>
               <div className="mt-2.5 flex gap-2">
                 <input
                   id="coupon"
-                  className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-[#FAFAFA] dark:bg-neutral-900/60 px-3.5 py-2 text-xs font-semibold text-foreground outline-none transition placeholder:text-neutral-400 focus:border-[#FF6B35]"
+                  className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-[#FAFAFA] dark:bg-neutral-900/60 px-3.5 py-2 text-xs font-semibold text-foreground outline-none transition placeholder:text-neutral-400 focus:border-[var(--accent)]"
                   placeholder="Enter Promo Code"
                 />
                 <button
                   type="button"
-                  className="rounded-xl border border-[#FF6B35] px-4 text-xs font-heading font-extrabold text-[#FF6B35] uppercase hover:bg-[#FF6B35]/10 transition-colors cursor-pointer"
+                  className="rounded-xl border border-[var(--accent)] px-4 text-xs font-heading font-extrabold text-[var(--accent)] uppercase hover:bg-[var(--accent)]/10 transition-colors cursor-pointer"
                   onClick={() => toast.success("GRIM40 applied successfully!")}
                 >
                   Apply
@@ -179,7 +179,7 @@ export default function CartPage() {
 
             {/* Checkout Trigger */}
             <button
-              className="mt-6 w-full flex min-h-11 items-center justify-center rounded-xl bg-[#111827] dark:bg-white text-white dark:text-[#111827] hover:bg-[#FF6B35] dark:hover:bg-[#FF6B35] dark:hover:text-white text-xs font-heading font-extrabold uppercase tracking-widest transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="mt-6 flex min-h-11 w-full items-center justify-center bg-[#1a1c1c] text-xs font-heading font-extrabold uppercase tracking-widest text-white shadow-sm transition hover:bg-[#FF3B30] disabled:cursor-not-allowed disabled:opacity-40 dark:bg-white dark:text-black dark:hover:bg-[#FF3B30] dark:hover:text-white"
               disabled={!items.length}
               onClick={() => router.push("/checkout")}
             >
@@ -190,14 +190,14 @@ export default function CartPage() {
       </div>
 
       {items.length > 0 && (
-        <div className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] left-0 right-0 z-45 border-t border-neutral-200/60 dark:border-neutral-800 bg-white/97 dark:bg-[#0B0F19]/97 p-3.5 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur-md lg:hidden flex items-center justify-between gap-4">
+        <div className="fixed bottom-0 left-0 right-0 z-45 flex items-center justify-between gap-4 border-t border-[#e5bdb8] bg-white/97 p-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur-md dark:border-[#3a1f1f] dark:bg-[#0A0A0A]/97 lg:hidden">
           <div className="flex flex-col pl-2">
             <span className="text-[9px] font-heading font-black uppercase tracking-wider text-neutral-450 dark:text-neutral-500 leading-none">Total Payable</span>
-            <span className="text-sm font-heading font-extrabold text-[#FF6B35] mt-1">{formatMoney(subtotal + shipping)}</span>
+            <span className="text-sm font-heading font-extrabold text-[var(--accent)] mt-1">{formatMoney(subtotal + shipping)}</span>
           </div>
           <button
             onClick={() => router.push("/checkout")}
-            className="flex-1 max-w-[200px] h-11 flex items-center justify-center bg-[#FF6B35] text-xs font-heading font-extrabold text-white rounded-xl uppercase tracking-widest transition"
+            className="flex h-11 max-w-[200px] flex-1 items-center justify-center bg-[#FF3B30] text-xs font-heading font-extrabold uppercase tracking-widest text-white transition"
           >
             Place Order
           </button>
@@ -217,7 +217,7 @@ function Row({ label, value, strong, shippingFree }: { label: string; value: str
       }`}
     >
       <span>{label}</span>
-      <span className={shippingFree ? "text-emerald-500 font-bold" : strong ? "text-neutral-900 dark:text-white" : ""}>{value}</span>
+      <span className={shippingFree ? "text-red-500 font-bold" : strong ? "text-neutral-900 dark:text-white" : ""}>{value}</span>
     </div>
   );
 }

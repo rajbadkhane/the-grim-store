@@ -26,6 +26,7 @@ function LoginForm() {
   const [phone, setPhone] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
 
   // Redirect if already authenticated
@@ -44,20 +45,79 @@ function LoginForm() {
     setPassword("");
   };
 
-  // Google Login Simulation
+  // Google Login via Google Identity Services
   async function handleGoogleLogin() {
-    setLoading(true);
-    toast.loading("Opening Google Sign-In...", { id: "google-loading" });
-    
-    // Simulate minor social popup delay
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-    
+    setGoogleLoading(true);
+
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      toast.error("Google Client ID is not configured.");
+      setGoogleLoading(false);
+      return;
+    }
+
+    const gsi = (window as any).google?.accounts?.id;
+    if (!gsi) {
+      toast.error("Google sign-in is loading. Please try again.");
+      setGoogleLoading(false);
+      return;
+    }
+
     try {
-      const res = await api.post("/auth/google-login", {
-        email: "raj.grimstore@gmail.com",
-        name: "Raj Badkhane",
-        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80"
+      const idToken = await new Promise<string>((resolve, reject) => {
+        gsi.initialize({
+          client_id: clientId,
+          callback: (response: any) => {
+            if (response.credential) {
+              resolve(response.credential);
+            } else {
+              reject(new Error("No credential received"));
+            }
+          },
+          cancel_on_tap_outside: true,
+        });
+        gsi.prompt((notification: any) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            // Fallback: render a real Google button
+            const container = document.createElement("div");
+            container.style.position = "fixed";
+            container.style.top = "50%";
+            container.style.left = "50%";
+            container.style.transform = "translate(-50%, -50%)";
+            container.style.zIndex = "99999";
+            container.style.background = "white";
+            container.style.borderRadius = "12px";
+            container.style.padding = "24px";
+            container.style.boxShadow = "0 25px 60px rgba(0,0,0,0.3)";
+            container.id = "google-signin-fallback";
+            document.body.appendChild(container);
+
+            gsi.renderButton(container, {
+              theme: "outline",
+              size: "large",
+              width: 320,
+              text: "signin_with",
+            });
+
+            setTimeout(() => {
+              const btn = container.querySelector('[role="button"]') as HTMLElement | null;
+              if (btn) btn.click();
+            }, 100);
+
+            setTimeout(() => {
+              const el = document.getElementById("google-signin-fallback");
+              if (el) el.remove();
+              reject(new Error("Google sign-in was dismissed"));
+            }, 60000);
+          }
+        });
       });
+
+      const fallback = document.getElementById("google-signin-fallback");
+      if (fallback) fallback.remove();
+
+      toast.loading("Authenticating with Google...", { id: "google-loading" });
+      const res = await api.post("/auth/google-login", { idToken });
 
       if (res.data?.success) {
         toast.dismiss("google-loading");
@@ -70,10 +130,15 @@ function LoginForm() {
         toast.error("Google login failed. Try again.");
       }
     } catch (err: any) {
+      const fallback = document.getElementById("google-signin-fallback");
+      if (fallback) fallback.remove();
+
       toast.dismiss("google-loading");
-      toast.error(err.response?.data?.message ?? "Google authentication failed.");
+      if (err.message !== "Google sign-in was dismissed") {
+        toast.error(err.response?.data?.message ?? err.message ?? "Google authentication failed.");
+      }
     } finally {
-      setLoading(false);
+      setGoogleLoading(false);
     }
   }
 
@@ -233,12 +298,20 @@ function LoginForm() {
   return (
     <div className="relative w-full overflow-hidden rounded-2xl border border-neutral-200/60 dark:border-neutral-800 bg-white dark:bg-neutral-900/30 shadow-md">
       
-      {/* Brand header banner gradient - matching premium Apple/Nintendo/Nothing vibes */}
-      <div className="relative w-full aspect-[2.8/1] bg-gradient-to-tr from-[#FF6B35] to-[#FFD93D] overflow-hidden flex items-center justify-center p-6 select-none border-b border-neutral-200/55 dark:border-neutral-800/60">
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
-        <div className="relative text-center">
-          <h2 className="text-xl sm:text-2xl font-heading font-extrabold text-neutral-950 uppercase tracking-widest leading-none">THE GRIM STORE</h2>
-          <p className="mt-1 text-[9px] font-heading font-black text-neutral-950/80 uppercase tracking-wider">Play • Learn • Explore</p>
+      <div className="relative flex aspect-[2.8/1] w-full items-center justify-center overflow-hidden border-b border-[#e5bdb8] bg-white p-6 select-none dark:border-[#3a1f1f] dark:bg-[#0A0A0A]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(215,25,32,0.10),transparent_45%)] dark:bg-[radial-gradient(circle_at_50%_0%,rgba(255,59,48,0.18),transparent_45%)]" />
+        <div className="relative flex items-center gap-3">
+          <span className="relative h-16 w-16 overflow-visible sm:h-20 sm:w-20">
+            <img src="/logo.png" alt="" className="h-full w-full object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.22)]" aria-hidden="true" />
+          </span>
+          <div>
+            <h2 className="grim-wordmark grim-wordmark-inline text-[26px] text-[#0A0A0A] dark:text-white sm:text-[32px]" aria-label="The Grim Store">
+              <span className="grim-wordmark-kicker">The</span>
+              <span>Grim</span>
+              <span>Store</span>
+            </h2>
+            <p className="mt-1 text-[9px] font-heading font-black uppercase tracking-wider text-[#D71920]">Electronic items &amp; useful gadgets</p>
+          </div>
         </div>
       </div>
 
@@ -263,7 +336,7 @@ function LoginForm() {
           <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-350 font-medium">
             {mode === "signin-password" && "Enter your email and password to log in."}
             {mode === "signin-otp" && "Verification code login / quick registration."}
-            {mode === "signup" && "Join The Grim Store for custom tech and style."}
+            {mode === "signup" && "Join The Grim Store for saved addresses, wishlist, and faster checkout."}
             {mode === "forgot-password" && "Recover your account password."}
             {mode === "reset-password" && "Enter the 6-digit code and set your password."}
           </p>
@@ -294,7 +367,7 @@ function LoginForm() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[var(--accent)] dark:focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
 
@@ -306,7 +379,7 @@ function LoginForm() {
                     <button
                       type="button"
                       onClick={() => switchMode("forgot-password")}
-                      className="text-[10px] font-heading font-extrabold text-[#FF6B35] hover:underline uppercase tracking-wider transition-colors"
+                      className="text-[10px] font-heading font-extrabold text-[var(--accent)] hover:underline uppercase tracking-wider transition-colors"
                     >
                       Forgot password?
                     </button>
@@ -317,14 +390,14 @@ function LoginForm() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[var(--accent)] dark:focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-white hover:bg-[#FF6B35] dark:hover:bg-[#FF6B35] text-white dark:text-[#111827] dark:hover:text-white text-xs font-heading font-extrabold uppercase tracking-widest transition-all duration-205 disabled:opacity-60 hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-sm"
+                  className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-white hover:bg-[var(--accent)] dark:hover:bg-[var(--accent)] text-white dark:text-[#111827] dark:hover:text-white text-xs font-heading font-extrabold uppercase tracking-widest transition-all duration-205 disabled:opacity-60 hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-sm"
                 >
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -361,7 +434,7 @@ function LoginForm() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Your name"
-                        className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
+                        className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[var(--accent)] dark:focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-neutral-400"
                       />
                     </div>
 
@@ -375,7 +448,7 @@ function LoginForm() {
                         value={phone}
                         onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                         placeholder="10-digit mobile number"
-                        className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
+                        className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[var(--accent)] dark:focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-neutral-400"
                       />
                     </div>
 
@@ -389,7 +462,7 @@ function LoginForm() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="name@example.com"
-                        className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
+                        className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[var(--accent)] dark:focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-neutral-400"
                       />
                     </div>
                   </>
@@ -406,7 +479,7 @@ function LoginForm() {
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                       placeholder="000000"
-                      className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 text-center text-xl font-extrabold tracking-[0.3em] text-[#424553] dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] transition-all placeholder:text-neutral-400"
+                      className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 text-center text-xl font-extrabold tracking-[0.3em] text-[#424553] dark:text-white outline-none focus:border-[var(--accent)] dark:focus:border-[var(--accent)] transition-all placeholder:text-neutral-400"
                     />
                   </div>
                 )}
@@ -414,7 +487,7 @@ function LoginForm() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-white hover:bg-[#FF6B35] dark:hover:bg-[#FF6B35] text-white dark:text-[#111827] dark:hover:text-white text-xs font-heading font-extrabold uppercase tracking-widest transition-all duration-205 disabled:opacity-60 hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-sm"
+                  className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-white hover:bg-[var(--accent)] dark:hover:bg-[var(--accent)] text-white dark:text-[#111827] dark:hover:text-white text-xs font-heading font-extrabold uppercase tracking-widest transition-all duration-205 disabled:opacity-60 hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-sm"
                 >
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   {loading ? "Processing..." : otpSent ? "Verify & Log In" : "Send Verification Code"}
@@ -445,7 +518,7 @@ function LoginForm() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Your name"
-                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[var(--accent)] dark:focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
 
@@ -459,7 +532,7 @@ function LoginForm() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                     placeholder="10-digit number"
-                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[var(--accent)] dark:focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
 
@@ -473,7 +546,7 @@ function LoginForm() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[var(--accent)] dark:focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
 
@@ -487,14 +560,14 @@ function LoginForm() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Min 8 characters"
-                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[var(--accent)] dark:focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-white hover:bg-[#FF6B35] dark:hover:bg-[#FF6B35] text-white dark:text-[#111827] dark:hover:text-white text-xs font-heading font-extrabold uppercase tracking-widest transition-all duration-205 disabled:opacity-60 hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-sm"
+                  className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-white hover:bg-[var(--accent)] dark:hover:bg-[var(--accent)] text-white dark:text-[#111827] dark:hover:text-white text-xs font-heading font-extrabold uppercase tracking-widest transition-all duration-205 disabled:opacity-60 hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-sm"
                 >
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -529,14 +602,14 @@ function LoginForm() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[var(--accent)] dark:focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-white hover:bg-[#FF6B35] dark:hover:bg-[#FF6B35] text-white dark:text-[#111827] dark:hover:text-white text-xs font-heading font-extrabold uppercase tracking-widest transition-all duration-205 disabled:opacity-60 hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-sm"
+                  className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-white hover:bg-[var(--accent)] dark:hover:bg-[var(--accent)] text-white dark:text-[#111827] dark:hover:text-white text-xs font-heading font-extrabold uppercase tracking-widest transition-all duration-205 disabled:opacity-60 hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-sm"
                 >
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   {loading ? "Sending..." : "Request Reset OTP"}
@@ -546,7 +619,7 @@ function LoginForm() {
                   <button
                     type="button"
                     onClick={() => switchMode("reset-password")}
-                    className="mt-2 text-center text-xs font-heading font-extrabold text-[#FF6B35] hover:underline uppercase tracking-wider"
+                    className="mt-2 text-center text-xs font-heading font-extrabold text-[var(--accent)] hover:underline uppercase tracking-wider"
                   >
                     Code already received? Click here to set password.
                   </button>
@@ -578,7 +651,7 @@ function LoginForm() {
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                     placeholder="000000"
-                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[var(--accent)] dark:focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
 
@@ -592,14 +665,14 @@ function LoginForm() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Min 8 characters"
-                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[#FF6B35] dark:focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/30 transition-all placeholder:text-neutral-400"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 px-4 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:border-[var(--accent)] dark:focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all placeholder:text-neutral-400"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-white hover:bg-[#FF6B35] dark:hover:bg-[#FF6B35] text-white dark:text-[#111827] dark:hover:text-white text-xs font-heading font-extrabold uppercase tracking-widest transition-all duration-205 disabled:opacity-60 hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-sm"
+                  className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#111827] dark:bg-white hover:bg-[var(--accent)] dark:hover:bg-[var(--accent)] text-white dark:text-[#111827] dark:hover:text-white text-xs font-heading font-extrabold uppercase tracking-widest transition-all duration-205 disabled:opacity-60 hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-sm"
                 >
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   {loading ? "Resetting..." : "Complete Password Reset"}
@@ -623,28 +696,32 @@ function LoginForm() {
         <button
           type="button"
           onClick={handleGoogleLogin}
-          disabled={loading}
+          disabled={googleLoading}
           className="flex min-h-[44px] w-full items-center justify-center gap-3 rounded-xl border border-neutral-250 dark:border-neutral-850 bg-white dark:bg-neutral-900/30 px-6 text-xs font-heading font-extrabold uppercase tracking-widest text-neutral-900 dark:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
         >
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" className="flex-shrink-0">
-            <path
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              fill="#4285F4"
-            />
-            <path
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              fill="#34A853"
-            />
-            <path
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-              fill="#FBBC05"
-            />
-            <path
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              fill="#EA4335"
-            />
-          </svg>
-          Continue with Google
+          {googleLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" className="flex-shrink-0">
+              <path
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                fill="#4285F4"
+              />
+              <path
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853"
+              />
+              <path
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                fill="#EA4335"
+              />
+            </svg>
+          )}
+          {googleLoading ? "Connecting Google..." : "Continue with Google"}
         </button>
 
         {/* Auth mode switches */}
@@ -654,14 +731,14 @@ function LoginForm() {
               Don't have an account?{" "}
               <button
                 onClick={() => switchMode("signup")}
-                className="font-heading font-black text-[#FF6B35] hover:underline uppercase tracking-wider"
+                className="font-heading font-black text-[var(--accent)] hover:underline uppercase tracking-wider"
               >
                 Sign up
               </button>{" "}
               or{" "}
               <button
                 onClick={() => switchMode("signin-otp")}
-                className="font-heading font-black text-[#FF6B35] hover:underline uppercase tracking-wider"
+                className="font-heading font-black text-[var(--accent)] hover:underline uppercase tracking-wider"
               >
                 Use OTP
               </button>
@@ -673,14 +750,14 @@ function LoginForm() {
               Already registered?{" "}
               <button
                 onClick={() => switchMode("signin-password")}
-                className="font-heading font-black text-[#FF6B35] hover:underline uppercase tracking-wider"
+                className="font-heading font-black text-[var(--accent)] hover:underline uppercase tracking-wider"
               >
                 Use Password
               </button>{" "}
               or{" "}
               <button
                 onClick={() => switchMode("signup")}
-                className="font-heading font-black text-[#FF6B35] hover:underline uppercase tracking-wider"
+                className="font-heading font-black text-[var(--accent)] hover:underline uppercase tracking-wider"
               >
                 Create Account
               </button>
@@ -692,7 +769,7 @@ function LoginForm() {
               Already have an account?{" "}
               <button
                 onClick={() => switchMode("signin-password")}
-                className="font-heading font-black text-[#FF6B35] hover:underline uppercase tracking-wider"
+                className="font-heading font-black text-[var(--accent)] hover:underline uppercase tracking-wider"
               >
                 Sign in
               </button>
@@ -702,7 +779,7 @@ function LoginForm() {
           {(mode === "forgot-password" || mode === "reset-password") && (
             <button
               onClick={() => switchMode("signin-password")}
-              className="font-heading font-black text-[#FF6B35] hover:underline uppercase tracking-wider"
+              className="font-heading font-black text-[var(--accent)] hover:underline uppercase tracking-wider"
             >
               Back to login page
             </button>
@@ -720,7 +797,7 @@ export default function LoginPage() {
       <LightweightCanvas />
       <Suspense fallback={
         <div className="relative w-full max-w-[420px] overflow-hidden rounded-2xl store-shell p-6 text-center py-20 animate-pulse">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#FF6B35]" />
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[var(--accent)]" />
           <p className="mt-4 text-xs font-semibold text-neutral-600 dark:text-neutral-350">Loading verification portal...</p>
         </div>
       }>
@@ -736,4 +813,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

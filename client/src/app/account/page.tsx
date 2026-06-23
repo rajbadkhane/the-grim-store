@@ -120,7 +120,7 @@ export default function AccountPage() {
   if (loading) {
     return (
       <div className="bg-transparent text-neutral-900 dark:text-[#f7f3ef] transition-colors duration-300 min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center gap-3">
-        <Loader2 className="h-8 w-8 animate-spin text-[#FF6B35]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[var(--accent)]" />
         <p className="text-sm font-bold text-neutral-500 dark:text-white/50">Loading profile details...</p>
       </div>
     );
@@ -136,7 +136,7 @@ export default function AccountPage() {
           </p>
           <button
             onClick={openLoginModal}
-            className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-md bg-[#FF6B35] hover:bg-[#e05626] px-8 text-sm font-black text-white transition duration-200 shadow-lg cursor-pointer"
+            className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-md bg-[var(--accent)] hover:bg-[#e05626] px-8 text-sm font-black text-white transition duration-200 shadow-lg cursor-pointer"
           >
             Sign In / Register
           </button>
@@ -158,7 +158,7 @@ export default function AccountPage() {
           </div>
           <button
             onClick={() => load()}
-            className="inline-flex items-center gap-2 rounded-md border border-neutral-250 dark:border-white/10 px-4 py-2 text-sm font-black text-neutral-800 dark:text-white hover:border-[#FF6B35] hover:text-[#FF6B35] transition cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-md border border-neutral-250 dark:border-white/10 px-4 py-2 text-sm font-black text-neutral-800 dark:text-white hover:border-[var(--accent)] hover:text-[var(--accent)] transition cursor-pointer"
           >
             <RefreshCcw size={16} /> Refresh Data
           </button>
@@ -170,7 +170,7 @@ export default function AccountPage() {
           <aside className="flex flex-col gap-4 h-fit">
             {/* User Greeting Block */}
             <div className="flex items-center gap-3.5 rounded-md border border-neutral-200 dark:border-white/10 bg-neutral-50/50 dark:bg-white/[0.02] p-4 shadow-sm">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FF6B35]/10 text-[#FF6B35] dark:bg-[#FF6B35]/20 font-black text-lg border border-[#FF6B35]/20 shadow-inner flex-shrink-0">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent)]/10 text-[var(--accent)] dark:bg-[var(--accent)]/20 font-black text-lg border border-[var(--accent)]/20 shadow-inner flex-shrink-0">
                 {profile.name ? profile.name.charAt(0).toUpperCase() : profile.email.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0">
@@ -193,12 +193,12 @@ export default function AccountPage() {
                   }}
                   className={`flex w-full items-center justify-between gap-3 rounded-md px-3.5 py-3 text-left text-sm font-black transition cursor-pointer ${
                     active === "orders"
-                      ? "bg-[#FF6B35]/10 dark:bg-[#FF6B35]/15 text-[#FF6B35] border-l-4 border-[#FF6B35] pl-2.5"
-                      : "text-neutral-700 dark:text-white/80 hover:bg-neutral-100 dark:hover:bg-white/5 hover:text-[#FF6B35]"
+                      ? "bg-[var(--accent)]/10 dark:bg-[var(--accent)]/15 text-[var(--accent)] border-l-4 border-[var(--accent)] pl-2.5"
+                      : "text-neutral-700 dark:text-white/80 hover:bg-neutral-100 dark:hover:bg-white/5 hover:text-[var(--accent)]"
                   }`}
                 >
                   <span className="inline-flex items-center gap-3">
-                    <Package size={18} className="text-[#FF6B35]/80" />
+                    <Package size={18} className="text-[var(--accent)]/80" />
                     MY ORDERS
                   </span>
                   <span className="flex items-center gap-2">
@@ -227,12 +227,12 @@ export default function AccountPage() {
                       }}
                       className={`flex w-full items-center justify-between gap-3 rounded-md px-3.5 py-2.5 text-left text-sm font-bold transition cursor-pointer ${
                         active === item.key
-                          ? "bg-[#FF6B35]/10 dark:bg-[#FF6B35]/15 text-[#FF6B35] border-l-4 border-[#FF6B35] pl-2.5"
-                          : "text-neutral-700 dark:text-white/80 hover:bg-neutral-100 dark:hover:bg-white/5 hover:text-[#FF6B35]"
+                          ? "bg-[var(--accent)]/10 dark:bg-[var(--accent)]/15 text-[var(--accent)] border-l-4 border-[var(--accent)] pl-2.5"
+                          : "text-neutral-700 dark:text-white/80 hover:bg-neutral-100 dark:hover:bg-white/5 hover:text-[var(--accent)]"
                       }`}
                     >
                       <span className="inline-flex items-center gap-3">
-                        <item.icon size={16} className={active === item.key ? "text-[#FF6B35]" : "text-neutral-400 dark:text-white/40"} />
+                        <item.icon size={16} className={active === item.key ? "text-[var(--accent)]" : "text-neutral-400 dark:text-white/40"} />
                         {item.label}
                       </span>
                       {item.key === "addresses" && addresses.length > 0 && <Count value={addresses.length} />}
@@ -260,12 +260,12 @@ export default function AccountPage() {
                       }}
                       className={`flex w-full items-center justify-between gap-3 rounded-md px-3.5 py-2.5 text-left text-sm font-bold transition cursor-pointer ${
                         active === item.key
-                          ? "bg-[#FF6B35]/10 dark:bg-[#FF6B35]/15 text-[#FF6B35] border-l-4 border-[#FF6B35] pl-2.5"
-                          : "text-neutral-700 dark:text-white/80 hover:bg-neutral-100 dark:hover:bg-white/5 hover:text-[#FF6B35]"
+                          ? "bg-[var(--accent)]/10 dark:bg-[var(--accent)]/15 text-[var(--accent)] border-l-4 border-[var(--accent)] pl-2.5"
+                          : "text-neutral-700 dark:text-white/80 hover:bg-neutral-100 dark:hover:bg-white/5 hover:text-[var(--accent)]"
                       }`}
                     >
                       <span className="inline-flex items-center gap-3">
-                        <item.icon size={16} className={active === item.key ? "text-[#FF6B35]" : "text-neutral-400 dark:text-white/40"} />
+                        <item.icon size={16} className={active === item.key ? "text-[var(--accent)]" : "text-neutral-400 dark:text-white/40"} />
                         {item.label}
                       </span>
                       {item.key === "wishlist" && wishlist.length > 0 && <Count value={wishlist.length} />}
@@ -287,7 +287,7 @@ export default function AccountPage() {
                       toast.error("Logout failed");
                     }
                   }}
-                  className="flex w-full items-center gap-3 rounded-md px-3.5 py-3 text-left text-sm font-black text-[#FF6B35] hover:bg-[#FF6B35]/10 transition cursor-pointer"
+                  className="flex w-full items-center gap-3 rounded-md px-3.5 py-3 text-left text-sm font-black text-[var(--accent)] hover:bg-[var(--accent)]/10 transition cursor-pointer"
                 >
                   <X size={18} />
                   LOGOUT
@@ -375,14 +375,14 @@ function ProfilePanel({ profile, loading, onSaved }: { profile: UserProfile | nu
         action={
           <button
             onClick={() => setEditing(true)}
-            className="inline-flex items-center gap-2 rounded-md border border-neutral-250 dark:border-white/10 px-3.5 py-2 text-xs font-black text-neutral-800 dark:text-white hover:border-[#FF6B35] hover:text-[#FF6B35] transition cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-md border border-neutral-250 dark:border-white/10 px-3.5 py-2 text-xs font-black text-neutral-800 dark:text-white hover:border-[var(--accent)] hover:text-[var(--accent)] transition cursor-pointer"
           >
             <Edit3 size={14} /> Edit Profile
           </button>
         }
       >
         <div className="grid gap-5 sm:grid-cols-[96px_1fr] items-center">
-          <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-md border border-neutral-200 dark:border-white/10 bg-neutral-100 dark:bg-[#FF6B35]/15 text-3xl font-black text-[#FF6B35]">
+          <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-md border border-neutral-200 dark:border-white/10 bg-neutral-100 dark:bg-[var(--accent)]/15 text-3xl font-black text-[var(--accent)]">
             {profile.avatar ? (
               <Image src={profile.avatar} alt={profile.name ?? "Profile"} width={96} height={96} className="h-full w-full object-cover" />
             ) : (
@@ -398,7 +398,7 @@ function ProfilePanel({ profile, loading, onSaved }: { profile: UserProfile | nu
                 {profile.role ?? "customer"}
               </span>
               {profile.emailVerified && (
-                <span className="rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-black text-emerald-600 dark:text-emerald-300 uppercase tracking-wide">
+                <span className="rounded-md bg-red-500/10 px-2.5 py-1 text-xs font-black text-red-600 dark:text-red-300 uppercase tracking-wide">
                   Verified email
                 </span>
               )}
@@ -417,7 +417,7 @@ function ProfilePanel({ profile, loading, onSaved }: { profile: UserProfile | nu
           <input
             value={form.name}
             onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-            className="mt-2 w-full rounded-md border border-neutral-250 dark:border-white/10 bg-white dark:bg-black px-3.5 py-3 text-sm text-neutral-800 dark:text-white outline-none focus:border-[#FF6B35] transition shadow-inner placeholder:text-neutral-450 dark:placeholder:text-white/30"
+            className="mt-2 w-full rounded-md border border-neutral-250 dark:border-white/10 bg-white dark:bg-black px-3.5 py-3 text-sm text-neutral-800 dark:text-white outline-none focus:border-[var(--accent)] transition shadow-inner placeholder:text-neutral-450 dark:placeholder:text-white/30"
           />
         </label>
         <label className="text-xs font-black text-neutral-500 dark:text-white/75 uppercase tracking-wider">
@@ -425,7 +425,7 @@ function ProfilePanel({ profile, loading, onSaved }: { profile: UserProfile | nu
           <input
             value={form.phone}
             onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
-            className="mt-2 w-full rounded-md border border-neutral-250 dark:border-white/10 bg-white dark:bg-black px-3.5 py-3 text-sm text-neutral-800 dark:text-white outline-none focus:border-[#FF6B35] transition shadow-inner placeholder:text-neutral-450 dark:placeholder:text-white/30"
+            className="mt-2 w-full rounded-md border border-neutral-250 dark:border-white/10 bg-white dark:bg-black px-3.5 py-3 text-sm text-neutral-800 dark:text-white outline-none focus:border-[var(--accent)] transition shadow-inner placeholder:text-neutral-450 dark:placeholder:text-white/30"
           />
         </label>
         <label className="text-xs font-black text-neutral-500 dark:text-white/75 uppercase tracking-wider sm:col-span-2">
@@ -434,7 +434,7 @@ function ProfilePanel({ profile, loading, onSaved }: { profile: UserProfile | nu
             value={form.avatar}
             onChange={(event) => setForm((current) => ({ ...current, avatar: event.target.value }))}
             placeholder="Optional image URL"
-            className="mt-2 w-full rounded-md border border-neutral-250 dark:border-white/10 bg-white dark:bg-black px-3.5 py-3 text-sm text-neutral-800 dark:text-white outline-none focus:border-[#FF6B35] transition shadow-inner placeholder:text-neutral-450 dark:placeholder:text-white/30"
+            className="mt-2 w-full rounded-md border border-neutral-250 dark:border-white/10 bg-white dark:bg-black px-3.5 py-3 text-sm text-neutral-800 dark:text-white outline-none focus:border-[var(--accent)] transition shadow-inner placeholder:text-neutral-450 dark:placeholder:text-white/30"
           />
         </label>
       </div>
@@ -442,14 +442,14 @@ function ProfilePanel({ profile, loading, onSaved }: { profile: UserProfile | nu
         <button
           onClick={save}
           disabled={saving}
-          className="inline-flex min-h-11 items-center gap-2 rounded-md bg-[#FF6B35] hover:bg-[#e05626] px-6 text-sm font-black text-white disabled:opacity-60 transition cursor-pointer shadow-lg shadow-[#FF6B35]/10"
+          className="inline-flex min-h-11 items-center gap-2 rounded-md bg-[var(--accent)] hover:bg-[#e05626] px-6 text-sm font-black text-white disabled:opacity-60 transition cursor-pointer shadow-lg shadow-[var(--accent)]/10"
         >
           {saving ? <Loader2 size={17} className="animate-spin" /> : <Save size={17} />} Save details
         </button>
         {hasProfile && (
           <button
             onClick={() => setEditing(false)}
-            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-neutral-250 dark:border-white/10 bg-transparent px-6 text-sm font-black text-neutral-700 dark:text-white/70 hover:border-[#FF6B35] hover:text-[#FF6B35] transition cursor-pointer"
+            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-neutral-250 dark:border-white/10 bg-transparent px-6 text-sm font-black text-neutral-700 dark:text-white/70 hover:border-[var(--accent)] hover:text-[var(--accent)] transition cursor-pointer"
           >
             <X size={17} /> Cancel
           </button>
@@ -515,8 +515,8 @@ function OrderCard({ order }: { order: Order }) {
           <p className="text-sm font-black text-neutral-900 dark:text-white font-mono">{order.orderId}</p>
           <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-wider">
             <span className="rounded bg-neutral-100 px-2 py-1 text-neutral-600 dark:bg-white/5 dark:text-white/60">Payment {paymentMethod}</span>
-            {courierName && <span className="rounded bg-[#FF6B35]/10 px-2 py-1 text-[#FF6B35]">{courierName}</span>}
-            {awbNumber && <span className="rounded bg-emerald-50 px-2 py-1 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">AWB {awbNumber}</span>}
+            {courierName && <span className="rounded bg-[var(--accent)]/10 px-2 py-1 text-[var(--accent)]">{courierName}</span>}
+            {awbNumber && <span className="rounded bg-red-50 px-2 py-1 text-red-700 dark:bg-red-500/10 dark:text-red-300">AWB {awbNumber}</span>}
           </div>
         </div>
         <div className="flex flex-wrap gap-2.5 items-center">
@@ -527,7 +527,7 @@ function OrderCard({ order }: { order: Order }) {
           )}
           <span className={`rounded-md px-2.5 py-1 text-xs font-black uppercase tracking-wider ${
             order.orderStatus === "delivered"
-              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300"
+              ? "bg-red-500/15 text-red-600 dark:text-red-300"
               : order.orderStatus === "cancelled" || order.orderStatus === "refunded"
                 ? "bg-neutral-500/15 text-neutral-650 dark:text-neutral-400"
                 : "bg-amber-500/15 text-amber-600 dark:text-amber-300"
@@ -575,7 +575,7 @@ function OrderCard({ order }: { order: Order }) {
             <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 dark:text-white/35">Payment Details</span>
             <div className="mt-2.5 flex justify-between text-xs font-bold text-neutral-500 dark:text-white/50">
               <span>Payment Status:</span>
-              <span className={`uppercase font-black ${order.paymentStatus === "paid" ? "text-emerald-650 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>{order.paymentStatus}</span>
+              <span className={`uppercase font-black ${order.paymentStatus === "paid" ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400"}`}>{order.paymentStatus}</span>
             </div>
             <div className="mt-2 flex justify-between text-xs font-bold text-neutral-500 dark:text-white/50">
               <span>Expected Delivery:</span>
@@ -590,15 +590,15 @@ function OrderCard({ order }: { order: Order }) {
           </div>
           <div className="mt-4 border-t border-neutral-200 dark:border-white/5 pt-3.5 flex items-center justify-between text-sm font-black text-neutral-900 dark:text-white">
             <span>Total Paid</span>
-            <span className="text-[#FF6B35] text-base">{formatMoney(order.totalAmount)}</span>
+            <span className="text-[var(--accent)] text-base">{formatMoney(order.totalAmount)}</span>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2">
             {labelUrl && (
-              <a href={labelUrl} target="_blank" rel="noreferrer" className="rounded-md border border-neutral-200 px-3 py-2 text-center text-[11px] font-black text-neutral-700 hover:border-[#FF6B35] hover:text-[#FF6B35] dark:border-white/10 dark:text-white/70">
+              <a href={labelUrl} target="_blank" rel="noreferrer" className="rounded-md border border-neutral-200 px-3 py-2 text-center text-[11px] font-black text-neutral-700 hover:border-[var(--accent)] hover:text-[var(--accent)] dark:border-white/10 dark:text-white/70">
                 Label
               </a>
             )}
-            <button onClick={loadTracking} disabled={trackingLoading} className="inline-flex items-center justify-center gap-2 rounded-md bg-[#FF6B35] hover:bg-[#e05626] px-3 py-2 text-[11px] font-black text-white disabled:opacity-60">
+            <button onClick={loadTracking} disabled={trackingLoading} className="inline-flex items-center justify-center gap-2 rounded-md bg-[var(--accent)] hover:bg-[#e05626] px-3 py-2 text-[11px] font-black text-white disabled:opacity-60">
               {trackingLoading ? <Loader2 size={13} className="animate-spin" /> : <Truck size={13} />}
               Live
             </button>
@@ -618,13 +618,13 @@ function OrderCard({ order }: { order: Order }) {
                   <p className="text-xs font-black uppercase tracking-wider text-neutral-400 dark:text-white/35">Carrier tracking</p>
                   <p className="mt-1 text-sm font-black text-neutral-900 dark:text-white">{tracking.status || order.trackingStatus}</p>
                 </div>
-                {tracking.awbNumber && <span className="rounded bg-emerald-500/10 px-2 py-1 text-[10px] font-black text-emerald-700 dark:text-emerald-300">AWB {tracking.awbNumber}</span>}
+                {tracking.awbNumber && <span className="rounded bg-red-500/10 px-2 py-1 text-[10px] font-black text-red-700 dark:text-red-300">AWB {tracking.awbNumber}</span>}
               </div>
               {tracking.error && <p className="mt-3 text-xs font-bold text-amber-600 dark:text-amber-300">{tracking.error}</p>}
               {!tracking.error && tracking.history?.length ? (
                 <div className="mt-4 max-h-56 space-y-3 overflow-y-auto pr-1">
                   {tracking.history.slice(0, 8).map((event, index) => (
-                    <div key={`${event.event_time ?? event.date ?? index}-${index}`} className="border-l-2 border-emerald-500/40 pl-3">
+                    <div key={`${event.event_time ?? event.date ?? index}-${index}`} className="border-l-2 border-red-500/40 pl-3">
                       <p className="text-xs font-black text-neutral-900 dark:text-white">{event.message ?? event.status ?? "Shipment update"}</p>
                       <p className="mt-0.5 text-[10px] font-bold text-neutral-500 dark:text-white/45">{[event.location, event.event_time ?? event.date].filter(Boolean).join(" | ")}</p>
                     </div>
@@ -716,7 +716,7 @@ function TrackingTimeline({ order }: { order: Order }) {
               <div
                 className={`absolute left-[7px] top-[18px] w-0.5 h-[calc(100%+8px)] transition-all duration-300 ${
                   isNextCompleted
-                    ? "bg-emerald-500"
+                    ? "bg-red-500"
                     : "bg-neutral-200 dark:bg-white/10"
                 }`}
               />
@@ -726,7 +726,7 @@ function TrackingTimeline({ order }: { order: Order }) {
             <div
               className={`absolute left-0 top-1 h-[16px] w-[16px] rounded-full border-2 flex items-center justify-center transition-all duration-300 z-10 ${
                 isCompleted
-                  ? "bg-emerald-500 border-emerald-500 text-white shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                  ? "bg-red-500 border-red-500 text-white shadow-[0_0_8px_rgba(215,25,32,0.3)]"
                   : isCurrent
                     ? "bg-amber-500 border-amber-500 text-white"
                     : "bg-white dark:bg-[#101010] border-neutral-350 dark:border-white/20"
@@ -777,7 +777,7 @@ function WishlistPanel({ products, loading }: { products: WishlistProduct[]; loa
             <Link
               key={product.id}
               href={`/products/${product.slug}`}
-              className="group rounded-md border border-neutral-200 dark:border-white/10 bg-neutral-50/50 dark:bg-black/20 p-3 hover:border-[#FF6B35] hover:shadow-md transition-all duration-200 flex flex-col justify-between"
+              className="group rounded-md border border-neutral-200 dark:border-white/10 bg-neutral-50/50 dark:bg-black/20 p-3 hover:border-[var(--accent)] hover:shadow-md transition-all duration-200 flex flex-col justify-between"
             >
               <div>
                 <div className="relative aspect-[4/5] overflow-hidden rounded-md bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/60 dark:border-transparent">
@@ -787,12 +787,12 @@ function WishlistPanel({ products, loading }: { products: WishlistProduct[]; loa
                     <div className="grid h-full place-items-center text-xs font-black text-neutral-400 dark:text-white/35">IMG</div>
                   )}
                 </div>
-                <p className="mt-3 line-clamp-2 text-sm font-black text-neutral-900 dark:text-white group-hover:text-[#FF6B35] transition duration-150">{product.title}</p>
+                <p className="mt-3 line-clamp-2 text-sm font-black text-neutral-900 dark:text-white group-hover:text-[var(--accent)] transition duration-150">{product.title}</p>
                 <p className="mt-1 text-xs font-bold text-neutral-500 dark:text-white/45">{product.brand ?? "The Grim Store"}</p>
               </div>
               <div className="mt-3.5 flex items-center justify-between border-t border-neutral-200 dark:border-white/5 pt-2.5">
-                {product.salePrice ? <p className="text-sm font-black text-[#FF6B35]">{formatMoney(product.salePrice)}</p> : null}
-                <span className="text-[11px] font-black uppercase tracking-wider text-[#FF6B35] hover:underline">View Details</span>
+                {product.salePrice ? <p className="text-sm font-black text-[var(--accent)]">{formatMoney(product.salePrice)}</p> : null}
+                <span className="text-[11px] font-black uppercase tracking-wider text-[var(--accent)] hover:underline">View Details</span>
               </div>
             </Link>
           ))}
@@ -841,7 +841,7 @@ function SavedAddresses({ addresses, loading }: { addresses: Address[]; loading:
                 {a.phone ? <p className="mt-2 text-xs font-bold text-neutral-500 dark:text-white/45">{a.phone}</p> : null}
               </div>
               {a.isDefault ? (
-                <span className="rounded bg-[#FF6B35]/10 px-2 py-0.5 text-[10px] font-black text-[#FF6B35] uppercase tracking-wider self-start sm:self-auto">
+                <span className="rounded bg-[var(--accent)]/10 px-2 py-0.5 text-[10px] font-black text-[var(--accent)] uppercase tracking-wider self-start sm:self-auto">
                   Default
                 </span>
               ) : null}

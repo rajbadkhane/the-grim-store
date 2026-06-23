@@ -71,21 +71,21 @@ export default async function SiteInfoPage({ params }: { params: Promise<{ pageS
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {faqJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />}
       <section className="border-b border-neutral-250 dark:border-white/10 bg-white/40 dark:bg-neutral-900/60 backdrop-blur-xs">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <p className="text-sm font-black uppercase tracking-[0.28em] text-blue-600 dark:text-blue-400">{page.eyebrow}</p>
-            <h1 className="mt-4 text-4xl font-black tracking-normal sm:text-5xl text-neutral-850 dark:text-white">{page.title}</h1>
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-[#FF3B30]">{page.eyebrow}</p>
+            <h1 className="mt-3 text-3xl font-black tracking-normal text-neutral-850 dark:text-white sm:text-4xl">{page.title}</h1>
             <p className="mt-5 text-base leading-8 text-neutral-600 dark:text-neutral-300">{page.description}</p>
             <p className="mt-5 text-xs font-black uppercase tracking-[0.18em] text-neutral-400 dark:text-neutral-500">Last updated: {page.lastUpdated}</p>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_340px] lg:px-8">
+      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_320px] lg:px-8">
         <article className="grid gap-5">
           {page.sections.map((section) => (
             <div key={section.title} className="rounded-2xl border border-[#282c3f]/10 dark:border-white/5 bg-white dark:bg-[#171a1d] p-5 sm:p-6 shadow-xs">
-              <h2 className="text-2xl font-black text-neutral-850 dark:text-white">{section.title}</h2>
+              <h2 className="text-xl font-black text-neutral-850 dark:text-white">{section.title}</h2>
               <div className="mt-4 grid gap-3 text-sm leading-7 text-neutral-600 dark:text-neutral-300">
                 {section.body.map((paragraph) => (
                   <p key={paragraph}>{paragraph}</p>
@@ -95,7 +95,7 @@ export default async function SiteInfoPage({ params }: { params: Promise<{ pageS
                 <ul className="mt-5 grid gap-3 text-sm font-bold text-neutral-700 dark:text-neutral-200">
                   {section.bullets.map((item) => (
                     <li key={item} className="flex gap-3">
-                      <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-blue-600 dark:text-blue-400" />
+                      <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-[#FF3B30]" />
                       <span>{item}</span>
                     </li>
                   ))}
@@ -105,10 +105,10 @@ export default async function SiteInfoPage({ params }: { params: Promise<{ pageS
           ))}
         </article>
 
-        <aside className="h-fit rounded-2xl border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-600/10 p-6 shadow-xs">
+        <aside className="h-fit rounded-xl border border-[#FF3B30]/20 bg-[#FF3B30]/5 p-5 shadow-xs dark:border-[#FF3B30]/30 dark:bg-[#FF3B30]/10">
           <h2 className="text-lg font-black text-neutral-850 dark:text-white">Need order help?</h2>
           <p className="mt-3 text-sm leading-6 text-neutral-600 dark:text-neutral-300">For parcel status, refunds, or return updates, open your account order history.</p>
-          <Link href="/account?tab=orders" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-black text-white hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/10">
+          <Link href="/account?tab=orders" className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#FF3B30] px-5 text-xs font-black text-white transition-colors hover:bg-[#D71920] shadow-sm shadow-[#FF3B30]/10">
             My Orders <ArrowRight size={17} />
           </Link>
         </aside>

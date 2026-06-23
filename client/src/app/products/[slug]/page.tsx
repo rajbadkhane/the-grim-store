@@ -34,7 +34,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 function ProductFaqSection({ product }: { product: any }) {
   const brandName = product.brand || "The Grim Store";
   const name = product.title;
-  const cat = product.category || "electronics product";
+  const cat = product.category || "electronic item";
 
   const faqs = [
     {
@@ -43,11 +43,11 @@ function ProductFaqSection({ product }: { product: any }) {
     },
     {
       q: `Who is ${name} for?`,
-      a: `${name} is designed for families and tech enthusiasts looking for high-quality, durable, and highly functional ${cat}s.`
+      a: `${name} is designed for buyers looking for useful function, reliable build quality, and clear everyday value.`
     },
     {
       q: `Why should I buy ${name}?`,
-      a: `Buying ${name} guarantees industry-leading build quality, verified user reviews, and comprehensive return/refund protection backed by The Grim Store.`
+      a: `Buying ${name} gives you verified catalog details, customer reviews, secure checkout, and return/refund protection backed by The Grim Store.`
     }
   ];
 

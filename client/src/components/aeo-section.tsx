@@ -53,7 +53,7 @@ export function AeoSection({ categorySlug }: AeoSectionProps) {
 
       {/* 1. Buying Guide Section */}
       <article className="rounded-3xl border border-neutral-200/50 dark:border-neutral-800/80 bg-white dark:bg-[#151B26] p-6 md:p-8 shadow-xs">
-        <div className="flex items-center gap-2 text-[#FF6B35] mb-4">
+        <div className="flex items-center gap-2 text-[var(--accent)] mb-4">
           <BookOpen size={20} className="stroke-[2.5]" />
           <span className="text-[10px] font-heading font-black uppercase tracking-widest">Expert Buying Guide</span>
         </div>
@@ -69,7 +69,7 @@ export function AeoSection({ categorySlug }: AeoSectionProps) {
       <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] items-start">
         {/* Top Picks */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-purple-500">
+          <div className="flex items-center gap-2 text-[#FF3B30]">
             <ThumbsUp size={18} className="stroke-[2.5]" />
             <h3 className="text-xs font-heading font-black uppercase tracking-wider">Top Recommended Picks</h3>
           </div>
@@ -77,10 +77,10 @@ export function AeoSection({ categorySlug }: AeoSectionProps) {
             {data.topPicks.map((pick) => (
               <div 
                 key={pick.title}
-                className="rounded-2xl border border-neutral-200/50 dark:border-neutral-800 bg-white dark:bg-[#151B26] p-5 flex flex-col justify-between hover:border-purple-500/30 transition-all"
+                className="flex flex-col justify-between rounded-xl border border-neutral-200/50 bg-white p-4 transition-all hover:border-[#FF3B30]/30 dark:border-neutral-800 dark:bg-[#151010]"
               >
                 <div>
-                  <span className="rounded bg-purple-500/10 text-purple-500 px-2 py-0.5 text-[9px] font-heading font-black uppercase tracking-wider inline-block">
+                  <span className="inline-block rounded bg-[#FF3B30]/10 px-2 py-0.5 font-heading text-[9px] font-black uppercase tracking-wider text-[#FF3B30]">
                     {pick.badge}
                   </span>
                   <h4 className="mt-3 text-sm font-heading font-extrabold text-neutral-900 dark:text-white uppercase tracking-tight">{pick.title}</h4>
@@ -94,7 +94,7 @@ export function AeoSection({ categorySlug }: AeoSectionProps) {
 
         {/* Comparison Table */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-blue-500">
+          <div className="flex items-center gap-2 text-[#FF3B30]">
             <Table size={18} className="stroke-[2.5]" />
             <h3 className="text-xs font-heading font-black uppercase tracking-wider">Specification Comparison Matrix</h3>
           </div>
@@ -132,7 +132,7 @@ export function AeoSection({ categorySlug }: AeoSectionProps) {
 
       {/* 3. FAQ Section */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2 text-[#FF6B35]">
+        <div className="flex items-center gap-2 text-[var(--accent)]">
           <HelpCircle size={18} className="stroke-[2.5]" />
           <h3 className="text-xs font-heading font-black uppercase tracking-wider">Frequently Asked Questions</h3>
         </div>
@@ -140,7 +140,7 @@ export function AeoSection({ categorySlug }: AeoSectionProps) {
           {data.faqs.map((faq) => (
             <div 
               key={faq.question}
-              className="rounded-2xl border border-neutral-200/50 dark:border-neutral-800 bg-white dark:bg-[#151B26] p-5 hover:border-[#FF6B35]/30 transition-all flex flex-col justify-between"
+              className="rounded-2xl border border-neutral-200/50 dark:border-neutral-800 bg-white dark:bg-[#151B26] p-5 hover:border-[var(--accent)]/30 transition-all flex flex-col justify-between"
             >
               <div>
                 <h4 className="text-xs sm:text-sm font-heading font-extrabold text-neutral-900 dark:text-white uppercase leading-snug tracking-tight">

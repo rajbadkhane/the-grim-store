@@ -20,11 +20,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <Toaster 
           position="top-center" 
           toastOptions={{ 
-            className: "border border-blue-300/20 bg-[#081026]/95 text-white shadow-[0_18px_60px_rgba(0,0,0,0.42)] backdrop-blur-xl font-semibold text-sm rounded-2xl",
+            className: "border border-[#FF3B30]/20 bg-[#130708]/95 text-white shadow-[0_18px_60px_rgba(0,0,0,0.42)] backdrop-blur-xl font-semibold text-sm rounded-2xl",
             style: {
-              background: "rgba(8, 16, 38, 0.96)",
+              background: "rgba(19, 7, 8, 0.96)",
               color: "#ffffff",
-              border: "1px solid rgba(147, 197, 253, 0.22)"
+              border: "1px solid rgba(255, 59, 48, 0.22)"
             }
           }} 
         />

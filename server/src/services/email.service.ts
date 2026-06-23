@@ -1,6 +1,9 @@
 import nodemailer from "nodemailer";
 import type SMTPTransport from "nodemailer/lib/smtp-transport/index.js";
 import dns from "node:dns/promises";
+import sgMail from "@sendgrid/mail";
+import { Client as SendGridClient } from "@sendgrid/client";
+import type { MailDataRequired, ResponseError } from "@sendgrid/mail";
 import { env } from "../config/env.js";
 
 async function resolveSmtpHost() {
@@ -25,28 +28,61 @@ const mailOptions = async (): Promise<SMTPTransport.Options> => ({
 });
 
 let transporterPromise: Promise<nodemailer.Transporter> | null = null;
+let sendGridConfigured = false;
 
 async function getTransporter() {
   transporterPromise ??= mailOptions().then((options) => nodemailer.createTransport(options));
   return transporterPromise;
 }
 
+function textFromHtml(html: string) {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getFromAddress() {
+  return env.emailFrom || (env.emailUser ? `"The Grim Store" <${env.emailUser}>` : "The Grim Store <no-reply@thegrimstore.com>");
+}
+
+function configureSendGrid() {
+  if (sendGridConfigured) return;
+
+  const client = new SendGridClient();
+  if (env.sendgridDataResidency.toLowerCase() === "eu") {
+    client.setDataResidency("eu");
+  }
+  client.setApiKey(env.sendgridApiKey);
+  sgMail.setClient(client);
+  sgMail.setTimeout(10000);
+  sendGridConfigured = true;
+}
+
+async function sendWithSendGrid(to: string, subject: string, html: string) {
+  configureSendGrid();
+  const message: MailDataRequired = {
+    to,
+    from: getFromAddress(),
+    subject,
+    text: textFromHtml(html),
+    html
+  };
+
+  try {
+    await sgMail.send(message);
+  } catch (error) {
+    const responseError = error as ResponseError;
+    const details = responseError.response?.body ? JSON.stringify(responseError.response.body) : responseError.message;
+    throw new Error(`SendGrid email failed: ${details}`);
+  }
+}
+
 async function sendMail(to: string, subject: string, html: string) {
-  if (env.resendApiKey) {
-    const from = env.emailFrom || (env.emailUser ? `"The Grim Store" <${env.emailUser}>` : "The Grim Store <onboarding@resend.dev>");
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${env.resendApiKey}`,
-        "Content-Type": "application/json",
-        "User-Agent": "the-grim-store-api"
-      },
-      body: JSON.stringify({ from, to, subject, html })
-    });
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Email API failed: ${response.status} ${errorText}`);
-    }
+  if (env.sendgridApiKey) {
+    await sendWithSendGrid(to, subject, html);
     return;
   }
 
@@ -55,7 +91,7 @@ async function sendMail(to: string, subject: string, html: string) {
     return;
   }
   const transporter = await getTransporter();
-  await transporter.sendMail({ from: env.emailFrom || `"The Grim Store" <${env.emailUser}>`, to, subject, html });
+  await transporter.sendMail({ from: getFromAddress(), to, subject, html });
 }
 
 export const emailService = {

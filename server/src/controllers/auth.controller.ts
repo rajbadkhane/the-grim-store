@@ -4,6 +4,7 @@ import { verifyRefreshToken, signAccessToken, signRefreshToken } from "../utils/
 import { issueOtp, resetPassword, verifyOtpAndLogin, loginOrCreateSocialUser, registerWithPassword, loginWithPasswordService } from "../services/auth.service.js";
 import { ApiError } from "../utils/ApiError.js";
 import { getUserById, publicUser, saveUserState } from "../lib/sql.js";
+import { env } from "../config/env.js";
 
 export const requestOtp = asyncHandler(async (req, res) => {
   const { email, purpose } = req.body;
@@ -58,8 +59,30 @@ export const resetPasswordController = asyncHandler(async (req, res) => {
 });
 
 export const googleLogin = asyncHandler(async (req, res) => {
-  const { email, name, avatar } = req.body;
-  if (!email) throw new ApiError(400, "Email is required");
+  const { idToken } = req.body;
+  if (!idToken) throw new ApiError(400, "Google ID token is required");
+  if (!env.googleClientId) throw new ApiError(500, "Google login is not configured");
+
+  // Verify the ID token with Google's tokeninfo endpoint
+  const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
+  if (!googleRes.ok) throw new ApiError(401, "Invalid Google token");
+
+  const payload = await googleRes.json() as Record<string, string>;
+
+  if (payload.aud !== env.googleClientId) {
+    throw new ApiError(401, "Google token audience mismatch");
+  }
+  if (!["accounts.google.com", "https://accounts.google.com"].includes(payload.iss ?? "")) {
+    throw new ApiError(401, "Invalid Google token issuer");
+  }
+
+  const email = payload.email;
+  const name = payload.name || payload.given_name || "";
+  const avatar = payload.picture || "";
+
+  if (!email) throw new ApiError(400, "Google account has no email");
+  if (payload.email_verified !== "true") throw new ApiError(400, "Google email is not verified");
+
   const { user, accessToken, refreshToken } = await loginOrCreateSocialUser(email, name, avatar);
   res.cookie("accessToken", accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
   res.cookie("refreshToken", refreshToken, cookieOptions);

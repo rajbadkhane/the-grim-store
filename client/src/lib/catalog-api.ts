@@ -16,6 +16,10 @@ export type StoreProduct = {
   slug: string;
   title: string;
   brand: string;
+  brandMeta?: {
+    name: string;
+    logo?: string;
+  };
   price: number;
   salePrice: number;
   stock: number;
@@ -190,12 +194,15 @@ export function normalizeProduct(product: any): StoreProduct {
   })) as StoreProductVariant[];
   const rating = Number(product.rating ?? product.ratings?.average ?? product.rating_average ?? 0);
   const reviewCount = Number(product.reviewCount ?? product.ratings?.count ?? product.rating_count ?? 0);
+  const tags = Array.isArray(product.tags) ? product.tags : [];
+  const brandMeta = brandMetaFromProduct(product.brand, product.brandMeta ?? product.brand_meta, tags);
 
   return {
     id: product.id ?? product._id,
     slug: product.slug,
     title: product.title,
     brand: product.brand,
+    brandMeta,
     price: Number(product.price ?? 0),
     salePrice: Number(product.salePrice ?? product.sale_price ?? 0),
     stock: Number(product.stock ?? 0),
@@ -216,6 +223,22 @@ export function normalizeProduct(product: any): StoreProduct {
     description: product.description ?? "",
     shortDescription: product.shortDescription ?? product.short_description ?? "",
     category: product.category,
-    tags: Array.isArray(product.tags) ? product.tags : []
+    tags
   };
+}
+
+function brandMetaFromProduct(brand: string, rawMeta: any, tags: string[]) {
+  const meta = {
+    name: String(rawMeta?.name ?? brand ?? ""),
+    logo: String(rawMeta?.logo ?? "")
+  };
+  for (const tag of tags) {
+    const [rawKey, ...rawValue] = String(tag).split(":");
+    const key = rawKey.trim().toLowerCase();
+    const value = rawValue.join(":").trim();
+    if (!value) continue;
+    if (key === "brandname" || key === "brand-name" || key === "branddisplay") meta.name = value;
+    if (key === "brandlogo" || key === "brand-logo" || key === "brandimage" || key === "brand-image") meta.logo = value;
+  }
+  return meta;
 }

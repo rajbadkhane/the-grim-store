@@ -55,13 +55,13 @@ export function CategoryScroll({ categories }: { categories: CategoryItem[] }) {
             <Link
               key={label}
               href={href}
-              className="flex flex-col items-center justify-center shrink-0 w-[110px] sm:w-[130px] aspect-square rounded-2xl bg-white dark:bg-[#1a1c1e] border border-[#282c3f]/10 dark:border-white/5 hover:border-blue-600 dark:hover:border-blue-600 transition-all duration-300 hover:scale-105 shadow-xs hover:shadow-md group cursor-pointer text-center p-3"
+              className="group flex aspect-square w-[96px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl border border-[#282c3f]/10 bg-white p-3 text-center shadow-xs transition-all duration-300 hover:scale-[1.03] hover:border-[#FF3B30] hover:shadow-md dark:border-white/5 dark:bg-[#171010] dark:hover:border-[#FF3B30] sm:w-[112px]"
             >
               <Icon
                 size={26}
-                className="text-neutral-700 dark:text-neutral-300 group-hover:text-blue-600 transition-colors duration-200"
+                className="text-neutral-700 transition-colors duration-200 group-hover:text-[#FF3B30] dark:text-neutral-300"
               />
-              <span className="mt-3 text-[10px] font-black uppercase tracking-wider text-neutral-850 dark:text-neutral-300 group-hover:text-blue-600 transition-colors duration-200">
+              <span className="mt-2.5 text-[9px] font-black uppercase tracking-wider text-neutral-850 transition-colors duration-200 group-hover:text-[#FF3B30] dark:text-neutral-300">
                 {label}
               </span>
             </Link>

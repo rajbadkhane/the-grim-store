@@ -1,6 +1,6 @@
 "use client";
 
-import { Banknote, CheckCircle2, CreditCard, Landmark, LocateFixed, Loader2, PartyPopper, Shield, Smartphone, Tag, Wallet, X, MapPin, Skull, type LucideIcon } from "lucide-react";
+import { Banknote, CheckCircle2, CreditCard, Landmark, LocateFixed, Loader2, PartyPopper, Shield, Smartphone, Tag, Wallet, X, MapPin, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
@@ -106,46 +106,12 @@ function loadRazorpayScript(): Promise<boolean> {
   });
 }
 
-const mockItems = [
-  { id: "mock-1", title: "Reaper Hoodie - L", quantity: 3, salePrice: 28.00, price: 28.00, slug: "reaper-hoodie" },
-  { id: "mock-2", title: "Skull Mug", quantity: 1, salePrice: 0.00, price: 0.00, slug: "skull-mug" }
-];
-
-const mockSavedAddresses = [
-  {
-    id: "mock-home",
-    addressType: "home" as const,
-    fullName: "John Doe",
-    house: "123 Elm Street",
-    road: "Springfield, IL 62704",
-    city: "United States",
-    state: "IL",
-    pincode: "62704",
-    latitude: 39.7817,
-    longitude: -89.6501,
-    isDefault: true
-  },
-  {
-    id: "mock-work",
-    addressType: "work" as const,
-    fullName: "John Doe",
-    house: "456 Oak Ave, Suite 300",
-    road: "Chicago, IL 60601",
-    city: "United States",
-    state: "IL",
-    pincode: "60601",
-    latitude: 41.8781,
-    longitude: -87.6298,
-    isDefault: false
-  }
-];
-
 export default function CheckoutPage() {
   const cartItems = useCart((state) => state.items);
   const clearCart = useCart((state) => state.clear);
   const router = useRouter();
 
-  const [items, setItems] = useState<any[]>(cartItems.length ? cartItems : mockItems);
+  const [items, setItems] = useState<any[]>(cartItems);
   const [isDirectBuyNow, setIsDirectBuyNow] = useState(false);
   const codLimit = 5000;
 
@@ -164,7 +130,7 @@ export default function CheckoutPage() {
         console.error(e);
       }
     }
-    setItems(cartItems.length ? cartItems : mockItems);
+    setItems(cartItems);
     setIsDirectBuyNow(false);
   }, [cartItems]);
 
@@ -174,16 +140,8 @@ export default function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<{ orderId: string; total: number } | null>(null);
   const [showSandboxModal, setShowSandboxModal] = useState<{ orderId: string; total: number; razorpayOrderId: string } | null>(null);
-  const [couponCode, setCouponCode] = useState("GRIM50");
-  const [couponQuote, setCouponQuote] = useState<CouponQuote | null>(
-    cartItems.length ? null : {
-      code: "GRIM50",
-      discountType: "flat",
-      value: 50.00,
-      discountAmount: 50.00,
-      totalAmount: 43.99
-    }
-  );
+  const [couponCode, setCouponCode] = useState("");
+  const [couponQuote, setCouponQuote] = useState<CouponQuote | null>(null);
   const [couponError, setCouponError] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
@@ -192,13 +150,13 @@ export default function CheckoutPage() {
   const { refreshMe, openLoginModal } = useAuth();
 
   // saved addresses
-  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>(mockSavedAddresses);
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [addressesLoading, setAddressesLoading] = useState(false);
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>("mock-home");
-  const [useNewAddress, setUseNewAddress] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [useNewAddress, setUseNewAddress] = useState(true);
 
   const subtotal = useMemo(() => items.reduce((sum, item) => sum + item.salePrice * item.quantity, 0), [items]);
-  const shipping = items[0]?.id === "mock-1" ? 9.99 : (subtotal > 1499 || subtotal === 0 ? 0 : 79);
+  const shipping = subtotal > 1499 || subtotal === 0 ? 0 : 79;
   const discount = couponQuote?.discountAmount ?? 0;
   const total = Math.max(0, subtotal + shipping - discount);
   const paymentOptions = useMemo<PaymentOption[]>(
@@ -604,21 +562,21 @@ export default function CheckoutPage() {
         if (cancelled) return;
 
         const addresses = (res.data?.addresses ?? []) as SavedAddress[];
-        setSavedAddresses(addresses.length ? addresses : mockSavedAddresses);
+        setSavedAddresses(addresses);
 
         if (addresses.length > 0) {
           const defaultAddress = addresses.find((a) => a.isDefault) ?? addresses[0];
           setSelectedAddressId(defaultAddress.id);
           setUseNewAddress(false);
         } else {
-          setSelectedAddressId("mock-home");
-          setUseNewAddress(false);
+          setSelectedAddressId(null);
+          setUseNewAddress(true);
         }
       } catch {
         if (cancelled) return;
-        setSavedAddresses(mockSavedAddresses);
-        setSelectedAddressId("mock-home");
-        setUseNewAddress(false);
+        setSavedAddresses([]);
+        setSelectedAddressId(null);
+        setUseNewAddress(true);
       } finally {
         if (!cancelled) setAddressesLoading(false);
       }
@@ -655,13 +613,9 @@ export default function CheckoutPage() {
   }, [items.length]);
 
   useEffect(() => {
-    if (items[0]?.id === "mock-1") {
-      // Don't clear coupon for mock items to preserve pre-applied state in tests/screenshots
-      return;
-    }
     setCouponQuote(null);
     setCouponError("");
-  }, [subtotal, shipping, items]);
+  }, [subtotal, shipping]);
 
   if (orderSuccess) {
     return <OrderSuccessPopup orderId={orderSuccess.orderId} total={orderSuccess.total} />;
@@ -674,7 +628,7 @@ export default function CheckoutPage() {
           <h1 className="text-2xl font-bold text-[#282c3f] dark:text-white">Your cart is empty</h1>
           <p className="mt-3 text-sm text-[#7e808c] dark:text-neutral-400">Add items to your cart before checking out.</p>
           <Link href="/products" className="mt-6 inline-block">
-            <button className="bg-[#FF6B35] hover:bg-[#e6355e] text-white px-6 py-3 font-bold uppercase text-xs tracking-wider transition rounded-none">
+            <button className="bg-[var(--accent)] hover:bg-[#e6355e] text-white px-6 py-3 font-bold uppercase text-xs tracking-wider transition rounded-none">
               Browse Products
             </button>
           </Link>
@@ -687,7 +641,7 @@ export default function CheckoutPage() {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[#f5f5f6] dark:bg-[#0f0f0f]">
         <div className="mx-auto max-w-7xl px-4 py-12 text-center flex flex-col items-center justify-center gap-3">
-          <Loader2 className="animate-spin text-[#FF6B35]" size={32} />
+          <Loader2 className="animate-spin text-[var(--accent)]" size={32} />
           <h1 className="text-lg font-bold text-[#282c3f] dark:text-white">Checking authentication...</h1>
         </div>
       </div>
@@ -702,7 +656,7 @@ export default function CheckoutPage() {
           <p className="mt-3 text-sm text-[#7e808c] dark:text-neutral-400">Please authenticate to access shipping details and complete your checkout.</p>
           <button
             onClick={openLoginModal}
-            className="mt-6 bg-[#FF6B35] hover:bg-[#e6355e] text-white px-8 py-3.5 font-bold uppercase tracking-wider text-xs transition rounded-none"
+            className="mt-6 bg-[var(--accent)] hover:bg-[#e6355e] text-white px-8 py-3.5 font-bold uppercase tracking-wider text-xs transition rounded-none"
           >
             Log In Now
           </button>
@@ -711,16 +665,46 @@ export default function CheckoutPage() {
     );
   }
 
+  if (!items.length) {
+    return (
+      <div className="grid min-h-[calc(100vh-4rem)] place-items-center bg-[#f9f9f9] px-4 text-[#1a1c1c] dark:bg-[#0A0A0A] dark:text-white">
+        <div className="w-full max-w-lg border border-[#e5bdb8] bg-white p-8 text-center shadow-sm dark:border-[#3a1f1f] dark:bg-[#130b0b]">
+          <div className="mx-auto mb-5 flex items-center justify-center gap-3">
+            <span className="relative h-16 w-16 overflow-visible">
+              <img src="/logo.png" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+            </span>
+            <span className="grim-wordmark grim-wordmark-inline text-[24px] text-[#0A0A0A] dark:text-white" aria-label="The Grim Store">
+              <span className="grim-wordmark-kicker">The</span>
+              <span>Grim</span>
+              <span>Store</span>
+            </span>
+          </div>
+          <h1 className="font-heading text-2xl uppercase tracking-wide">No items to checkout</h1>
+          <p className="mt-3 text-sm font-semibold text-[#5c403c] dark:text-white/60">Your checkout only uses real cart or buy-now items. Add products from the live catalog to continue.</p>
+          <Link href="/products" className="mt-6 inline-flex h-11 items-center justify-center bg-[#FF3B30] px-7 text-xs font-black uppercase tracking-widest text-white">
+            Go to catalog
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="mobile-bottom-safe min-h-[calc(100vh-4rem)] bg-transparent text-[#424553] dark:text-neutral-200">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f9f9f9] text-[#424553] dark:bg-[#0A0A0A] dark:text-neutral-200">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(checkoutPageJsonLd()) }} />
       
       {/* Checkout Progress Timeline Header */}
       <div className="border-b border-neutral-200/80 dark:border-neutral-850 bg-[#f4f0e6] dark:bg-[#0f1113]">
         <div className="mx-auto max-w-5xl px-4 py-5 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <Skull size={24} className="text-[#282c3f] dark:text-white fill-current animate-pulse" />
-            <span className="text-sm font-black uppercase tracking-wider text-[#282c3f] dark:text-white">THE GRIM STORE</span>
+          <Link href="/" className="flex items-center gap-2.5 text-[#0A0A0A] dark:text-white">
+            <span className="relative h-10 w-10 overflow-visible">
+              <img src="/logo.png" alt="" className="h-full w-full object-contain" aria-hidden="true" />
+            </span>
+            <span className="grim-wordmark grim-wordmark-inline text-[21px]">
+              <span className="grim-wordmark-kicker">The</span>
+              <span>Grim</span>
+              <span>Store</span>
+            </span>
           </Link>
           <div className="flex gap-6 text-[11px] font-black uppercase tracking-wider text-neutral-500">
             <Link href="/products" className="hover:text-neutral-800 dark:hover:text-white transition-colors">SHOP</Link>
@@ -767,7 +751,7 @@ export default function CheckoutPage() {
                   {useNewAddress && (
                     <button
                       type="button"
-                      className="cursor-pointer border border-[#d4d5d9] dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 py-2 text-xs font-bold text-[#282c3f] dark:text-white transition hover:border-[#FF6B35] hover:text-[#FF6B35] rounded-none"
+                      className="cursor-pointer border border-[#d4d5d9] dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 py-2 text-xs font-bold text-[#282c3f] dark:text-white transition hover:border-[var(--accent)] hover:text-[var(--accent)] rounded-none"
                       onClick={() => {
                         if (savedAddresses.length > 0) {
                           const defaultAddress = savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0];
@@ -785,7 +769,7 @@ export default function CheckoutPage() {
 
               {addressesLoading && (
                 <div className="flex items-center gap-2 mt-3 text-xs font-bold text-[#7e808c]">
-                  <Loader2 className="animate-spin text-[#FF6B35]" size={14} />
+                  <Loader2 className="animate-spin text-[var(--accent)]" size={14} />
                   <span>Loading saved addresses...</span>
                 </div>
               )}
@@ -857,15 +841,15 @@ export default function CheckoutPage() {
                       type="button"
                       onClick={detect}
                       disabled={detecting}
-                      className="inline-flex items-center gap-2 border border-[#d4d5d9] dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 py-2 text-xs font-bold hover:border-[#FF6B35] hover:text-[#FF6B35] text-[#282c3f] dark:text-white disabled:cursor-not-allowed disabled:opacity-60 transition cursor-pointer rounded-none"
+                      className="inline-flex items-center gap-2 border border-[#d4d5d9] dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 py-2 text-xs font-bold hover:border-[var(--accent)] hover:text-[var(--accent)] text-[#282c3f] dark:text-white disabled:cursor-not-allowed disabled:opacity-60 transition cursor-pointer rounded-none"
                     >
-                      {detecting ? <Loader2 className="animate-spin text-[#FF6B35]" size={14} /> : <LocateFixed size={14} />}
+                      {detecting ? <Loader2 className="animate-spin text-[var(--accent)]" size={14} /> : <LocateFixed size={14} />}
                       {detecting ? "Detecting" : "Detect Location"}
                     </button>
                   </div>
 
                   {address.latitude && address.longitude && (
-                    <p className="mt-2.5 text-xs font-semibold text-emerald-600 dark:text-emerald-450">
+                    <p className="mt-2.5 text-xs font-semibold text-red-600 dark:text-red-400">
                       Coordinates captured: {address.latitude.toFixed(5)}, {address.longitude.toFixed(5)}
                     </p>
                   )}
@@ -876,7 +860,7 @@ export default function CheckoutPage() {
                         key={field.key}
                         value={String(address[field.key] ?? "")}
                         onChange={(event) => updateAddress(field.key, event.target.value)}
-                        className="rounded-none border border-[#d4d5d9] dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 py-3 text-sm text-[#282c3f] dark:text-white outline-none transition placeholder:text-neutral-450 focus:border-[#FF6B35] focus:bg-white"
+                        className="rounded-none border border-[#d4d5d9] dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 py-3 text-sm text-[#282c3f] dark:text-white outline-none transition placeholder:text-neutral-450 focus:border-[var(--accent)] focus:bg-white"
                         placeholder={field.label}
                       />
                     ))}
@@ -925,18 +909,18 @@ export default function CheckoutPage() {
                     <div className="mt-2 flex items-center gap-2 select-none">
                       {/* Google Pay */}
                       <div className="h-5 px-2 bg-white rounded border border-neutral-250 flex items-center justify-center text-[9px] font-black tracking-tight select-none">
-                        <span className="text-[#4285F4]">G</span>
+                        <span className="text-[#111111]">G</span>
                         <span className="text-[#EA4335]">P</span>
                         <span className="text-[#FBBC05]">a</span>
-                        <span className="text-[#34A853]">y</span>
+                        <span className="text-[#D71920]">y</span>
                       </div>
                       {/* PhonePe */}
-                      <div className="h-5 w-5 bg-[#5f259f] rounded-full flex items-center justify-center text-[9px] font-black text-white select-none">
+                      <div className="h-5 w-5 bg-[#D71920] rounded-full flex items-center justify-center text-[9px] font-black text-white select-none">
                         पे
                       </div>
                       {/* UPI Logo */}
-                      <div className="h-5 px-2 bg-white rounded border border-neutral-250 flex items-center justify-center text-[8px] font-black italic tracking-tighter text-[#0f7a5b] select-none">
-                        UPI<span className="text-blue-500 font-extrabold ml-0.5">▶</span>
+                      <div className="h-5 px-2 bg-white rounded border border-neutral-250 flex items-center justify-center text-[8px] font-black italic tracking-tighter text-[#111111] select-none">
+                        UPI<span className="text-[#D71920] font-extrabold ml-0.5">▶</span>
                       </div>
                     </div>
                   </div>
@@ -969,11 +953,11 @@ export default function CheckoutPage() {
                         <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f00] -ml-1.5 opacity-90"></span>
                       </div>
                       {/* VISA */}
-                      <div className="h-5 px-2 bg-[#1a1f71] rounded flex items-center justify-center text-[8px] font-extrabold italic text-white tracking-wider select-none">
+                      <div className="h-5 px-2 bg-[#111111] rounded flex items-center justify-center text-[8px] font-extrabold italic text-white tracking-wider select-none">
                         VISA
                       </div>
                       {/* Amex */}
-                      <div className="h-5 px-2 bg-[#016fd0] rounded flex items-center justify-center text-[7px] font-black text-white select-none">
+                      <div className="h-5 px-2 bg-[#D71920] rounded flex items-center justify-center text-[7px] font-black text-white select-none">
                         AMEX
                       </div>
                       {/* RuPay */}
@@ -1105,7 +1089,7 @@ export default function CheckoutPage() {
                 )}
               </form>
               {couponQuote && (
-                <p className="mt-2 text-[10px] font-bold text-emerald-600 dark:text-emerald-450 pl-1">
+                <p className="mt-2 text-[10px] font-bold text-red-600 dark:text-red-400 pl-1">
                   Coupon applied successfully!
                 </p>
               )}
@@ -1136,7 +1120,7 @@ export default function CheckoutPage() {
         <div className="fixed bottom-0 left-0 right-0 z-45 border-t border-neutral-200 dark:border-neutral-850 bg-white/97 dark:bg-[#111315]/97 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(0,0,0,0.12)] backdrop-blur-xl lg:hidden flex items-center justify-between gap-4">
           <div className="flex flex-col pl-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-450 dark:text-neutral-500 leading-none">Total Payable</span>
-            <span className="text-sm font-extrabold text-[#FF6B35] mt-1">{formatMoney(total)}</span>
+            <span className="text-sm font-extrabold text-[var(--accent)] mt-1">{formatMoney(total)}</span>
           </div>
           <button
             disabled={placing || !isAuthed || checkingAuth}
@@ -1200,8 +1184,8 @@ function SandboxPaymentModal({
   return (
     <div className="fixed inset-0 z-[80] grid place-items-center bg-black/70 px-4 backdrop-blur-sm">
       <div className="relative w-full max-w-md overflow-hidden rounded-sm store-shell p-7 text-[#424553] dark:text-white">
-        <div className="flex items-center gap-2 text-[#FF6B35]">
-          <span className="h-2 w-2 animate-ping rounded-full bg-[#FF6B35]" />
+        <div className="flex items-center gap-2 text-[var(--accent)]">
+          <span className="h-2 w-2 animate-ping rounded-full bg-[var(--accent)]" />
           <h2 className="text-xs font-bold uppercase tracking-wider">Razorpay Sandbox Mode</h2>
         </div>
         <h1 className="mt-4 text-xl font-bold text-[#282c3f] dark:text-white">Simulate Razorpay Payment</h1>
@@ -1221,7 +1205,7 @@ function SandboxPaymentModal({
           </div>
           <div className="mt-2.5 flex justify-between border-t border-neutral-200 dark:border-neutral-800 pt-3 text-sm font-bold text-[#282c3f] dark:text-white">
             <span>Total Payable:</span>
-            <span className="text-[#FF6B35]">{formatMoney(total)}</span>
+            <span className="text-[var(--accent)]">{formatMoney(total)}</span>
           </div>
         </div>
 
@@ -1230,7 +1214,7 @@ function SandboxPaymentModal({
             type="button"
             disabled={submitting}
             onClick={() => handleSimulate(false)}
-            className="rounded-none border border-[#d4d5d9] dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 text-xs font-bold text-[#424553] dark:text-white hover:border-[#FF6B35] hover:text-[#FF6B35] disabled:opacity-50 transition cursor-pointer uppercase tracking-wider"
+            className="rounded-none border border-[#d4d5d9] dark:border-neutral-800 bg-white dark:bg-neutral-950 py-3 text-xs font-bold text-[#424553] dark:text-white hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-50 transition cursor-pointer uppercase tracking-wider"
           >
             Cancel / Fail
           </button>
@@ -1238,7 +1222,7 @@ function SandboxPaymentModal({
             type="button"
             disabled={submitting}
             onClick={() => handleSimulate(true)}
-            className="flex items-center justify-center gap-2 rounded-none bg-[#FF6B35] py-3 text-xs font-bold text-white hover:bg-[#e6355e] disabled:opacity-50 transition cursor-pointer uppercase tracking-wider"
+            className="flex items-center justify-center gap-2 rounded-none bg-[var(--accent)] py-3 text-xs font-bold text-white hover:bg-[#e6355e] disabled:opacity-50 transition cursor-pointer uppercase tracking-wider"
           >
             {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {submitting ? "Processing..." : "Pay Success"}
@@ -1262,12 +1246,12 @@ function OrderSuccessPopup({ orderId, total }: { orderId: string; total: number 
                 left: `${12 + ((index * 17) % 78)}%`,
                 top: `${10 + ((index * 23) % 70)}%`,
                 animationDelay: `${index * 0.08}s`,
-                backgroundColor: index % 3 === 0 ? "#FF6B35" : index % 3 === 1 ? "#3b82f6" : "#eab308"
+                backgroundColor: index % 3 === 0 ? "var(--accent)" : index % 3 === 1 ? "#3b82f6" : "#eab308"
               }}
             />
           ))}
         </div>
-        <div className="relative mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#FF6B35] text-white shadow-[0_0_24px_rgba(255,63,108,0.4)]">
+        <div className="relative mx-auto grid h-16 w-16 place-items-center rounded-full bg-[var(--accent)] text-white shadow-[0_0_24px_rgba(255,63,108,0.4)]">
           <PartyPopper size={32} />
         </div>
         <h1 className="relative mt-5 text-xl font-bold text-[#282c3f] dark:text-white tracking-tight">Your order has been placed</h1>
@@ -1281,10 +1265,10 @@ function OrderSuccessPopup({ orderId, total }: { orderId: string; total: number 
           </div>
           <div className="mt-2.5 flex items-center justify-between border-t border-neutral-200 dark:border-neutral-800 pt-2.5 gap-3 text-xs font-bold text-[#282c3f] dark:text-white">
             <span className="text-[#7e808c]">Total</span>
-            <span className="text-[#FF6B35]">{formatMoney(total)}</span>
+            <span className="text-[var(--accent)]">{formatMoney(total)}</span>
           </div>
         </div>
-        <p className="relative mt-6 text-[10px] font-bold uppercase tracking-wider text-[#FF6B35]">
+        <p className="relative mt-6 text-[10px] font-bold uppercase tracking-wider text-[var(--accent)]">
           Redirecting to My Orders in 5 seconds
         </p>
       </div>

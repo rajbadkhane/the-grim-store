@@ -80,7 +80,7 @@ function FlyingItem({ flight }: { flight: Flight }) {
         transform: "translate(-50%, -50%)", // anchor to image center
         pointerEvents: "none"
       }}
-      className="rounded-full border-2 border-blue-500/90 bg-neutral-900 overflow-hidden shadow-2xl flex items-center justify-center select-none"
+      className="flex items-center justify-center overflow-hidden rounded-full border-2 border-[#FF3B30]/90 bg-neutral-900 shadow-2xl select-none"
     >
       {flight.image ? (
         <img
@@ -90,7 +90,7 @@ function FlyingItem({ flight }: { flight: Flight }) {
           draggable={false}
         />
       ) : (
-        <div className="w-full h-full bg-blue-600 flex items-center justify-center text-[8px] font-black text-white">
+        <div className="flex h-full w-full items-center justify-center bg-[#FF3B30] text-[8px] font-black text-white">
           ADD
         </div>
       )}

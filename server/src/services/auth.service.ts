@@ -99,9 +99,11 @@ export async function loginOrCreateSocialUser(email: string, name: string, avata
     user = mapUser(await row("SELECT * FROM users WHERE id = :userId", { userId }))!;
     await emailService.sendWelcome(normalizedEmail, name ?? "");
   } else {
+    if (name && !user.name) {
+      user.name = name;
+    }
     if (avatar && !user.avatar) {
       user.avatar = avatar;
-      await saveUserState(user);
     }
   }
 

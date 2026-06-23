@@ -11,6 +11,7 @@
     "seed": "npm run build && node dist/utils/seed.js"
   },
   "dependencies": {
+    "@sendgrid/mail": "^8.1.6",
     "@supabase/supabase-js": "^2.75.0",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.7.0",
@@ -25,9 +26,9 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
-    "postgres": "^3.4.4",
     "nanoid": "^5.1.5",
     "nodemailer": "^8.0.7",
+    "postgres": "^3.4.4",
     "razorpay": "^2.9.6",
     "slugify": "^1.6.6",
     "xlsx": "^0.18.5",

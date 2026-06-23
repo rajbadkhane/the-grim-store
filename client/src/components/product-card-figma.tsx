@@ -25,29 +25,13 @@ export function ProductCardFigma({ product }: { product: any }) {
   const image = selectedVariant?.images?.[0] || product.image || product.images?.[0];
   const salePrice = Number(selectedVariant?.salePrice ?? product.salePrice ?? 0);
   const price = Number(selectedVariant?.price ?? product.price ?? salePrice);
-  const rating = Number(product.rating ?? product.ratings?.average ?? 4.8);
-  const reviewCount = Number(product.reviewCount ?? product.ratings?.count ?? 128);
+  const rating = Number(product.rating ?? product.ratings?.average ?? 0);
   const hasDiscount = price > salePrice;
   const discountPercentage = hasDiscount ? Math.round(((price - salePrice) / price) * 100) : 0;
   const isWishlisted = Array.isArray(user?.wishlist) && user.wishlist.map(String).includes(String(product.id));
 
-  // Determine on-brand badge
-  let badgeText = "Trending";
-  let badgeColor = "bg-[#FF6B35] text-white"; // default accent
-  
   const titleLower = product.title.toLowerCase();
-  const catLower = (product.category?.name || product.category || "").toString().toLowerCase();
-
-  if (titleLower.includes("toy") || titleLower.includes("kid") || catLower.includes("toy") || catLower.includes("kid")) {
-    badgeText = "Kids Favorite";
-    badgeColor = "bg-[#FFD93D] text-[#111827]"; // highlight yellow
-  } else if (rating >= 4.8 || titleLower.includes("console") || titleLower.includes("ps5") || titleLower.includes("xbox")) {
-    badgeText = "Bestseller";
-    badgeColor = "bg-[#111827] text-white dark:bg-white dark:text-[#111827]";
-  } else if (product.flags?.isNew || titleLower.includes("new")) {
-    badgeText = "New Arrival";
-    badgeColor = "bg-[#22C55E] text-white";
-  }
+  const badgeText = product.flags?.isNew || titleLower.includes("new") ? "New Arrival" : rating >= 4.5 ? "Bestseller" : "Vault Pick";
 
   async function handleWishlistToggle(event: React.MouseEvent) {
     event.preventDefault();
@@ -95,12 +79,12 @@ export function ProductCardFigma({ product }: { product: any }) {
 
   return (
     <motion.article 
-      whileHover={{ y: -8, scale: 1.02 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className="group relative flex flex-col h-full bg-white dark:bg-neutral-900/30 border border-neutral-200/50 dark:border-neutral-800/80 p-3 rounded-2xl overflow-hidden shadow-xs hover:shadow-lg hover:border-[#FF6B35]/30 dark:hover:border-[#FF6B35]/30 transition-all duration-300"
+      whileHover={{ y: -4, scale: 1.01 }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
+      className="group relative flex h-full flex-col overflow-hidden border border-[#e5bdb8] bg-white p-2.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-[#FF3B30] hover:shadow-[0_10px_20px_rgba(15,23,42,0.08)] dark:border-[#3a1f1f] dark:bg-[#130b0b]"
     >
       {/* Image container - Strict 1/1 Aspect Ratio occupying ~70% of vertical space */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-[#FAFAFA] dark:bg-neutral-900/60 border border-neutral-200/30 dark:border-transparent flex items-center justify-center">
+      <div className="relative aspect-square w-full overflow-hidden bg-[#eeeeee] dark:bg-[#120909] border border-[#e2e2e2] dark:border-[#352020] flex items-center justify-center">
         <Link href={`/products/${product.slug}`} className="absolute inset-0 z-0">
           {image ? (
             <Image
@@ -108,11 +92,11 @@ export function ProductCardFigma({ product }: { product: any }) {
               alt={product.title}
               fill
               sizes="(max-width: 768px) 50vw, 25vw"
-              className="object-contain p-4 transition-transform duration-500 group-hover:scale-[1.06]"
+              className="object-contain p-3 transition-transform duration-500 group-hover:scale-[1.05]"
               draggable={false}
             />
           ) : (
-            <div className="grid h-full place-items-center text-[10px] font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">No Image</div>
+            <div className="grid h-full place-items-center text-[10px] font-bold uppercase tracking-wider text-[#5c403c] dark:text-white/45">No Image</div>
           )}
         </Link>
 
@@ -120,12 +104,12 @@ export function ProductCardFigma({ product }: { product: any }) {
         <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/15 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10" />
 
         {/* Badges */}
-        <div className="absolute left-2.5 top-2.5 flex flex-col gap-1.2 z-20">
-          <span className={`rounded-md px-2 py-0.5 text-[8px] font-heading font-black uppercase tracking-wider shadow-xs select-none ${badgeColor}`}>
+        <div className="absolute left-2 top-2 z-20 flex flex-col gap-1">
+          <span className="bg-[#FF3B30] px-1.5 py-0.5 text-[7px] font-heading font-black uppercase tracking-wider text-white shadow-xs select-none">
             {badgeText}
           </span>
           {hasDiscount && (
-            <span className="rounded-md bg-[#FF6B35] px-2 py-0.5 text-[8px] font-heading font-black uppercase tracking-wider text-white shadow-xs select-none">
+            <span className="bg-black px-1.5 py-0.5 text-[7px] font-heading font-black uppercase tracking-wider text-white shadow-xs select-none dark:bg-white dark:text-black">
               {discountPercentage}% OFF
             </span>
           )}
@@ -134,7 +118,7 @@ export function ProductCardFigma({ product }: { product: any }) {
         {/* Wishlist Heart Icon overlay top-right */}
         <button
           onClick={handleWishlistToggle}
-          className="absolute right-2.5 top-2.5 p-1.5 rounded-lg bg-white/95 dark:bg-neutral-950/95 text-[#334155] dark:text-neutral-300 hover:text-red-500 dark:hover:text-red-400 shadow-md z-20 backdrop-blur-xs transition hover:scale-110 active:scale-90 border border-neutral-200/20"
+          className="absolute right-2 top-2 z-20 border border-black/10 bg-white/95 p-1.5 text-[#1a1c1c] shadow-md backdrop-blur-xs transition hover:scale-105 hover:text-[#FF3B30] active:scale-90 dark:border-white/10 dark:bg-black/70 dark:text-white"
           title={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
           aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
@@ -147,11 +131,11 @@ export function ProductCardFigma({ product }: { product: any }) {
       </div>
 
       {/* Details container - Occupies remaining 30% of the card height */}
-      <div className="relative flex flex-col justify-between flex-grow pt-3 bg-transparent z-20">
+      <div className="relative flex flex-col justify-between flex-grow pt-2.5 bg-transparent z-20">
         <div>
           {/* Brand */}
           {product.brand && (
-            <span className="text-[8px] font-heading font-black uppercase tracking-widest text-[#FF6B35]">
+            <span className="text-[7px] font-heading font-black uppercase tracking-widest text-[#FF3B30]">
               {product.brand}
             </span>
           )}
@@ -159,18 +143,18 @@ export function ProductCardFigma({ product }: { product: any }) {
           {/* Title - font-weight: 600, clamped to 2 lines max with height reservation */}
           <Link 
             href={`/products/${product.slug}`} 
-            className="mt-0.5 line-clamp-2 text-xs font-semibold text-neutral-900 dark:text-white hover:text-[#FF6B35] dark:hover:text-[#FF6B35] transition-colors leading-tight min-h-[2.25rem] block"
+            className="mt-0.5 block min-h-[2rem] line-clamp-2 text-[11px] font-black uppercase leading-tight text-[#1a1c1c] transition-colors hover:text-[#FF3B30] dark:text-white"
           >
             {product.title}
           </Link>
 
           {/* Rating Support */}
-          <div className="mt-1 flex items-center gap-1.5">
+          <div className="mt-0.5 flex items-center gap-1.5">
             <div className="flex gap-0.5 text-[#FFD93D]">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
                   key={i}
-                  size={10}
+                  size={9}
                   className={`${
                     i < Math.round(rating)
                       ? "fill-[#FFD93D] text-[#FFD93D]"
@@ -179,7 +163,7 @@ export function ProductCardFigma({ product }: { product: any }) {
                 />
               ))}
             </div>
-            <span className="text-[9.5px] text-slate-600 dark:text-slate-300 font-bold">
+            <span className="text-[9px] text-[#5c403c] dark:text-white/55 font-bold">
                ({rating.toFixed(1)})
              </span>
           </div>
@@ -188,11 +172,11 @@ export function ProductCardFigma({ product }: { product: any }) {
         {/* Footer Area: Price & Action */}
         <div className="flex items-center justify-between gap-2 mt-auto">
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-sm font-heading font-extrabold text-neutral-900 dark:text-white">
+            <span className="text-[13px] font-heading font-extrabold text-[#1a1c1c] dark:text-white">
               {formatMoney(salePrice, true)}
             </span>
             {hasDiscount && (
-              <span className="text-[9.5px] text-neutral-600 dark:text-neutral-400 line-through font-semibold">
+              <span className="text-[9px] text-neutral-600 dark:text-neutral-400 line-through font-semibold">
                 {formatMoney(price, true)}
               </span>
             )}
@@ -201,10 +185,10 @@ export function ProductCardFigma({ product }: { product: any }) {
           <button
             disabled={isLoading}
             onClick={handleAddToCart}
-            className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#111827] dark:bg-white text-white dark:text-[#111827] hover:bg-[#FF6B35] dark:hover:bg-[#FF6B35] dark:hover:text-white transition-all duration-200 shadow-xs hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
+            className="flex h-6 w-6 items-center justify-center bg-[#1a1c1c] text-white shadow-xs transition-all duration-200 hover:scale-105 hover:bg-[#FF3B30] active:scale-95 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-[#FF3B30] dark:hover:text-white"
             title="Add To Cart"
           >
-            <ShoppingCart size={12} className="stroke-[2.5]" />
+            <ShoppingCart size={11} className="stroke-[2.5]" />
           </button>
         </div>
       </div>

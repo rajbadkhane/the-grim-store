@@ -229,7 +229,7 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
     <div className="text-foreground bg-transparent">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <nav aria-label="Breadcrumb" className="mb-5 text-xs font-bold uppercase tracking-[0.16em] text-neutral-400">
-          Home / Products / <span className="text-[#FF6B35]">{product.title}</span>
+          Home / Products / <span className="text-[var(--accent)]">{product.title}</span>
         </nav>
 
         <div className="grid gap-8 md:grid-cols-[1.1fr_0.9fr] items-start">
@@ -257,7 +257,7 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
                       onMouseEnter={() => setActiveImage(image)}
                       className={`relative aspect-[3/4] w-full overflow-hidden rounded-lg border bg-white dark:bg-neutral-900 transition-all ${
                         visibleImage === image
-                          ? "border-[#FF6B35] ring-2 ring-[#FF6B35]/30"
+                          ? "border-[var(--accent)] ring-2 ring-[var(--accent)]/30"
                           : "border-neutral-200 dark:border-neutral-800 hover:border-neutral-400"
                       }`}
                     >
@@ -303,7 +303,7 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
               <div className="border-b border-neutral-200/40 dark:border-neutral-800/40 pb-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-grow">
-                    <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#FF6B35] dark:text-[#FF6B35]">{product.brand || "The Grim Store"}</p>
+                    <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[var(--accent)] dark:text-[var(--accent)]">{product.brand || "The Grim Store"}</p>
                     <h1 className="mt-1.5 text-xl font-black leading-tight text-neutral-900 dark:text-white uppercase tracking-tight">{product.title}</h1>
                   </div>
 
@@ -334,21 +334,21 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
                     {selectedVariant.price > selectedVariant.salePrice && (
                       <>
                         <span className="text-sm text-neutral-400 dark:text-neutral-500 line-through">{formatMoney(selectedVariant.price)}</span>
-                        <span className="text-sm font-bold text-[#FF6B35]">({discount}% OFF)</span>
+                        <span className="text-sm font-bold text-[var(--accent)]">({discount}% OFF)</span>
                       </>
                     )}
                   </div>
-                  <p className="mt-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-450 uppercase tracking-wide">Inclusive of all taxes</p>
+                  <p className="mt-1 text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wide">Inclusive of all taxes</p>
                 </div>
 
                 {/* Rating badge (Myntra Style) */}
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <span className="inline-flex items-center gap-1 rounded border border-neutral-200 dark:border-neutral-800 px-2.5 py-1 text-xs font-bold text-neutral-800 dark:text-neutral-200 bg-white/50 dark:bg-black/25">
-                    <span className="flex items-center gap-0.5">{product.rating.toFixed(1)} <Star size={12} fill="currentColor" className="text-emerald-500" /></span>
+                    <span className="flex items-center gap-0.5">{product.rating.toFixed(1)} <Star size={12} fill="currentColor" className="text-red-500" /></span>
                     <span className="text-neutral-350 dark:text-neutral-700 font-normal">|</span>
                     <span>{product.reviewCount} Ratings</span>
                   </span>
-                  <span className={`rounded px-2.5 py-1 text-xs font-bold uppercase ${canBuy ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-450" : "bg-neutral-100 text-neutral-500 dark:bg-white/10 dark:text-white/55"}`}>
+                  <span className={`rounded px-2.5 py-1 text-xs font-bold uppercase ${canBuy ? "bg-red-50 text-red-600 dark:bg-red-950/20 dark:text-red-400" : "bg-neutral-100 text-neutral-500 dark:bg-white/10 dark:text-white/55"}`}>
                     {canBuy ? "In Stock" : "Out of Stock"}
                   </span>
                 </div>
@@ -415,7 +415,7 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
               {/* Delivery Pincode Checker (Myntra style) */}
               <div className="mt-6 border-t border-neutral-200/40 dark:border-neutral-800/40 pt-5">
                 <p className="text-xs font-bold uppercase tracking-wider text-neutral-450 mb-2.5">Delivery Options</p>
-                <div className="flex max-w-sm rounded-sm border border-white/50 dark:border-white/5 bg-white/40 dark:bg-[#111315]/40 backdrop-blur-md px-3.5 py-2 items-center focus-within:border-[#FF6B35] dark:focus-within:border-[#FF6B35] focus-within:shadow-[0_0_12px_rgba(255,63,108,0.15)] focus-within:ring-1 focus-within:ring-[#FF6B35]/20 transition-all shadow-xs">
+                <div className="flex max-w-sm rounded-sm border border-white/50 dark:border-white/5 bg-white/40 dark:bg-[#111315]/40 backdrop-blur-md px-3.5 py-2 items-center focus-within:border-[var(--accent)] dark:focus-within:border-[var(--accent)] focus-within:shadow-[0_0_12px_rgba(255,63,108,0.15)] focus-within:ring-1 focus-within:ring-[var(--accent)]/20 transition-all shadow-xs">
                   <Truck size={14} className="text-neutral-400 dark:text-neutral-500 mr-2" />
                   <input
                     type="text"
@@ -428,14 +428,14 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
                   <button
                     type="button"
                     onClick={checkPincodeDelivery}
-                    className="text-xs font-bold uppercase tracking-wider text-[#FF6B35] hover:text-[#e6355e] transition-colors px-2"
+                    className="text-xs font-bold uppercase tracking-wider text-[var(--accent)] hover:text-[#e6355e] transition-colors px-2"
                   >
                     Check
                   </button>
                 </div>
                 {pincodeChecked && estimatedDelivery && (
-                  <div className="mt-3 rounded-sm bg-emerald-500/5 border border-emerald-500/10 p-3 text-xs space-y-1.5 backdrop-blur-xs">
-                    <p className="font-bold text-emerald-600 dark:text-emerald-450 flex items-center gap-1.5">
+                  <div className="mt-3 rounded-sm bg-red-500/5 border border-red-500/10 p-3 text-xs space-y-1.5 backdrop-blur-xs">
+                    <p className="font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
                       <Truck size={14} /> Get it by {estimatedDelivery}
                     </p>
                     <p className="text-neutral-450 dark:text-neutral-400 font-medium">• Cash on Delivery (COD) available</p>
@@ -473,7 +473,7 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
               </div>
               <div className="min-w-0">
                 <h4 className="text-[10px] font-bold truncate text-neutral-850 dark:text-neutral-200">{product.title}</h4>
-                <p className="text-xs font-black text-[#FF6B35]">{formatMoney(selectedVariant.salePrice)}</p>
+                <p className="text-xs font-black text-[var(--accent)]">{formatMoney(selectedVariant.salePrice)}</p>
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
@@ -540,7 +540,7 @@ function VariantGroup({ title, options, selected, onPick, swatches }: { title: s
       <div className="mb-2 flex items-center justify-between">
         <p className="text-xs font-bold uppercase tracking-wider text-neutral-450">{title}</p>
         {title === "Size" && (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#FF6B35] uppercase tracking-wider cursor-pointer hover:underline">
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider cursor-pointer hover:underline">
             <Ruler size={11} /> Size chart
           </span>
         )}
@@ -554,8 +554,8 @@ function VariantGroup({ title, options, selected, onPick, swatches }: { title: s
             onClick={() => onPick(option.label)}
             className={`relative inline-flex min-h-10 items-center justify-center gap-2 rounded-sm border px-4 text-xs font-bold transition-all duration-200 ${
               selected === option.label
-                ? "border-[#FF6B35] bg-[#FF6B35]/5 text-[#FF6B35] shadow-[0_0_12px_rgba(255,63,108,0.15)] ring-1 ring-[#FF6B35]/20"
-                : "border-white/50 dark:border-white/5 bg-white/60 dark:bg-neutral-900/60 text-foreground hover:border-[#FF6B35] dark:hover:border-[#FF6B35] hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                ? "border-[var(--accent)] bg-[var(--accent)]/5 text-[var(--accent)] shadow-[0_0_12px_rgba(255,63,108,0.15)] ring-1 ring-[var(--accent)]/20"
+                : "border-white/50 dark:border-white/5 bg-white/60 dark:bg-neutral-900/60 text-foreground hover:border-[var(--accent)] dark:hover:border-[var(--accent)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
             } disabled:cursor-not-allowed disabled:opacity-35`}
           >
             {swatches && <span className="h-3.5 w-3.5 rounded-full border border-neutral-300 dark:border-white/20 shadow-xs" style={{ backgroundColor: option.hex ?? option.label }} />}
@@ -570,7 +570,7 @@ function VariantGroup({ title, options, selected, onPick, swatches }: { title: s
 function InfoPill({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
   return (
     <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-1 sm:gap-2.5 rounded border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#111315] p-2 sm:p-3 shadow-xs">
-      <span className="text-[#FF6B35] shrink-0">{icon}</span>
+      <span className="text-[var(--accent)] shrink-0">{icon}</span>
       <div className="min-w-0">
         <p className="text-[9px] sm:text-xs font-bold text-neutral-800 dark:text-neutral-200 truncate leading-tight">{title}</p>
         <p className="mt-0.5 text-[8px] sm:text-[10px] font-semibold text-neutral-450 truncate leading-none">{text}</p>
@@ -583,21 +583,21 @@ function ProductSummary({ product }: { product: StoreProduct }) {
   const items = product.summary.length
     ? product.summary
     : [
-        { title: "Material", text: "High grade components certified for daily use." },
-        { title: "Standard", text: "Rigorously tested to comply with international specifications." },
-        { title: "Care", text: "Covered by direct service guarantee." }
+        { title: "Build", text: "Selected for daily handling, repeat use, and practical utility." },
+        { title: "Standard", text: "Checked for finish, fit, packaging, and dispatch readiness." },
+        { title: "Care", text: "Covered by direct store support." }
       ];
 
   return (
     <section className="mt-7 rounded border border-neutral-200/50 dark:border-neutral-800 bg-white dark:bg-[#1a1c1e]/30 p-5 shadow-sm">
       <div className="flex items-center gap-2 border-b border-neutral-100 dark:border-neutral-800 pb-3">
-        <Sparkles size={16} className="text-[#FF6B35]" />
+        <Sparkles size={16} className="text-[var(--accent)]" />
         <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">Product Summary</h2>
       </div>
       <div className="mt-4 grid gap-3">
         {items.map((item, index) => (
           <div key={`${item.text}-${index}`} className="flex gap-3">
-            <PackageCheck size={16} className="mt-0.5 shrink-0 text-[#FF6B35]" />
+            <PackageCheck size={16} className="mt-0.5 shrink-0 text-[var(--accent)]" />
             <p className="text-xs leading-5 text-neutral-450 font-semibold">
               {item.title && <strong className="text-foreground">{item.title}: </strong>}
               {item.text}
@@ -622,23 +622,23 @@ function ProductSpecificationsAccordion({ product }: { product: StoreProduct }) 
   };
 
   const genericAdminHtml =
-    "<h2>Product Details</h2><p>premium electronics built with clean structure, soft handfeel, and durable finish.</p><ul><li>Premium fabric</li><li>Comfort-first fit</li><li>Easy everyday styling</li></ul>";
+    "<h2>Product Details</h2><p>Practical electronic item with dependable construction, everyday utility, and clear product variants.</p><ul><li>Useful daily function</li><li>Checked before dispatch</li><li>Easy everyday handling</li></ul>";
   const hasCustomRichDescription = product.descriptionHtml && product.descriptionHtml !== "<p></p>" && product.descriptionHtml !== genericAdminHtml;
   const descriptionHtml = textToHtml(product.description);
 
   return (
     <div className="mt-10 border-t border-neutral-200 dark:border-neutral-850 pt-8">
-      <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#FF6B35] mb-6">Product Details & Specifications</p>
+      <p className="text-xs font-bold uppercase tracking-[0.24em] text-[var(--accent)] mb-6">Product Details & Specifications</p>
       
       <div className="space-y-3">
         {/* Description Accordion */}
         <div className="border border-white/50 dark:border-white/5 bg-white/40 dark:bg-[#111315]/40 backdrop-blur-md rounded-sm overflow-hidden transition-all duration-300 hover:border-white/80 dark:hover:border-white/10">
           <button
             onClick={() => toggleAccordion("description")}
-            className="flex w-full items-center justify-between bg-white/60 dark:bg-neutral-900/20 px-4 py-3.5 text-left font-bold text-xs uppercase tracking-wider text-neutral-850 dark:text-neutral-200 hover:text-[#FF6B35] dark:hover:text-[#FF6B35] transition-all"
+            className="flex w-full items-center justify-between bg-white/60 dark:bg-neutral-900/20 px-4 py-3.5 text-left font-bold text-xs uppercase tracking-wider text-neutral-850 dark:text-neutral-200 hover:text-[var(--accent)] dark:hover:text-[var(--accent)] transition-all"
           >
             <span>Product Description</span>
-            <ChevronDown size={16} className={`text-neutral-400 transition-transform duration-300 ${openSections.description ? "rotate-180 text-[#FF6B35]" : ""}`} />
+            <ChevronDown size={16} className={`text-neutral-400 transition-transform duration-300 ${openSections.description ? "rotate-180 text-[var(--accent)]" : ""}`} />
           </button>
           {openSections.description && (
             <div className="p-4 bg-white/50 dark:bg-transparent border-t border-neutral-100/40 dark:border-neutral-850/40 text-xs leading-6 text-neutral-400 font-medium">
@@ -654,10 +654,10 @@ function ProductSpecificationsAccordion({ product }: { product: StoreProduct }) 
         <div className="border border-white/50 dark:border-white/5 bg-white/40 dark:bg-[#111315]/40 backdrop-blur-md rounded-sm overflow-hidden transition-all duration-300 hover:border-white/80 dark:hover:border-white/10">
           <button
             onClick={() => toggleAccordion("specifications")}
-            className="flex w-full items-center justify-between bg-white/60 dark:bg-neutral-900/20 px-4 py-3.5 text-left font-bold text-xs uppercase tracking-wider text-neutral-850 dark:text-neutral-200 hover:text-[#FF6B35] dark:hover:text-[#FF6B35] transition-all"
+            className="flex w-full items-center justify-between bg-white/60 dark:bg-neutral-900/20 px-4 py-3.5 text-left font-bold text-xs uppercase tracking-wider text-neutral-850 dark:text-neutral-200 hover:text-[var(--accent)] dark:hover:text-[var(--accent)] transition-all"
           >
             <span>Specifications & Details</span>
-            <ChevronDown size={16} className={`text-neutral-400 transition-transform duration-300 ${openSections.specifications ? "rotate-180 text-[#FF6B35]" : ""}`} />
+            <ChevronDown size={16} className={`text-neutral-400 transition-transform duration-300 ${openSections.specifications ? "rotate-180 text-[var(--accent)]" : ""}`} />
           </button>
           {openSections.specifications && (
             <div className="p-4 bg-white/50 dark:bg-transparent border-t border-neutral-100/40 dark:border-neutral-850/40 text-xs font-medium">
@@ -712,10 +712,10 @@ function ProductSpecificationsAccordion({ product }: { product: StoreProduct }) 
         <div className="border border-white/50 dark:border-white/5 bg-white/40 dark:bg-[#111315]/40 backdrop-blur-md rounded-sm overflow-hidden transition-all duration-300 hover:border-white/80 dark:hover:border-white/10">
           <button
             onClick={() => toggleAccordion("delivery")}
-            className="flex w-full items-center justify-between bg-white/60 dark:bg-neutral-900/20 px-4 py-3.5 text-left font-bold text-xs uppercase tracking-wider text-neutral-850 dark:text-neutral-200 hover:text-[#FF6B35] dark:hover:text-[#FF6B35] transition-all"
+            className="flex w-full items-center justify-between bg-white/60 dark:bg-neutral-900/20 px-4 py-3.5 text-left font-bold text-xs uppercase tracking-wider text-neutral-850 dark:text-neutral-200 hover:text-[var(--accent)] dark:hover:text-[var(--accent)] transition-all"
           >
             <span>Delivery & Shipping Info</span>
-            <ChevronDown size={16} className={`text-neutral-400 transition-transform duration-300 ${openSections.delivery ? "rotate-180 text-[#FF6B35]" : ""}`} />
+            <ChevronDown size={16} className={`text-neutral-400 transition-transform duration-300 ${openSections.delivery ? "rotate-180 text-[var(--accent)]" : ""}`} />
           </button>
           {openSections.delivery && (
             <div className="p-4 bg-white/50 dark:bg-transparent border-t border-neutral-100/40 dark:border-neutral-850/40 text-xs leading-6 text-neutral-400 font-medium">
@@ -728,10 +728,10 @@ function ProductSpecificationsAccordion({ product }: { product: StoreProduct }) 
         <div className="border border-white/50 dark:border-white/5 bg-white/40 dark:bg-[#111315]/40 backdrop-blur-md rounded-sm overflow-hidden transition-all duration-300 hover:border-white/80 dark:hover:border-white/10">
           <button
             onClick={() => toggleAccordion("returns")}
-            className="flex w-full items-center justify-between bg-white/60 dark:bg-neutral-900/20 px-4 py-3.5 text-left font-bold text-xs uppercase tracking-wider text-neutral-850 dark:text-neutral-200 hover:text-[#FF6B35] dark:hover:text-[#FF6B35] transition-all"
+            className="flex w-full items-center justify-between bg-white/60 dark:bg-neutral-900/20 px-4 py-3.5 text-left font-bold text-xs uppercase tracking-wider text-neutral-850 dark:text-neutral-200 hover:text-[var(--accent)] dark:hover:text-[var(--accent)] transition-all"
           >
             <span>Returns & Exchanges</span>
-            <ChevronDown size={16} className={`text-neutral-400 transition-transform duration-300 ${openSections.returns ? "rotate-180 text-[#FF6B35]" : ""}`} />
+            <ChevronDown size={16} className={`text-neutral-400 transition-transform duration-300 ${openSections.returns ? "rotate-180 text-[var(--accent)]" : ""}`} />
           </button>
           {openSections.returns && (
             <div className="p-4 bg-white/50 dark:bg-transparent border-t border-neutral-100/40 dark:border-neutral-850/40 text-xs leading-6 text-neutral-400 font-medium">
@@ -751,7 +751,7 @@ function textToHtml(value: string) {
     .replace(/>/g, "&gt;")
     .trim();
 
-  if (!escaped) return "<h2>Product Details</h2><p>Premium grade construction with comfortable daily utility.</p>";
+  if (!escaped) return "<h2>Product Details</h2><p>Practical construction with comfortable daily utility.</p>";
 
   return escaped
     .split(/\n{2,}/)

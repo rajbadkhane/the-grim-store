@@ -38,7 +38,7 @@ export function WishlistButton({ productId }: { productId: string }) {
     <button
       type="button"
       onClick={toggleWishlist}
-      className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-white/70 hover:text-blue-300"
+      className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-white/70 hover:text-[#FF3B30]"
     >
       <Heart size={18} /> Add to wishlist
     </button>

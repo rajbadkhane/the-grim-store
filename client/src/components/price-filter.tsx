@@ -34,7 +34,7 @@ export function PriceFilter({ currentMax }: { currentMax?: string }) {
         max="5999"
         value={val}
         onChange={(e) => setVal(Number(e.target.value))}
-        className="mt-3 w-full cursor-pointer accent-blue-500"
+        className="mt-3 w-full cursor-pointer accent-[#FF3B30]"
         style={{ caretColor: "transparent" }}
       />
       <button

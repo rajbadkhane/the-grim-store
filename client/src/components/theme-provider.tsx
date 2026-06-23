@@ -21,7 +21,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (saved === "dark" || saved === "light") {
       setThemeState(saved);
     } else {
-      setThemeState("light"); // Light mode is default
+      setThemeState("light");
     }
     setMounted(true);
   }, []);

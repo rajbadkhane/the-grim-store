@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: process.cwd(),
+  devIndicators: false,
   async headers() {
     return ["/account", "/cart", "/checkout", "/wishlist"].map((source) => ({
       source,
@@ -12,6 +13,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "plus.unsplash.com" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
       { protocol: "https", hostname: "m.media-amazon.com" },
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "http", hostname: "localhost", port: "5000" },

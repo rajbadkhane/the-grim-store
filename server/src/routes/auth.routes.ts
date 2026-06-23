@@ -3,7 +3,7 @@ import { forgotPassword, logout, me, refreshToken, requestOtp, resetPasswordCont
 import { requireAuth } from "../middlewares/auth.js";
 import { authLimiter } from "../middlewares/rateLimiter.js";
 import { validate } from "../middlewares/validate.js";
-import { requestOtpSchema, resetPasswordSchema, verifyOtpSchema } from "../validators/auth.validator.js";
+import { googleLoginSchema, requestOtpSchema, resetPasswordSchema, verifyOtpSchema } from "../validators/auth.validator.js";
 
 export const authRoutes = Router();
 
@@ -18,4 +18,4 @@ authRoutes.post("/logout", requireAuth, logout);
 
 authRoutes.post("/register", authLimiter, register);
 authRoutes.post("/password-login", authLimiter, loginWithPassword);
-authRoutes.post("/google-login", authLimiter, googleLogin);
+authRoutes.post("/google-login", authLimiter, validate(googleLoginSchema), googleLogin);

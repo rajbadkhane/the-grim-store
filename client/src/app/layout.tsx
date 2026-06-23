@@ -3,37 +3,55 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Providers } from "@/components/providers";
 import { storefrontJsonLd } from "@/lib/seo";
-import { Space_Grotesk, Inter } from "next/font/google";
+import { Anton, Bebas_Neue, Hanken_Grotesk, JetBrains_Mono, Pirata_One } from "next/font/google";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
+const anton = Anton({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-space-grotesk",
+  weight: ["400"],
+  variable: "--font-anton",
 });
 
-const inter = Inter({
+const bebasNeue = Bebas_Neue({
   subsets: ["latin"],
-  variable: "--font-inter",
+  weight: ["400"],
+  variable: "--font-bebas-neue",
+});
+
+const pirataOne = Pirata_One({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-blackletter",
+});
+
+const hankenGrotesk = Hanken_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-hanken-grotesk",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains-mono",
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://thegrimstore.com"),
   title: {
-    default: "The Grim Store | Premium Smart Toys & Electronics",
+    default: "The Grim Store | Electronic Items, Kids Cameras & Game Sticks",
     template: "%s | The Grim Store"
   },
-  description: "Premium kids smart toys, educational gadgets, gaming consoles, wearables, and electronics designed for modern families.",
+  description: "Shop electronic items, kids instant cameras, game sticks, wireless audio, grooming tools, and accessories from The Grim Store.",
   applicationName: "The Grim Store",
   keywords: [
     "The Grim Store",
     "thegrimstore.com",
-    "kids smart toys",
-    "educational gadgets",
-    "gaming consoles",
-    "wearables",
-    "electronics ecommerce store",
-    "premium electronics"
+    "electronic items",
+    "kids camera",
+    "instant print camera",
+    "game stick",
+    "wireless headphones",
+    "grooming tools",
+    "electronic accessories"
   ],
   alternates: { canonical: "/" },
   category: "electronics ecommerce",
@@ -42,7 +60,7 @@ export const metadata: Metadata = {
     url: "/",
     siteName: "The Grim Store",
     title: "The Grim Store",
-    description: "Premium smart toys, gaming gadgets, and electronics.",
+    description: "Electronic items, kids cameras, game sticks, audio, grooming tools, and accessories.",
     images: ["/og-image.jpg"]
   },
   twitter: { card: "summary_large_image", title: "The Grim Store" },
@@ -52,7 +70,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#FAFAFA"
+  themeColor: "#0A0A0A"
 };
 
 import { LoginModal } from "@/components/layout/login-modal";
@@ -80,8 +98,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             `
           }}
         />
+        <script src="https://accounts.google.com/gsi/client" async defer />
       </head>
-      <body className={`${spaceGrotesk.variable} ${inter.variable} antialiased`}>
+      <body className={`${anton.variable} ${bebasNeue.variable} ${pirataOne.variable} ${hankenGrotesk.variable} ${jetbrainsMono.variable} site-compact antialiased`}>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(storefrontJsonLd()) }} />
         <Providers>
           <Header />

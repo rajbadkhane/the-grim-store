@@ -103,7 +103,7 @@ export const sitePages: SitePage[] = [
       {
         title: "Eligibility",
         body: ["Products are eligible for return or exchange when they are unused, unwashed, undamaged, and returned with original tags and packaging."],
-        bullets: ["Size exchanges are subject to stock availability", "Damaged or incorrect products should be reported quickly after delivery", "Innerwear, final-sale products, and customized products may not be returnable"]
+        bullets: ["Exchanges are subject to stock availability", "Damaged or incorrect products should be reported quickly after delivery", "Final-sale products and customized products may not be returnable"]
       },
       {
         title: "Inspection",
@@ -164,16 +164,16 @@ export const sitePages: SitePage[] = [
     slug: "about-us",
     title: "About The Grim Store",
     eyebrow: "Brand",
-    description: "A premium black and red electronics label built around limited drops, durable essentials, and fast ecommerce experiences.",
+    description: "A premium black and red electronics store built around practical items, durable essentials, and fast ecommerce experiences.",
     lastUpdated: "11 May 2026",
     sections: [
       {
         title: "What we make",
-        body: ["The Grim Store is built for premium electronics essentials: oversized tees, hoodies, statement graphics, and limited seasonal drops."]
+        body: ["The Grim Store is built for practical electronic essentials: kids cameras, game sticks, wireless audio, grooming tools, accessories, and reliable everyday gadgets."]
       },
       {
         title: "What we care about",
-        body: ["We focus on strong silhouettes, reliable checkout, transparent policies, and a shopping experience that feels sharp on mobile and desktop."]
+        body: ["We focus on useful products, reliable checkout, transparent policies, and a shopping experience that feels sharp on mobile and desktop."]
       }
     ]
   },
@@ -212,7 +212,7 @@ export const sitePages: SitePage[] = [
       },
       {
         title: "Sizing",
-        body: ["Check the size chart on the product page before buying. Oversized products are intentionally relaxed and may fit larger than regular tees."]
+        body: ["Check product photos, variant details, stock status, and description before buying. For electronic items, confirm the exact model, included accessories, and usage notes."]
       }
     ]
   },
@@ -236,4 +236,3 @@ export const sitePages: SitePage[] = [
 ];
 
 export const pageMap = new Map(sitePages.map((page) => [page.slug, page]));
-

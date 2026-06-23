@@ -20,32 +20,32 @@ const getThemeClass = (slide: CarouselSlide) => {
   const text = `${slide.title} ${slide.subtitle} ${slide.description}`.toLowerCase();
   if (text.includes("audio") || text.includes("headphone") || text.includes("earbud") || text.includes("sound") || text.includes("speaker") || text.includes("acoustic")) {
     return {
-      gradient: "from-[#1a0e30] via-[#0e071c] to-[#05020a]",
-      glow: "bg-[#ff3f6c]/25",
+      gradient: "from-[#25090d] via-[#120406] to-[#050101]",
+      glow: "bg-[#ff3b30]/25",
     };
   }
   if (text.includes("game") || text.includes("gaming") || text.includes("play") || text.includes("controller") || text.includes("console") || text.includes("gamepad")) {
     return {
       gradient: "from-[#2b0c15] via-[#17060b] to-[#080204]",
-      glow: "bg-[#a855f7]/30",
+      glow: "bg-[#ff3b30]/24",
     };
   }
   if (text.includes("camera") || text.includes("eos") || text.includes("photo") || text.includes("lens") || text.includes("photography") || text.includes("shutter")) {
     return {
-      gradient: "from-[#241c0c] via-[#120e06] to-[#060402]",
-      glow: "bg-[#fbbf24]/22",
+      gradient: "from-[#2a0909] via-[#140404] to-[#050101]",
+      glow: "bg-[#ff3b30]/20",
     };
   }
   if (text.includes("phone") || text.includes("mobile") || text.includes("smartphone") || text.includes("iphone") || text.includes("cellular")) {
     return {
-      gradient: "from-[#082230] via-[#04121a] to-[#010609]",
-      glow: "bg-[#06b6d4]/28",
+      gradient: "from-[#25090d] via-[#120406] to-[#050101]",
+      glow: "bg-[#ff3b30]/22",
     };
   }
   if (text.includes("laptop") || text.includes("computer") || text.includes("keyboard") || text.includes("pc") || text.includes("monitor") || text.includes("screen") || text.includes("display")) {
     return {
-      gradient: "from-[#052917] via-[#02170d] to-[#010804]",
-      glow: "bg-[#10b981]/22",
+      gradient: "from-[#260707] via-[#120303] to-[#050101]",
+      glow: "bg-[#ff3b30]/22",
     };
   }
   return {
@@ -81,7 +81,7 @@ export function HeroCarousel({ initialSlides }: { initialSlides: CarouselSlide[]
   const themeStyles = getThemeClass(initialSlides[current]);
 
   return (
-    <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${themeStyles.gradient} text-white min-h-[350px] sm:min-h-[420px] transition-all duration-1000`}>
+    <div className={`relative min-h-[300px] overflow-hidden rounded-md bg-gradient-to-br ${themeStyles.gradient} text-white transition-all duration-1000 sm:min-h-[360px]`}>
       {/* Dynamic Product-Themed Canvas Background */}
       <ProductCanvasBackground activeSlide={initialSlides[current]} />
 
@@ -95,28 +95,28 @@ export function HeroCarousel({ initialSlides }: { initialSlides: CarouselSlide[]
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.5 }}
-          className="grid min-h-[350px] items-center gap-6 p-8 sm:min-h-[420px] lg:grid-cols-[1.2fr_0.8fr] lg:p-12"
+          className="grid min-h-[300px] items-center gap-5 p-6 sm:min-h-[360px] lg:grid-cols-[1.2fr_0.8fr] lg:p-8"
         >
           <div className="relative z-20">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-[#ff3f6c] text-white shadow-sm">
+            <span className="inline-block rounded-full bg-[#ff3f6c] px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-white shadow-sm">
               {initialSlides[current].subtitle}
             </span>
-            <h1 className="mt-4 max-w-xl text-4xl font-black leading-tight sm:text-5xl lg:text-6xl tracking-tight [text-shadow:_0_2px_12px_rgba(0,0,0,0.6)]">
+            <h1 className="mt-3 max-w-xl text-3xl font-black leading-tight tracking-tight [text-shadow:_0_2px_12px_rgba(0,0,0,0.6)] sm:text-4xl lg:text-5xl">
               {initialSlides[current].title}
             </h1>
-            <p className="mt-4 max-w-md text-sm font-semibold leading-relaxed text-neutral-300 [text-shadow:_0_1px_6px_rgba(0,0,0,0.5)]">
+            <p className="mt-3 max-w-md text-xs font-semibold leading-relaxed text-neutral-300 [text-shadow:_0_1px_6px_rgba(0,0,0,0.5)]">
               {initialSlides[current].description}
             </p>
             <Link
               href={initialSlides[current].href}
-              className="mt-8 inline-flex min-h-12 items-center justify-center rounded bg-[#ff3f6c] hover:bg-[#e6355e] px-8 text-xs font-black uppercase tracking-wider text-white transition-all duration-200 cursor-pointer shadow-lg shadow-[#ff3f6c]/20 hover:scale-[1.02]"
+              className="mt-6 inline-flex min-h-10 items-center justify-center rounded bg-[#ff3f6c] px-6 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-[#ff3f6c]/20 transition-all duration-200 hover:scale-[1.02] hover:bg-[#e6355e]"
             >
               Shop Collection
             </Link>
           </div>
-          <div className="relative min-h-[220px] sm:min-h-[280px] w-full flex items-center justify-center z-20">
+          <div className="relative z-20 flex min-h-[190px] w-full items-center justify-center sm:min-h-[240px]">
             {/* Ambient Glow behind image */}
-            <div className={`absolute w-64 h-64 ${themeStyles.glow} rounded-full blur-[80px] pointer-events-none transition-all duration-1000`} />
+            <div className={`absolute h-56 w-56 ${themeStyles.glow} rounded-full blur-[72px] pointer-events-none transition-all duration-1000`} />
             {initialSlides[current].image && (
               <motion.div
                 onMouseMove={handleMouseMove}
@@ -134,7 +134,7 @@ export function HeroCarousel({ initialSlides }: { initialSlides: CarouselSlide[]
                   transform: `perspective(1000px) rotateY(${tilt.x}deg) rotateX(${tilt.y}deg)`,
                   transition: "transform 0.15s ease-out"
                 }}
-                className="relative w-full h-[220px] sm:h-[280px] cursor-grab active:cursor-grabbing"
+                className="relative h-[190px] w-full cursor-grab active:cursor-grabbing sm:h-[240px]"
               >
                 <Image
                   src={initialSlides[current].image}

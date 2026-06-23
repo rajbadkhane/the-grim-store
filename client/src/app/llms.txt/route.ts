@@ -5,12 +5,15 @@ export async function GET() {
   
   const markdown = `# The Grim Store
 
-> A premium, modern e-commerce platform specializing in Smart Toys, Educational Gadgets, Gaming Consoles, Wearables, and Audio Products. Built with premium Lego, Apple, and Nothing design vibes.
+> A premium, modern e-commerce platform for electronic items, kids cameras, game sticks, wireless audio, grooming tools, and everyday accessories.
 
 ## Links
 - [Full Product Catalog & Store Policies](${host}/llms-full.txt): Comprehensive, structured markdown dump of all 21 products, variants, specs, and logistics policies.
+- [AI Search Q&A Base](${host}/llms-faq.txt): Structured question-and-answer formatted catalog content optimized for generative answer engines (AEO/GEO).
 - [All Products Catalog](${host}/products): Dynamic catalog index featuring search, filter by price, colors, and category.
-- [Terms & Return Policy](${host}/policies): Specific terms governing returns, shipping timelines, and exchange conditions.
+- [Terms & Conditions](${host}/terms-and-conditions): Store usage rules, account responsibilities, and legal agreements.
+- [Returns & Exchange Policy](${host}/returns-and-exchange-policy): Details on size exchanges, return eligibility, and quality inspection rules.
+- [Shipping & Delivery Policy](${host}/shipping-policy): Coverage, shipping charges, delivery times, and dispatch tracking details.
 `;
 
   return new NextResponse(markdown, {

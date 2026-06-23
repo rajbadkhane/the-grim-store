@@ -110,7 +110,7 @@ export function organizationJsonLd() {
     name: "The Grim Store",
     url: siteUrl("/"),
     logo: siteUrl("/logo.png"),
-    description: "Premium kids smart toys, educational gadgets, gaming consoles, wearables, and electronics designed for modern families.",
+    description: "Electronic items, kids cameras, game sticks, wireless audio, grooming tools, and accessories from The Grim Store.",
     contactPoint: {
       "@type": "ContactPoint",
       telephone: "+91-9999999999",
@@ -227,7 +227,7 @@ export function checkoutPageJsonLd() {
 export function productFaqJsonLd(product: any) {
   const brandName = product.brand || "The Grim Store";
   const name = product.title;
-  const cat = product.category || "electronics product";
+  const cat = product.category || "catalog product";
   
   return {
     "@context": "https://schema.org",
@@ -246,7 +246,7 @@ export function productFaqJsonLd(product: any) {
         "name": `Who is ${name} for?`,
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": `${name} is designed for families and tech enthusiasts looking for high-quality, durable, and highly functional ${cat}s.`
+          "text": `${name} is designed for buyers looking for high-quality construction, distinctive styling, and dependable everyday utility.`
         }
       },
       {

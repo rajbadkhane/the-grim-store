@@ -50,7 +50,8 @@ export const env = {
   emailUser: process.env.EMAIL_USER ?? "",
   emailPass: process.env.EMAIL_PASS ?? "",
   emailFrom: process.env.EMAIL_FROM ?? "",
-  resendApiKey: process.env.RESEND_API_KEY ?? "",
+  sendgridApiKey: process.env.SENDGRID_API_KEY ?? "",
+  sendgridDataResidency: process.env.SENDGRID_DATA_RESIDENCY ?? "",
   smtpHost: process.env.SMTP_HOST ?? "smtp.gmail.com",
   smtpPort: Number(process.env.SMTP_PORT ?? 587),
   smtpSecure: process.env.SMTP_SECURE === "true",
@@ -75,5 +76,6 @@ export const env = {
   nimbuspostCourierId: process.env.NIMBUSPOST_COURIER_ID ?? "",
   nimbuspostAutoPickup: process.env.NIMBUSPOST_AUTO_PICKUP ?? "yes",
   shiprocketEmail: process.env.SHIPROCKET_EMAIL ?? "",
-  shiprocketPassword: process.env.SHIPROCKET_PASSWORD ?? ""
+  shiprocketPassword: process.env.SHIPROCKET_PASSWORD ?? "",
+  googleClientId: process.env.GOOGLE_CLIENT_ID ?? ""
 };
