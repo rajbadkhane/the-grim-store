@@ -145,8 +145,8 @@ export default function CheckoutPage() {
   const [couponError, setCouponError] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
-  const [checkingAuth, setCheckingAuth] = useState(false);
-  const [isAuthed, setIsAuthed] = useState(true);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [isAuthed, setIsAuthed] = useState(false);
   const { refreshMe, openLoginModal } = useAuth();
 
   // saved addresses
@@ -342,7 +342,7 @@ export default function CheckoutPage() {
     if (!items.length) return;
     if (!isAuthed) {
       toast.error("Login required to checkout.");
-      router.push("/account");
+      router.push(`/login?redirect=${encodeURIComponent("/checkout")}`);
       return;
     }
     if (placing) return;
@@ -533,11 +533,10 @@ export default function CheckoutPage() {
         const res = await api.get("/auth/me");
         if (cancelled) return;
 
-        const authed = Boolean(res.data?.user);
-        setIsAuthed(true); // Always allow checkout in offline/demo mode
+        setIsAuthed(Boolean(res.data?.user));
       } catch {
         if (cancelled) return;
-        setIsAuthed(true); // Always allow checkout in offline/demo mode
+        setIsAuthed(false);
       } finally {
         if (!cancelled) setCheckingAuth(false);
       }

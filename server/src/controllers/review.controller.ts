@@ -5,6 +5,8 @@ import { recalculateProductRating } from "../services/review.service.js";
 import { execute, id, json, mapProduct, mapReview, row, rows } from "../lib/sql.js";
 import { apiCache } from "../utils/cache.js";
 
+const PUBLIC_REVIEW_CACHE = "public, max-age=60, stale-while-revalidate=300";
+
 export const createReview = asyncHandler(async (req, res) => {
   await apiCache.clear();
   const { productId, orderId, rating, title, comment, images } = req.body;
@@ -84,6 +86,8 @@ export const listReviews = asyncHandler(async (req, res) => {
   
   const cachedData = await apiCache.get(cacheKey);
   if (cachedData) {
+    res.set("Cache-Control", PUBLIC_REVIEW_CACHE);
+    res.set("X-Grim-Cache", "HIT");
     return res.json(cachedData);
   }
 
@@ -98,6 +102,8 @@ export const listReviews = asyncHandler(async (req, res) => {
   
   const responseData = { success: true, reviews: reviews.map(mapReview) };
   await apiCache.set(cacheKey, responseData, 60); // Cache for 60 seconds
+  res.set("Cache-Control", PUBLIC_REVIEW_CACHE);
+  res.set("X-Grim-Cache", "MISS");
   res.json(responseData);
 });
 

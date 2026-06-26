@@ -3,6 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { makeSlug } from "../helpers/slug.js";
 import { execute, id, json, row, rows } from "../lib/sql.js";
+import { apiCache } from "../utils/cache.js";
 
 /* ------------------------------------------------------------------ */
 /*  Column map: maps friendly Excel header names → internal keys      */
@@ -383,6 +384,8 @@ export const bulkImportProducts = asyncHandler(async (req, res) => {
       errorCount++;
     }
   }
+
+  if (successCount > 0) await apiCache.clear();
 
   res.status(201).json({
     success: true,

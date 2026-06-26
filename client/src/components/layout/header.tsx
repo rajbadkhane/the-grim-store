@@ -43,6 +43,7 @@ import { useAuth } from "@/store/auth";
 import { useCart } from "@/store/cart";
 import { useFlyCartStore } from "@/store/fly-cart";
 import { useTheme } from "@/components/theme-provider";
+import { cachedJsonFetch } from "@/lib/browser-cache";
 
 type SearchSuggestion = {
   id: string;
@@ -51,7 +52,7 @@ type SearchSuggestion = {
   category?: string;
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api/v1";
+const API_URL = "/api/v1";
 
 const primaryNav = [
   { label: "Electronic Items", href: "/products?category=electronic-items" },
@@ -258,12 +259,15 @@ export function Header() {
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
       try {
-        const response = await fetch(`${API_URL}/products/suggestions?q=${encodeURIComponent(query)}&limit=8`, {
-          credentials: "include",
-          signal: controller.signal
-        });
-        if (!response.ok) return;
-        const data = await response.json();
+        const data = await cachedJsonFetch<{ suggestions?: SearchSuggestion[] }>(
+          `suggestions:${query.toLowerCase()}:8`,
+          `${API_URL}/products/suggestions?q=${encodeURIComponent(query)}&limit=8`,
+          10 * 60,
+          {
+            credentials: "include",
+            signal: controller.signal
+          }
+        );
         setSearchSuggestions(Array.isArray(data.suggestions) ? data.suggestions : []);
       } catch {
         if (!controller.signal.aborted) setSearchSuggestions([]);

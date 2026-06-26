@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { BadgeCheck, Camera, Loader2, Send, Star, ThumbsUp } from "lucide-react";
 import { api } from "@/lib/api";
+import { cachedJsonFetch } from "@/lib/browser-cache";
 import type { StoreProduct, StoreReview } from "@/lib/catalog-api";
 
 type SortKey = "latest" | "highest" | "lowest" | "helpful" | "images";
@@ -27,8 +28,13 @@ export function ReviewPanel({ product, initialReviews }: { product: StoreProduct
     setLoadingReviews(true);
     try {
       const params = nextSort === "images" ? "?withImages=true" : `?sort=${nextSort}`;
-      const res = await api.get(`/reviews/product/${product.id}${params}`);
-      setReviews(res.data?.reviews ?? []);
+      const data = await cachedJsonFetch<{ reviews?: StoreReview[] }>(
+        `reviews:${product.id}:${params}`,
+        `/api/v1/reviews/product/${product.id}${params}`,
+        5 * 60,
+        { credentials: "include" }
+      );
+      setReviews(data?.reviews ?? []);
     } catch {
       toast.error("Unable to load reviews");
     } finally {

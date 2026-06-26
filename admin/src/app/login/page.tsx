@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { api } from "@/lib/api";
@@ -11,6 +11,33 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const getRedirectPath = useCallback(() => {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get("redirect") || "/";
+    return redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : "/";
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function redirectExistingAdmin() {
+      try {
+        const { data } = await api.get("/auth/me");
+        if (!cancelled && data?.user?.role === "admin") {
+          router.replace(getRedirectPath());
+          router.refresh();
+        }
+      } catch {
+        // No active admin session; keep the login form visible.
+      }
+    }
+
+    redirectExistingAdmin();
+    return () => {
+      cancelled = true;
+    };
+  }, [getRedirectPath, router]);
 
   async function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -23,7 +50,8 @@ export default function LoginPage() {
         return;
       }
       toast.success("Welcome back");
-      router.push("/");
+      router.replace(getRedirectPath());
+      router.refresh();
     } catch (error: any) {
       toast.error(error.response?.data?.message ?? "Invalid admin email or password");
     } finally {

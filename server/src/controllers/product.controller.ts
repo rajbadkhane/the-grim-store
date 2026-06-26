@@ -4,8 +4,9 @@ import { ApiError } from "../utils/ApiError.js";
 import { execute, id, json, mapProduct, parseJson, row, rows } from "../lib/sql.js";
 import { apiCache } from "../utils/cache.js";
 
-const PUBLIC_CATALOG_CACHE = "public, max-age=30, stale-while-revalidate=300";
-const SUGGESTION_CACHE = "public, max-age=15, stale-while-revalidate=120";
+const PUBLIC_CATALOG_CACHE = "public, max-age=120, stale-while-revalidate=600";
+const PRODUCT_DETAIL_CACHE = "public, max-age=60, stale-while-revalidate=300";
+const SUGGESTION_CACHE = "public, max-age=60, stale-while-revalidate=300";
 
 export const listProducts = asyncHandler(async (req, res) => {
   const { q, category, brand, gender, min, max, sort = "latest", page = 1, limit = 12 } = req.query as any;
@@ -14,6 +15,7 @@ export const listProducts = asyncHandler(async (req, res) => {
   const cachedData = await apiCache.get(cacheKey);
   if (cachedData) {
     res.set("Cache-Control", PUBLIC_CATALOG_CACHE);
+    res.set("X-Grim-Cache", "HIT");
     return res.json(cachedData);
   }
 
@@ -84,6 +86,7 @@ export const listProducts = asyncHandler(async (req, res) => {
   await apiCache.set(cacheKey, responseData, 60); // Cache for 60 seconds
   
   res.set("Cache-Control", PUBLIC_CATALOG_CACHE);
+  res.set("X-Grim-Cache", "MISS");
   res.json(responseData);
 });
 
@@ -99,6 +102,7 @@ export const listProductSuggestions = asyncHandler(async (req, res) => {
   const cachedData = await apiCache.get(cacheKey);
   if (cachedData) {
     res.set("Cache-Control", SUGGESTION_CACHE);
+    res.set("X-Grim-Cache", "HIT");
     return res.json(cachedData);
   }
 
@@ -159,6 +163,7 @@ export const listProductSuggestions = asyncHandler(async (req, res) => {
 
   await apiCache.set(cacheKey, responseData, 30); // Cache for 30 seconds
   res.set("Cache-Control", SUGGESTION_CACHE);
+  res.set("X-Grim-Cache", "MISS");
   res.json(responseData);
 });
 
@@ -166,6 +171,8 @@ export const getProduct = asyncHandler(async (req, res) => {
   const cacheKey = `product:${req.params.slug}`;
   const cachedData = await apiCache.get(cacheKey);
   if (cachedData) {
+    res.set("Cache-Control", PRODUCT_DETAIL_CACHE);
+    res.set("X-Grim-Cache", "HIT");
     return res.json(cachedData);
   }
   
@@ -174,6 +181,8 @@ export const getProduct = asyncHandler(async (req, res) => {
   
   const responseData = { success: true, product };
   await apiCache.set(cacheKey, responseData, 60); // Cache for 60 seconds
+  res.set("Cache-Control", PRODUCT_DETAIL_CACHE);
+  res.set("X-Grim-Cache", "MISS");
   res.json(responseData);
 });
 
@@ -289,6 +298,7 @@ export const listCategories = asyncHandler(async (_req, res) => {
   const cachedData = await apiCache.get(cacheKey);
   if (cachedData) {
     res.set("Cache-Control", PUBLIC_CATALOG_CACHE);
+    res.set("X-Grim-Cache", "HIT");
     return res.json(cachedData);
   }
 
@@ -300,6 +310,7 @@ export const listCategories = asyncHandler(async (_req, res) => {
   await apiCache.set(cacheKey, responseData, 300); // Cache for 5 mins
   
   res.set("Cache-Control", PUBLIC_CATALOG_CACHE);
+  res.set("X-Grim-Cache", "MISS");
   res.json(responseData);
 });
 
@@ -342,6 +353,8 @@ export const listSubCategories = asyncHandler(async (req, res) => {
   const cacheKey = `subcategories:${categoryId ?? "all"}`;
   const cachedData = await apiCache.get(cacheKey);
   if (cachedData) {
+    res.set("Cache-Control", PUBLIC_CATALOG_CACHE);
+    res.set("X-Grim-Cache", "HIT");
     return res.json(cachedData);
   }
 
@@ -352,6 +365,8 @@ export const listSubCategories = asyncHandler(async (req, res) => {
   
   const responseData = { success: true, subCategories };
   await apiCache.set(cacheKey, responseData, 300); // Cache for 5 mins
+  res.set("Cache-Control", PUBLIC_CATALOG_CACHE);
+  res.set("X-Grim-Cache", "MISS");
   res.json(responseData);
 });
 

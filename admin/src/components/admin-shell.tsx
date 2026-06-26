@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell, Boxes, Handshake, LayoutDashboard, LogOut, Menu, Percent, Search, Settings, ShoppingBag, Star, Tags, Users, X } from "lucide-react";
-import { useState } from "react";
+import { Bell, Boxes, Handshake, LayoutDashboard, Loader2, LogOut, Menu, Percent, Search, Settings, ShoppingBag, Star, Tags, Users, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -22,10 +22,66 @@ const nav = [
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobile, setMobile] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const [admin, setAdmin] = useState<any>(null);
+  const isLogin = pathname === "/login";
 
-  if (pathname === "/login") {
+  useEffect(() => {
+    if (isLogin) {
+      setChecking(false);
+      setAdmin(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function verifyAdmin() {
+      setChecking(true);
+      try {
+        const { data } = await api.get("/auth/me");
+        const user = data?.user;
+        if (cancelled) return;
+
+        if (user?.role === "admin") {
+          setAdmin(user);
+          setChecking(false);
+          return;
+        }
+
+        setAdmin(null);
+        await api.post("/auth/logout").catch(() => null);
+        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
+      } catch {
+        if (cancelled) return;
+        setAdmin(null);
+        await api.post("/auth/logout").catch(() => null);
+        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
+      } finally {
+        if (!cancelled) setChecking(false);
+      }
+    }
+
+    verifyAdmin();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLogin, pathname, router]);
+
+  if (isLogin) {
     return <main className="min-h-screen">{children}</main>;
+  }
+
+  if (checking || !admin) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#f4f6fb] px-4">
+        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm font-black text-slate-700 shadow-sm">
+          <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
+          Verifying admin access...
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -69,7 +125,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     try {
       await api.post("/auth/logout");
     } finally {
-      router.push("/login");
+      router.replace("/login");
     }
   }
 

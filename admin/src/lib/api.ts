@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const apiBaseUrl = typeof window === "undefined" ? process.env.NEXT_PUBLIC_API_URL ?? "/api/v1" : "/api/v1";
+
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? "/api/v1",
+  baseURL: apiBaseUrl,
   withCredentials: true
 });
 
@@ -9,6 +11,10 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
+    if (error.response?.status === 401 && original?.url?.includes("/auth/refresh")) {
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && !original?._retry) {
       original._retry = true;
       try {

@@ -76,7 +76,7 @@ type WishlistProduct = {
 };
 
 export default function AccountPage() {
-  const { openLoginModal, logout } = useAuth();
+  const { openLoginModal, logout, setAuthenticatedUser } = useAuth();
   const [active, setActive] = useState<Tab>("profile");
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -94,7 +94,9 @@ export default function AccountPage() {
         api.get("/orders/mine"),
         api.get("/users/wishlist-products")
       ]);
-      setProfile((meRes.data?.user ?? null) as UserProfile | null);
+      const user = (meRes.data?.user ?? null) as UserProfile | null;
+      setProfile(user);
+      if (user) setAuthenticatedUser({ ...user, role: user.role ?? "customer" });
       setAddresses((addressRes.data?.addresses ?? []) as Address[]);
       setOrders((orderRes.data?.orders ?? []) as Order[]);
       setWishlist((wishlistRes.data?.products ?? []) as WishlistProduct[]);

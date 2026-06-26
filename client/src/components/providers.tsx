@@ -2,17 +2,30 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import { ThemeProvider } from "./theme-provider";
 import { NavigationLoading } from "./navigation-loading";
 import { ElectroXExperience } from "./electrox-experience";
+import { useAuth } from "@/store/auth";
+
+function AuthBootstrap() {
+  const { status, refreshMe } = useAuth();
+
+  useEffect(() => {
+    if (status !== "unknown") return;
+    refreshMe().catch(() => null);
+  }, [refreshMe, status]);
+
+  return null;
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [client] = useState(() => new QueryClient());
   return (
     <ThemeProvider>
       <QueryClientProvider client={client}>
+        <AuthBootstrap />
         <ElectroXExperience>{children}</ElectroXExperience>
         <Suspense fallback={null}>
           <NavigationLoading />
