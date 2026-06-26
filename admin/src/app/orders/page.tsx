@@ -182,7 +182,26 @@ export default function OrdersPage() {
         )}
         {!loading && orders.length === 0 && <p className="py-12 text-center text-sm font-bold text-slate-500">No orders yet.</p>}
         {!loading && orders.length > 0 && (
-          <div className="overflow-x-auto">
+          <>
+          <div className="grid gap-3 md:hidden">
+            {orders.map((order) => {
+              const draft = drafts[order.id] ?? { orderStatus: order.orderStatus, trackingStatus: order.trackingStatus };
+              const open = Boolean(openRows[order.id]);
+              return (
+                <OrderMobileCard
+                  key={order.id}
+                  order={order}
+                  draft={draft}
+                  open={open}
+                  saving={savingId === order.id}
+                  onToggle={() => setOpenRows((current) => ({ ...current, [order.id]: !open }))}
+                  onDraft={updateDraft}
+                  onSave={save}
+                />
+              );
+            })}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[1540px] text-left text-sm">
               <thead className="text-xs uppercase tracking-wider text-slate-400">
                 <tr>
@@ -217,8 +236,97 @@ export default function OrdersPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </section>
+    </div>
+  );
+}
+
+function OrderMobileCard({
+  order,
+  draft,
+  open,
+  saving,
+  onToggle,
+  onDraft,
+  onSave
+}: {
+  order: Order;
+  draft: { orderStatus: OrderStatus; trackingStatus: string };
+  open: boolean;
+  saving: boolean;
+  onToggle: () => void;
+  onDraft: (orderId: string, patch: Partial<{ orderStatus: OrderStatus; trackingStatus: string }>) => void;
+  onSave: (order: Order) => void;
+}) {
+  const address = order.shippingAddress ?? {};
+  const paymentMethod = String(order.paymentInfo?.method ?? "unknown").toUpperCase();
+  const orderDate = order.createdAt ? formatDateTime(order.createdAt) : "Unknown";
+
+  return (
+    <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate font-black text-slate-950">{order.orderId}</p>
+          <p className="mt-1 text-xs font-bold text-slate-500">{orderDate}</p>
+        </div>
+        <button onClick={onToggle} className="rounded-xl bg-white p-2 text-slate-600 ring-1 ring-slate-200" aria-label="Toggle order details">
+          {open ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
+        </button>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-1">
+        <Badge tone={statusTone(order.orderStatus)}>{statusLabel(order.orderStatus)}</Badge>
+        <Badge tone="green">{order.paymentStatus}</Badge>
+      </div>
+
+      <div className="mt-4 grid gap-3 text-sm">
+        <MobileInfo label="Customer" value={`${order.user?.name || "Customer"} - ${order.user?.phone || address.phone || "No phone"}`} />
+        <MobileInfo label="Products" value={`${order.products.length} line item${order.products.length === 1 ? "" : "s"}`} />
+        <MobileInfo label="Address" value={formatAddress(address)} />
+        <div className="grid grid-cols-2 gap-2">
+          <MobileInfo label="Payment" value={paymentMethod} />
+          <MobileInfo label="Total" value={money(order.totalAmount)} />
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-2">
+        <select value={draft.orderStatus} onChange={(event) => onDraft(order.id, { orderStatus: event.target.value as OrderStatus })} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-900">
+          {statuses.map((status) => <option key={status.value} value={status.value}>{status.label}</option>)}
+        </select>
+        <input value={draft.trackingStatus} onChange={(event) => onDraft(order.id, { trackingStatus: event.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-900" />
+        <button onClick={() => onSave(order)} disabled={saving} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-black text-white disabled:opacity-60">
+          {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />} Save
+        </button>
+      </div>
+
+      {open && (
+        <div className="mt-4 grid gap-3">
+          <DetailBox title="Product line items">
+            {order.products.map((item, index) => (
+              <p key={`${item.sku ?? item.title}-${index}`}>
+                <strong>{item.title}</strong> x {item.quantity} - {money(item.salePrice * item.quantity)}
+              </p>
+            ))}
+          </DetailBox>
+          <DetailBox title="Payment & totals">
+            <p>Payment method: <strong>{paymentMethod}</strong></p>
+            <p>Shipping: <strong>{money(order.shippingFee ?? 0)}</strong></p>
+            <p>Discount: <strong>{money(order.discountAmount ?? 0)}</strong></p>
+            <p>Total: <strong>{money(order.totalAmount)}</strong></p>
+          </DetailBox>
+        </div>
+      )}
+    </article>
+  );
+}
+
+function MobileInfo({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-white p-3 ring-1 ring-slate-200">
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</p>
+      <p className="mt-1 break-words text-xs font-bold text-slate-700">{value}</p>
     </div>
   );
 }

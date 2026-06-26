@@ -214,7 +214,43 @@ export default function CouponsPage() {
           {!loading && coupons.length === 0 && <p className="py-12 text-center text-sm font-bold text-slate-500">No coupons created yet.</p>}
 
           {!loading && coupons.length > 0 && (
-            <div className="overflow-x-auto">
+            <>
+            <div className="grid gap-3 md:hidden">
+              {coupons.map((coupon) => {
+                const status = couponStatus(coupon);
+                return (
+                  <article key={coupon.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-black text-slate-950">{coupon.code}</p>
+                        <p className="mt-1 text-xs font-bold text-slate-500">{coupon.discountType === "percentage" ? `${coupon.value}% off` : `${money(coupon.value)} off`}</p>
+                      </div>
+                      <Badge tone={status.tone} label={status.label} />
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                      <MobileCouponMetric label="Minimum" value={money(coupon.minimumPurchase)} />
+                      <MobileCouponMetric label="Usage" value={`${coupon.usedCount} / ${coupon.usageLimit}`} />
+                      <MobileCouponMetric label="Expiry" value={formatDateTime(coupon.expiryDate)} />
+                      <MobileCouponMetric label="State" value={coupon.active ? "Active" : "Inactive"} />
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button onClick={() => editCoupon(coupon)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700">
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => toggle(coupon)}
+                        disabled={togglingId === coupon.id}
+                        className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black disabled:opacity-60 ${coupon.active ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700"}`}
+                      >
+                        {togglingId === coupon.id ? <Loader2 size={14} className="animate-spin" /> : coupon.active ? <ShieldOff size={14} /> : <ShieldCheck size={14} />}
+                        {coupon.active ? "Deactivate" : "Activate"}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[980px] text-left text-sm">
                 <thead className="text-xs uppercase tracking-wider text-slate-400">
                   <tr>
@@ -261,9 +297,19 @@ export default function CouponsPage() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </section>
       </div>
+    </div>
+  );
+}
+
+function MobileCouponMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-white p-3 ring-1 ring-slate-200">
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</p>
+      <p className="mt-1 break-words text-xs font-black text-slate-800">{value}</p>
     </div>
   );
 }

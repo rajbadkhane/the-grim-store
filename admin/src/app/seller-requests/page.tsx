@@ -88,7 +88,7 @@ export default function SellerRequestsPage() {
           <div className="grid gap-4 xl:grid-cols-2">
             {filtered.map((request) => (
               <article key={request.id} className="rounded-3xl border border-slate-200 p-5">
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h3 className="text-lg font-black text-slate-950">{request.businessName}</h3>
                     <p className="text-sm font-semibold text-slate-500">{request.ownerName} • {request.city} {request.pincode}</p>

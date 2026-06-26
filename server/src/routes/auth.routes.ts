@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { adminLogin, forgotPassword, logout, me, refreshToken, requestOtp, resetPasswordController, verifyOtp, googleLogin, register, loginWithPassword } from "../controllers/auth.controller.js";
+import { adminLogin, forgotPassword, logout, me, refreshToken, requestOtp, resetPasswordController, verifyOtp, googleLogin, googleRedirect, register, loginWithPassword } from "../controllers/auth.controller.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { authLimiter } from "../middlewares/rateLimiter.js";
 import { validate } from "../middlewares/validate.js";
@@ -20,3 +20,4 @@ authRoutes.post("/logout", requireAuth, logout);
 authRoutes.post("/register", authLimiter, register);
 authRoutes.post("/password-login", authLimiter, loginWithPassword);
 authRoutes.post("/google-login", authLimiter, validate(googleLoginSchema), googleLogin);
+authRoutes.post("/google-redirect", authLimiter, googleRedirect);

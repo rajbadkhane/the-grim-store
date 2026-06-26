@@ -384,7 +384,7 @@ function ReviewCard({ review }: { review: Review }) {
             <span className="inline-flex items-center gap-1"><ThumbsUp size={13} /> {review.helpfulCount}</span>
           </div>
         </div>
-        <div className="min-w-64 rounded-2xl border border-slate-200 bg-white p-4">
+        <div className="w-full rounded-2xl border border-slate-200 bg-white p-4 lg:w-64 lg:shrink-0">
           <p className="text-xs font-black uppercase tracking-widest text-slate-400">Product</p>
           {review.product?.slug ? (
             <Link href={`${storefrontUrl}/products/${review.product.slug}`} target="_blank" className="mt-2 block text-sm font-black text-indigo-700 hover:text-indigo-500">

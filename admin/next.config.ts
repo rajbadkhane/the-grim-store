@@ -1,8 +1,18 @@
 import type { NextConfig } from "next";
 
+const apiProxyTarget = (process.env.API_PROXY_URL ?? process.env.API_URL ?? "http://localhost:5000").replace(/\/$/, "");
+
 const nextConfig: NextConfig = {
   outputFileTracingRoot: process.cwd(),
   devIndicators: false,
+  async rewrites() {
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination: `${apiProxyTarget}/api/v1/:path*`
+      }
+    ];
+  },
   async headers() {
     return [
       {

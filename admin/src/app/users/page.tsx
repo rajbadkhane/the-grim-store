@@ -174,14 +174,14 @@ function UserCard({ user, saving, onToggleBlock }: { user: AdminUser; saving: bo
                 {user.isBlocked && <Badge tone="red">Blocked</Badge>}
               </div>
               <div className="mt-3 grid gap-2 text-sm font-bold text-slate-600">
-                <span className="inline-flex items-center gap-2"><Mail size={15} /> {user.email}</span>
-                <span className="inline-flex items-center gap-2"><Phone size={15} /> {user.phone || "Phone not added"}</span>
-                <span className="inline-flex items-center gap-2"><UserRound size={15} /> Joined {joined}</span>
+                <span className="inline-flex min-w-0 items-center gap-2"><Mail className="shrink-0" size={15} /> <span className="break-all">{user.email}</span></span>
+                <span className="inline-flex min-w-0 items-center gap-2"><Phone className="shrink-0" size={15} /> <span className="truncate">{user.phone || "Phone not added"}</span></span>
+                <span className="inline-flex min-w-0 items-center gap-2"><UserRound className="shrink-0" size={15} /> <span className="truncate">Joined {joined}</span></span>
               </div>
             </div>
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-4">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Metric label="Orders" value={user.stats?.orderCount ?? 0} />
             <Metric label="Spent" value={money(user.stats?.totalSpent ?? 0)} />
             <Metric label="Wishlist" value={user.stats?.wishlistCount ?? user.wishlist.length} />
@@ -190,7 +190,7 @@ function UserCard({ user, saving, onToggleBlock }: { user: AdminUser; saving: bo
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 text-sm font-black text-slate-950">
               <MapPin size={17} className="text-indigo-600" /> Address & Activity
             </div>

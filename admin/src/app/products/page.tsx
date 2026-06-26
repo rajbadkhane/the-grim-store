@@ -165,7 +165,19 @@ export default function ProductsPage() {
           <span className="text-sm font-bold text-slate-500">{filtered.length} products</span>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="grid gap-3 md:hidden">
+          {loading && (
+            <div className="py-10 text-center text-slate-500">
+              <Loader2 className="mx-auto mb-2 animate-spin" /> Loading products
+            </div>
+          )}
+          {!loading && filtered.map((product) => (
+            <ProductMobileCard key={product.id} product={product} onEdit={editProduct} onDelete={deleteProduct} />
+          ))}
+          {!loading && filtered.length === 0 && <p className="py-10 text-center text-slate-500">No products found.</p>}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[880px] text-left text-sm">
             <thead className="text-xs uppercase tracking-wider text-slate-400">
               <tr>
@@ -232,6 +244,50 @@ export default function ProductsPage() {
 
       {open && <ProductModal product={editingProduct} categories={categories} onClose={() => setOpen(false)} onSaved={() => { setOpen(false); setEditingProduct(null); load(); }} />}
       {importOpen && <BulkImportModal onClose={() => setImportOpen(false)} onImported={() => { setImportOpen(false); load(); }} />}
+    </div>
+  );
+}
+
+function ProductMobileCard({ product, onEdit, onDelete }: { product: Product; onEdit: (product: Product) => void; onDelete: (product: Product) => void }) {
+  return (
+    <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="flex gap-3">
+        {product.images?.[0]?.url ? (
+          <img src={product.images[0].url} alt={product.title} className="h-16 w-16 shrink-0 rounded-2xl object-cover ring-1 ring-slate-200" />
+        ) : (
+          <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-white text-xs font-black text-slate-400 ring-1 ring-slate-200">IMG</div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-black text-slate-950">{product.title}</p>
+          <p className="mt-1 truncate text-xs font-bold text-slate-500">{product.brand}</p>
+          <p className="mt-1 truncate text-xs font-bold text-slate-500">SKU: {product.sku || "Not set"}</p>
+        </div>
+      </div>
+      <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
+        <MobileMetric label="Stock" value={product.stock} />
+        <MobileMetric label="MRP" value={money(product.price)} />
+        <MobileMetric label="Sale" value={money(product.salePrice)} />
+      </div>
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">Active</span>
+        <div className="flex gap-1">
+          <button onClick={() => onEdit(product)} aria-label={`Edit ${product.title}`} className="rounded-xl bg-white p-2 text-slate-500 ring-1 ring-slate-200 hover:text-indigo-700">
+            <Edit3 size={17} />
+          </button>
+          <button onClick={() => onDelete(product)} aria-label={`Delete ${product.title}`} className="rounded-xl bg-white p-2 text-slate-500 ring-1 ring-slate-200 hover:text-red-600">
+            <Trash2 size={17} />
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function MobileMetric({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-xl bg-white p-3 ring-1 ring-slate-200">
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</p>
+      <p className="mt-1 truncate text-xs font-black text-slate-900">{value}</p>
     </div>
   );
 }
@@ -447,9 +503,9 @@ function ProductModal({ product, categories, onClose, onSaved }: { product: Prod
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4">
-      <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-5">
+    <div className="fixed inset-0 z-50 grid place-items-end bg-slate-950/45 p-0 sm:place-items-center sm:p-4">
+      <div className="flex max-h-[96vh] w-full max-w-4xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:max-h-[92vh] sm:rounded-3xl">
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:px-6 sm:py-5">
           <div>
             <h3 className="text-xl font-black text-slate-950">{isEditing ? "Edit Product" : "Add Product"}</h3>
             <p className="text-sm text-slate-500">{isEditing ? "Update details, variants, and product images." : "Upload multiple images and publish to the SQL database."}</p>
@@ -459,7 +515,7 @@ function ProductModal({ product, categories, onClose, onSaved }: { product: Prod
           </button>
         </div>
 
-        <div className="grid gap-5 p-6 lg:grid-cols-[1fr_280px]">
+        <div className="grid flex-1 gap-5 overflow-y-auto p-4 sm:p-6 lg:grid-cols-[1fr_280px]">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Product title" required value={form.title} onChange={(value) => update("title", value)} />
             <Field label="SKU" required value={form.sku} onChange={(value) => update("sku", value)} />
@@ -587,9 +643,9 @@ function ProductModal({ product, categories, onClose, onSaved }: { product: Prod
           </aside>
         </div>
 
-        <div className="flex justify-end gap-3 border-t border-slate-200 px-6 py-5">
+        <div className="flex flex-col-reverse gap-3 border-t border-slate-200 px-4 py-4 sm:flex-row sm:justify-end sm:px-6 sm:py-5">
           <button onClick={onClose} className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-black text-slate-700">Cancel</button>
-          <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white disabled:opacity-60">
+          <button onClick={save} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white disabled:opacity-60">
             {saving ? <Loader2 className="animate-spin" size={18} /> : <PackagePlus size={18} />} {isEditing ? "Update Product" : "Save Product"}
           </button>
         </div>
@@ -746,9 +802,9 @@ function BulkImportModal({ onClose, onImported }: { onClose: () => void; onImpor
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4">
-      <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-5">
+    <div className="fixed inset-0 z-50 grid place-items-end bg-slate-950/45 p-0 sm:place-items-center sm:p-4">
+      <div className="flex max-h-[96vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:max-h-[92vh] sm:rounded-3xl">
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:px-6 sm:py-5">
           <div>
             <h3 className="text-xl font-black text-slate-950">Import Products from Excel</h3>
             <p className="text-sm text-slate-500">Upload a .xlsx, .xls, or .csv file with your product data.</p>
@@ -758,9 +814,9 @@ function BulkImportModal({ onClose, onImported }: { onClose: () => void; onImpor
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {/* Template download */}
-          <div className="mb-6 flex items-center justify-between rounded-2xl border border-dashed border-indigo-200 bg-indigo-50/50 p-4">
+          <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-dashed border-indigo-200 bg-indigo-50/50 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-black text-slate-800">Need the right format?</p>
               <p className="text-xs text-slate-500">Download our Excel template with all supported columns and a sample row.</p>
@@ -831,7 +887,7 @@ function BulkImportModal({ onClose, onImported }: { onClose: () => void; onImpor
           {/* Results */}
           {results && (
             <div className="mt-6">
-              <div className="mb-4 grid grid-cols-3 gap-3">
+              <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
                 <div className="rounded-2xl bg-slate-100 p-4 text-center">
                   <p className="text-2xl font-black text-slate-900">{results.total}</p>
                   <p className="text-xs font-bold text-slate-500">Total Rows</p>
@@ -882,15 +938,15 @@ function BulkImportModal({ onClose, onImported }: { onClose: () => void; onImpor
           )}
         </div>
 
-        <div className="flex justify-end gap-3 border-t border-slate-200 px-6 py-5">
+        <div className="flex flex-col-reverse gap-3 border-t border-slate-200 px-4 py-4 sm:flex-row sm:justify-end sm:px-6 sm:py-5">
           {results?.successCount ? (
-            <button onClick={onImported} className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white shadow-sm hover:bg-emerald-500">
+            <button onClick={onImported} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white shadow-sm hover:bg-emerald-500">
               <Check size={18} /> Done — Refresh Products
             </button>
           ) : (
             <>
               <button onClick={onClose} className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-black text-slate-700">Cancel</button>
-              <button onClick={runImport} disabled={importing || !file} className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white disabled:opacity-60">
+              <button onClick={runImport} disabled={importing || !file} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white disabled:opacity-60">
                 {importing ? <Loader2 className="animate-spin" size={18} /> : <Upload size={18} />} Import Products
               </button>
             </>

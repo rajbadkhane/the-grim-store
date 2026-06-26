@@ -17,9 +17,22 @@ type AuthState = {
   showLoginModal: boolean;
   openLoginModal: () => void;
   closeLoginModal: () => void;
+  setAuthenticatedUser: (user: AuthUser) => void;
   refreshMe: () => Promise<void>;
   logout: () => Promise<void>;
 };
+
+function setAuthStatusCookie() {
+  if (typeof window !== "undefined") {
+    document.cookie = "grim_auth_status=true; path=/; max-age=172800; SameSite=Lax";
+  }
+}
+
+function clearAuthStatusCookie() {
+  if (typeof window !== "undefined") {
+    document.cookie = "grim_auth_status=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+  }
+}
 
 export const useAuth = create<AuthState>((set, get) => ({
   user: null,
@@ -27,6 +40,10 @@ export const useAuth = create<AuthState>((set, get) => ({
   showLoginModal: false,
   openLoginModal: () => set({ showLoginModal: true }),
   closeLoginModal: () => set({ showLoginModal: false }),
+  setAuthenticatedUser: (user) => {
+    setAuthStatusCookie();
+    set({ user, status: "authenticated", showLoginModal: false });
+  },
 
   refreshMe: async () => {
     const state = get();
@@ -37,23 +54,17 @@ export const useAuth = create<AuthState>((set, get) => ({
       const res = await api.get("/auth/me");
       const user = (res.data?.user ?? null) as AuthUser | null;
       if (user) {
-        if (typeof window !== "undefined") {
-          document.cookie = "grim_auth_status=true; path=/; max-age=172800; SameSite=Lax";
-        }
+        setAuthStatusCookie();
         set({
           user,
           status: "authenticated"
         });
       } else {
-        if (typeof window !== "undefined") {
-          document.cookie = "grim_auth_status=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-        }
+        clearAuthStatusCookie();
         set({ user: null, status: "unauthenticated" });
       }
     } catch {
-      if (typeof window !== "undefined") {
-        document.cookie = "grim_auth_status=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      }
+      clearAuthStatusCookie();
       set({ user: null, status: "unauthenticated" });
       throw new Error("Unauthenticated");
     }
@@ -63,9 +74,7 @@ export const useAuth = create<AuthState>((set, get) => ({
     try {
       await api.post("/auth/logout");
     } finally {
-      if (typeof window !== "undefined") {
-        document.cookie = "grim_auth_status=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      }
+      clearAuthStatusCookie();
       set({ user: null, status: "unauthenticated" });
     }
   }

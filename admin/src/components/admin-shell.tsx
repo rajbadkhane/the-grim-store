@@ -30,25 +30,32 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#f4f6fb] lg:grid lg:grid-cols-[280px_1fr]">
-      <button aria-label="Open admin menu" onClick={() => setMobile(true)} className="fixed left-4 top-4 z-40 rounded-xl border border-slate-200 bg-white p-2 shadow-sm lg:hidden">
-        <Menu />
-      </button>
       <aside className="sticky top-0 hidden h-screen border-r border-slate-200 bg-white p-6 lg:block">
         <SidebarContent />
       </aside>
       <AnimatePresence>
         {mobile && (
-          <motion.aside initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} className="fixed inset-y-0 left-0 z-50 w-72 border-r border-slate-200 bg-white p-5 lg:hidden">
-            <button aria-label="Close admin menu" className="mb-4 rounded-xl p-2 hover:bg-slate-100" onClick={() => setMobile(false)}>
-              <X />
-            </button>
-            <SidebarContent onNavigate={() => setMobile(false)} />
-          </motion.aside>
+          <>
+            <motion.button
+              aria-label="Close admin menu backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobile(false)}
+              className="fixed inset-0 z-40 bg-slate-950/45 lg:hidden"
+            />
+            <motion.aside initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} className="fixed inset-y-0 left-0 z-50 w-[min(20rem,86vw)] overflow-y-auto border-r border-slate-200 bg-white p-5 lg:hidden">
+              <button aria-label="Close admin menu" className="mb-4 rounded-xl p-2 hover:bg-slate-100" onClick={() => setMobile(false)}>
+                <X />
+              </button>
+              <SidebarContent onNavigate={() => setMobile(false)} />
+            </motion.aside>
+          </>
         )}
       </AnimatePresence>
       <div className="min-w-0">
-        <Topbar />
-        <main className="px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <Topbar onMenu={() => setMobile(true)} />
+        <main className="px-3 py-5 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>
   );
@@ -100,17 +107,20 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function Topbar() {
+function Topbar({ onMenu }: { onMenu: () => void }) {
   const pathname = usePathname();
   const title = nav.find((item) => item[2] === pathname)?.[1] ?? "Dashboard";
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="pl-12 lg:pl-0">
-          <h1 className="text-2xl font-black text-slate-950">{title as string}</h1>
-          <p className="text-sm text-slate-500">The Grim Store ecommerce control panel</p>
+    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-3 py-3 backdrop-blur sm:px-6 lg:px-8">
+      <div className="flex min-h-12 items-center gap-3 lg:min-h-16 lg:justify-between">
+        <button aria-label="Open admin menu" onClick={onMenu} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm lg:hidden">
+          <Menu size={20} />
+        </button>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-xl font-black text-slate-950 sm:text-2xl">{title as string}</h1>
+          <p className="hidden text-sm text-slate-500 sm:block">The Grim Store ecommerce control panel</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <label className="hidden min-w-72 items-center rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-400 md:flex">
             <Search size={18} />
             <input className="ml-2 w-full bg-transparent text-sm text-slate-700" placeholder="Search products, orders..." />

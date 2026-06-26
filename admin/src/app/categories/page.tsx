@@ -267,15 +267,15 @@ function SubCategoryModal({ subCategory, categories, onClose, onSaved }: { subCa
 
 function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4">
-      <div className="w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+    <div className="fixed inset-0 z-50 grid place-items-end bg-slate-950/45 p-0 sm:place-items-center sm:p-4">
+      <div className="max-h-[96vh] w-full max-w-xl overflow-y-auto rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-4 sm:px-6 sm:py-5">
           <h3 className="text-xl font-black text-slate-950">{title}</h3>
           <button onClick={onClose} aria-label="Close" className="rounded-xl p-2 text-slate-500 hover:bg-slate-100">
             <X />
           </button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-4 sm:p-6">{children}</div>
       </div>
     </div>
   );
@@ -283,9 +283,9 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
 
 function ModalActions({ onClose, onSave, saving, label }: { onClose: () => void; onSave: () => void; saving: boolean; label: string }) {
   return (
-    <div className="mt-6 flex justify-end gap-3">
+    <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
       <button onClick={onClose} className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-black text-slate-700">Cancel</button>
-      <button onClick={onSave} disabled={saving} className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white disabled:opacity-60">
+      <button onClick={onSave} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white disabled:opacity-60">
         {saving && <Loader2 className="animate-spin" size={18} />} {label}
       </button>
     </div>

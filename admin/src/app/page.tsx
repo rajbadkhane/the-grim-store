@@ -119,7 +119,19 @@ export default function DashboardPage() {
 
       <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-black text-slate-950">Recent Orders</h2>
-        <div className="mt-4 overflow-x-auto">
+        <div className="mt-4 grid gap-3 md:hidden">
+          {recentOrders.length > 0 ? (
+            recentOrders.map((order) => <RecentOrderCard key={order.id} order={order} />)
+          ) : (
+            ["GRIM-84HSA9", "GRIM-2PQA11", "GRIM-9LKS22"].map((order, index) => (
+              <RecentOrderCard
+                key={order}
+                order={{ id: order, orderId: order, user: `Customer ${index + 1}`, orderStatus: "Packed", totalAmount: 1999 + index * 600, paymentInfo: { method: "COD" } }}
+              />
+            ))
+          )}
+        </div>
+        <div className="mt-4 hidden overflow-x-auto md:block">
           <table className="w-full min-w-[760px] text-left text-sm">
             <thead className="text-xs uppercase tracking-wider text-slate-400">
               <tr><th className="py-3">Order</th><th>Customer ID</th><th>Status</th><th>Total</th><th>Payment</th></tr>
@@ -155,5 +167,29 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function RecentOrderCard({ order }: { order: AnalyticsData["recentOrders"][number] }) {
+  return (
+    <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate font-black text-slate-950">{order.orderId}</p>
+          <p className="mt-1 text-xs font-bold text-slate-500">ID: {order.user.slice(0, 12)}</p>
+        </div>
+        <span className="shrink-0 rounded-full bg-indigo-50 px-3 py-1 text-xs font-black capitalize text-indigo-700">{order.orderStatus}</span>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <p className="text-xs font-black uppercase tracking-widest text-slate-400">Total</p>
+          <p className="font-black text-slate-900">{money(order.totalAmount)}</p>
+        </div>
+        <div>
+          <p className="text-xs font-black uppercase tracking-widest text-slate-400">Payment</p>
+          <p className="font-black uppercase text-slate-700">{order.paymentInfo?.method ?? "COD"}</p>
+        </div>
+      </div>
+    </article>
   );
 }
