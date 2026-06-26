@@ -24,13 +24,15 @@ type AuthState = {
 
 function setAuthStatusCookie() {
   if (typeof window !== "undefined") {
-    document.cookie = "grim_auth_status=true; path=/; max-age=172800; SameSite=Lax";
+    const secure = window.location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = `grim_auth_status=true; path=/; max-age=172800; SameSite=Lax${secure}`;
   }
 }
 
 function clearAuthStatusCookie() {
   if (typeof window !== "undefined") {
-    document.cookie = "grim_auth_status=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+    const secure = window.location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = `grim_auth_status=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${secure}`;
   }
 }
 

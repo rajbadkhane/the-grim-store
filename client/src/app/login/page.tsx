@@ -18,6 +18,7 @@ function LoginForm() {
   const { user, status, refreshMe, setAuthenticatedUser } = useAuth();
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleInitializedRef = useRef(false);
+  const redirectingRef = useRef(false);
   
   const [mode, setMode] = useState<FormState>("signin-password");
   
@@ -36,6 +37,21 @@ function LoginForm() {
     return redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : "/account";
   }, [searchParams]);
 
+  const navigateAfterAuth = useCallback(() => {
+    const redirectPath = getRedirectPath();
+    if (redirectingRef.current) return;
+
+    redirectingRef.current = true;
+    router.replace(redirectPath);
+    router.refresh();
+
+    window.setTimeout(() => {
+      if (window.location.pathname === "/login") {
+        window.location.replace(redirectPath);
+      }
+    }, 350);
+  }, [getRedirectPath, router]);
+
   const completeAuthSuccess = useCallback(async (authUser: any, message: string) => {
     toast.success(message);
     if (authUser) {
@@ -43,16 +59,39 @@ function LoginForm() {
     } else {
       await refreshMe();
     }
-    router.replace(getRedirectPath());
-    router.refresh();
-  }, [getRedirectPath, refreshMe, router, setAuthenticatedUser]);
+    navigateAfterAuth();
+  }, [navigateAfterAuth, refreshMe, setAuthenticatedUser]);
 
   // Redirect if already authenticated
   useEffect(() => {
     if (status === "authenticated" || user) {
-      router.replace(getRedirectPath());
+      navigateAfterAuth();
     }
-  }, [user, status, router, getRedirectPath]);
+  }, [user, status, navigateAfterAuth]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function confirmExistingSession() {
+      if (redirectingRef.current || status === "authenticated" || user) return;
+
+      try {
+        const res = await api.get("/auth/me");
+        const authUser = res.data?.user;
+        if (!cancelled && authUser) {
+          setAuthenticatedUser(authUser);
+          navigateAfterAuth();
+        }
+      } catch {
+        // No active session; keep the user on the login form.
+      }
+    }
+
+    confirmExistingSession();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigateAfterAuth, setAuthenticatedUser, status, user]);
 
   // Form Reset
   const switchMode = (nextMode: FormState) => {

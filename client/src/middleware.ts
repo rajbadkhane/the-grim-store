@@ -3,7 +3,11 @@ import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isAuthenticated = request.cookies.get("grim_auth_status")?.value === "true";
+  const hasAuthMarker = request.cookies.get("grim_auth_status")?.value === "true";
+  const hasServerSession = Boolean(
+    request.cookies.get("accessToken")?.value || request.cookies.get("refreshToken")?.value
+  );
+  const isAuthenticated = hasAuthMarker || hasServerSession;
 
   // Protected paths that require authentication
   const protectedPaths = ["/account", "/checkout", "/wishlist"];

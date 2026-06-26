@@ -51,7 +51,7 @@ type SearchSuggestion = {
   category?: string;
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://the-grim-store.onrender.com/api/v1";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api/v1";
 
 const primaryNav = [
   { label: "Electronic Items", href: "/products?category=electronic-items" },
