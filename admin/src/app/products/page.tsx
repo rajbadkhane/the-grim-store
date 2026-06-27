@@ -45,6 +45,10 @@ type Product = {
   featured: boolean;
   trending: boolean;
   bestseller: boolean;
+  sellerId?: string | null;
+  sellerName?: string | null;
+  productStatus?: "draft" | "pending_review" | "active" | "rejected" | "inactive";
+  adminNote?: string;
 };
 
 type VariantDraft = {
@@ -88,6 +92,8 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [query, setQuery] = useState("");
+  const [ownership, setOwnership] = useState<"all" | "admin" | "seller">("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [importOpen, setImportOpen] = useState(false);
@@ -97,7 +103,7 @@ export default function ProductsPage() {
     try {
       setLoading(true);
       await api.get("/auth/me");
-      const [productRes, categoryRes] = await Promise.all([api.get("/products?limit=100"), api.get("/products/categories")]);
+      const [productRes, categoryRes] = await Promise.all([api.get("/products/admin/all?limit=500"), api.get("/products/categories")]);
       setProducts(productRes.data.items ?? []);
       setCategories(categoryRes.data.categories ?? []);
     } catch (error: any) {
@@ -114,8 +120,13 @@ export default function ProductsPage() {
 
   const filtered = useMemo(() => {
     const value = query.toLowerCase();
-    return products.filter((product) => [product.title, product.brand, product.sku].join(" ").toLowerCase().includes(value));
-  }, [products, query]);
+    return products.filter((product) => {
+      const matchesText = [product.title, product.brand, product.sku, product.sellerName, product.productStatus].join(" ").toLowerCase().includes(value);
+      const matchesOwnership = ownership === "all" || (ownership === "admin" ? !product.sellerId : Boolean(product.sellerId));
+      const matchesStatus = statusFilter === "all" || product.productStatus === statusFilter;
+      return matchesText && matchesOwnership && matchesStatus;
+    });
+  }, [products, query, ownership, statusFilter]);
 
   function addProduct() {
     setEditingProduct(null);
@@ -138,6 +149,17 @@ export default function ProductsPage() {
     }
   }
 
+  async function moderateProduct(product: Product, status: "active" | "rejected" | "inactive" | "pending_review") {
+    const adminNote = status === "rejected" ? window.prompt("Reason for rejection?", product.adminNote ?? "") ?? "" : product.adminNote ?? "";
+    try {
+      await api.patch(`/products/${product.id}/moderation`, { status, adminNote });
+      toast.success(status === "active" ? "Product approved" : "Product status updated");
+      load();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message ?? "Unable to update product status");
+    }
+  }
+
   return (
     <div>
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -156,23 +178,37 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="mt-6 max-w-full overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <label className="flex w-full max-w-md items-center rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-400">
             <Search size={18} />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search products" className="ml-2 w-full bg-transparent text-sm text-slate-800" />
           </label>
+          <div className="flex flex-wrap gap-2">
+            <select value={ownership} onChange={(event) => setOwnership(event.target.value as any)} className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700">
+              <option value="all">All ownership</option>
+              <option value="admin">Admin-owned</option>
+              <option value="seller">Seller products</option>
+            </select>
+            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700">
+              <option value="all">All status</option>
+              <option value="pending_review">Pending review</option>
+              <option value="active">Active</option>
+              <option value="rejected">Rejected</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
           <span className="text-sm font-bold text-slate-500">{filtered.length} products</span>
         </div>
 
-        <div className="grid gap-3 md:hidden">
+        <div className="grid min-w-0 max-w-full gap-3 md:hidden">
           {loading && (
             <div className="py-10 text-center text-slate-500">
               <Loader2 className="mx-auto mb-2 animate-spin" /> Loading products
             </div>
           )}
           {!loading && filtered.map((product) => (
-            <ProductMobileCard key={product.id} product={product} onEdit={editProduct} onDelete={deleteProduct} />
+            <ProductMobileCard key={product.id} product={product} onEdit={editProduct} onDelete={deleteProduct} onModerate={moderateProduct} />
           ))}
           {!loading && filtered.length === 0 && <p className="py-10 text-center text-slate-500">No products found.</p>}
         </div>
@@ -186,6 +222,7 @@ export default function ProductsPage() {
                 <th>Stock</th>
                 <th>Price</th>
                 <th>Sale</th>
+                <th>Seller</th>
                 <th>Status</th>
                 <th className="text-right">Actions</th>
               </tr>
@@ -193,7 +230,7 @@ export default function ProductsPage() {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-slate-500">
+                  <td colSpan={8} className="py-10 text-center text-slate-500">
                     <Loader2 className="mx-auto mb-2 animate-spin" /> Loading products
                   </td>
                 </tr>
@@ -217,11 +254,22 @@ export default function ProductsPage() {
                   <td className="text-slate-600">{product.stock}</td>
                   <td className="text-slate-500">{money(product.price)}</td>
                   <td className="font-black text-slate-900">{money(product.salePrice)}</td>
+                  <td className="text-sm font-bold text-slate-600">{product.sellerName || "The Grim Store"}</td>
                   <td>
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">Active</span>
+                    <StatusPill product={product} />
                   </td>
                   <td>
                     <div className="flex justify-end gap-1">
+                      {product.productStatus === "pending_review" && (
+                        <>
+                          <button onClick={() => moderateProduct(product, "active")} aria-label={`Approve ${product.title}`} className="rounded-xl p-2 text-emerald-600 hover:bg-emerald-50">
+                            <Check size={17} />
+                          </button>
+                          <button onClick={() => moderateProduct(product, "rejected")} aria-label={`Reject ${product.title}`} className="rounded-xl p-2 text-red-600 hover:bg-red-50">
+                            <XCircle size={17} />
+                          </button>
+                        </>
+                      )}
                       <button onClick={() => editProduct(product)} aria-label={`Edit ${product.title}`} className="rounded-xl p-2 text-slate-500 hover:bg-indigo-50 hover:text-indigo-700">
                         <Edit3 size={17} />
                       </button>
@@ -234,7 +282,7 @@ export default function ProductsPage() {
               ))}
               {!loading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-slate-500">No products found.</td>
+                  <td colSpan={8} className="py-10 text-center text-slate-500">No products found.</td>
                 </tr>
               )}
             </tbody>
@@ -248,10 +296,20 @@ export default function ProductsPage() {
   );
 }
 
-function ProductMobileCard({ product, onEdit, onDelete }: { product: Product; onEdit: (product: Product) => void; onDelete: (product: Product) => void }) {
+function ProductMobileCard({
+  product,
+  onEdit,
+  onDelete,
+  onModerate
+}: {
+  product: Product;
+  onEdit: (product: Product) => void;
+  onDelete: (product: Product) => void;
+  onModerate: (product: Product, status: "active" | "rejected" | "inactive" | "pending_review") => void;
+}) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <div className="flex gap-3">
+    <article className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="flex min-w-0 gap-3">
         {product.images?.[0]?.url ? (
           <img src={product.images[0].url} alt={product.title} className="h-16 w-16 shrink-0 rounded-2xl object-cover ring-1 ring-slate-200" />
         ) : (
@@ -260,17 +318,28 @@ function ProductMobileCard({ product, onEdit, onDelete }: { product: Product; on
         <div className="min-w-0 flex-1">
           <p className="truncate font-black text-slate-950">{product.title}</p>
           <p className="mt-1 truncate text-xs font-bold text-slate-500">{product.brand}</p>
+          <p className="mt-1 truncate text-xs font-bold text-indigo-600">Seller: {product.sellerName || "The Grim Store"}</p>
           <p className="mt-1 truncate text-xs font-bold text-slate-500">SKU: {product.sku || "Not set"}</p>
         </div>
       </div>
-      <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
+      <div className="mt-4 grid min-w-0 grid-cols-3 gap-2 text-sm">
         <MobileMetric label="Stock" value={product.stock} />
         <MobileMetric label="MRP" value={money(product.price)} />
         <MobileMetric label="Sale" value={money(product.salePrice)} />
       </div>
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">Active</span>
-        <div className="flex gap-1">
+      <div className="mt-4 flex min-w-0 items-center justify-between gap-3">
+        <StatusPill product={product} />
+        <div className="flex shrink-0 gap-1">
+          {product.productStatus === "pending_review" && (
+            <>
+              <button onClick={() => onModerate(product, "active")} aria-label={`Approve ${product.title}`} className="rounded-xl bg-white p-2 text-emerald-600 ring-1 ring-slate-200 hover:bg-emerald-50">
+                <Check size={17} />
+              </button>
+              <button onClick={() => onModerate(product, "rejected")} aria-label={`Reject ${product.title}`} className="rounded-xl bg-white p-2 text-red-600 ring-1 ring-slate-200 hover:bg-red-50">
+                <XCircle size={17} />
+              </button>
+            </>
+          )}
           <button onClick={() => onEdit(product)} aria-label={`Edit ${product.title}`} className="rounded-xl bg-white p-2 text-slate-500 ring-1 ring-slate-200 hover:text-indigo-700">
             <Edit3 size={17} />
           </button>
@@ -283,9 +352,25 @@ function ProductMobileCard({ product, onEdit, onDelete }: { product: Product; on
   );
 }
 
+function StatusPill({ product }: { product: Product }) {
+  const status = product.productStatus ?? "active";
+  const statusClass: Record<string, string> = {
+    active: "bg-emerald-50 text-emerald-700",
+    pending_review: "bg-amber-50 text-amber-700",
+    rejected: "bg-red-50 text-red-700",
+    inactive: "bg-slate-100 text-slate-600",
+    draft: "bg-slate-100 text-slate-600"
+  };
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-black ${statusClass[status] ?? statusClass.active}`}>
+      {status.replace("_", " ")}
+    </span>
+  );
+}
+
 function MobileMetric({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-xl bg-white p-3 ring-1 ring-slate-200">
+    <div className="min-w-0 rounded-xl bg-white p-3 ring-1 ring-slate-200">
       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</p>
       <p className="mt-1 truncate text-xs font-black text-slate-900">{value}</p>
     </div>

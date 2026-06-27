@@ -411,6 +411,9 @@ export function Header() {
                       <Link href="/account?tab=orders" className="text-[#5f4a4a] hover:text-[#FF3B30] dark:text-white/70">My Orders</Link>
                       <Link href="/wishlist" className="text-[#5f4a4a] hover:text-[#FF3B30] dark:text-white/70">Wishlist</Link>
                       <Link href="/account?tab=addresses" className="text-[#5f4a4a] hover:text-[#FF3B30] dark:text-white/70">Saved Addresses</Link>
+                      {(user?.role === "seller" || user?.role === "admin") && (
+                        <Link href="/seller" className="text-[#5f4a4a] hover:text-[#FF3B30] dark:text-white/70">Seller Panel</Link>
+                      )}
                     </div>
                   </div>
                 </div>

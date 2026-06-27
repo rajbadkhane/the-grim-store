@@ -176,6 +176,8 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
       title: product.title,
       image: gallery[0] ?? product.image,
       brand: product.brand,
+      sellerId: product.sellerId ?? null,
+      sellerName: product.sellerName ?? "The Grim Store",
       price: selectedVariant.price,
       salePrice: selectedVariant.salePrice,
       quantity,
@@ -209,6 +211,8 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
           title: product.title,
           image: gallery[0] ?? product.image,
           brand: product.brand,
+          sellerId: product.sellerId ?? null,
+          sellerName: product.sellerName ?? "The Grim Store",
           price: selectedVariant.price,
           salePrice: selectedVariant.salePrice,
           quantity,
@@ -303,8 +307,11 @@ export function ProductDetailClient({ product }: { product: StoreProduct }) {
               <div className="border-b border-neutral-200/40 dark:border-neutral-800/40 pb-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-grow">
-                    <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[var(--accent)] dark:text-[var(--accent)]">{product.brand || "The Grim Store"}</p>
-                    <h1 className="mt-1.5 text-xl font-black leading-tight text-neutral-900 dark:text-white uppercase tracking-tight">{product.title}</h1>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[var(--accent)] dark:text-[var(--accent)]">{product.brand || "The Grim Store"}</p>
+                  <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                    Sold by {product.sellerName || "The Grim Store"}
+                  </p>
+                  <h1 className="mt-1.5 text-xl font-black leading-tight text-neutral-900 dark:text-white uppercase tracking-tight">{product.title}</h1>
                   </div>
 
                   {/* Circular Rotating Gold Seal Badge */}

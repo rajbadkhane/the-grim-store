@@ -17,6 +17,8 @@ export function ProductActions({ product }: { product: any }) {
       slug: product.slug,
       title: product.title,
       image: product.image || product.images?.[0],
+      sellerId: product.sellerId ?? null,
+      sellerName: product.sellerName ?? "The Grim Store",
       salePrice: product.salePrice,
       quantity: 1,
       size: "M",

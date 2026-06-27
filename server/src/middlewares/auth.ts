@@ -24,3 +24,10 @@ export function requireAdmin(req: Request, _res: Response, next: NextFunction) {
   if (req.user?.role !== "admin") return next(new ApiError(403, "Admin access required"));
   next();
 }
+
+export function requireSellerOrAdmin(req: Request, _res: Response, next: NextFunction) {
+  if (req.user?.role !== "seller" && req.user?.role !== "admin") {
+    return next(new ApiError(403, "Seller access required"));
+  }
+  next();
+}

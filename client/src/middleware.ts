@@ -10,7 +10,7 @@ export function middleware(request: NextRequest) {
   const isAuthenticated = hasAuthMarker || hasServerSession;
 
   // Protected paths that require authentication
-  const protectedPaths = ["/account", "/checkout", "/wishlist"];
+  const protectedPaths = ["/account", "/checkout", "/wishlist", "/seller"];
   const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
 
   // Authentication path (/login)
@@ -34,5 +34,5 @@ export function middleware(request: NextRequest) {
 
 // Config to specify matching routes
 export const config = {
-  matcher: ["/account/:path*", "/checkout/:path*", "/wishlist/:path*", "/login"]
+  matcher: ["/account/:path*", "/checkout/:path*", "/wishlist/:path*", "/seller/:path*", "/login"]
 };

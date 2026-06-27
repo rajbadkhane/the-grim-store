@@ -10,7 +10,7 @@ const SUGGESTION_CACHE = "public, max-age=60, stale-while-revalidate=300";
 
 export const listProducts = asyncHandler(async (req, res) => {
   const { q, category, brand, gender, min, max, sort = "latest", page = 1, limit = 12 } = req.query as any;
-  const cacheKey = `products:${JSON.stringify({ q, category, brand, gender, min, max, sort, page, limit })}`;
+  const cacheKey = `products:v2:${JSON.stringify({ q, category, brand, gender, min, max, sort, page, limit })}`;
   
   const cachedData = await apiCache.get(cacheKey);
   if (cachedData) {
@@ -64,6 +64,7 @@ export const listProducts = asyncHandler(async (req, res) => {
     clauses.push("sale_price <= :max");
     params.max = Number(max);
   }
+  clauses.push("product_status = 'active'");
 
   const sortMap: Record<string, string> = {
     latest: "created_at DESC",
@@ -98,7 +99,7 @@ export const listProductSuggestions = asyncHandler(async (req, res) => {
     return res.json({ success: true, suggestions: [] });
   }
 
-  const cacheKey = `suggestions:${q}:${limit}`;
+  const cacheKey = `suggestions:v2:${q}:${limit}`;
   const cachedData = await apiCache.get(cacheKey);
   if (cachedData) {
     res.set("Cache-Control", SUGGESTION_CACHE);
@@ -125,10 +126,12 @@ export const listProductSuggestions = asyncHandler(async (req, res) => {
       products.price, products.sale_price, categories.name AS category
     FROM products
     LEFT JOIN categories ON categories.id = products.category_id
-    WHERE products.title ILIKE :likeQ
+    WHERE products.product_status = 'active' AND (
+      products.title ILIKE :likeQ
       OR products.brand ILIKE :likeQ
       OR products.sku ILIKE :likeQ
       OR categories.name ILIKE :likeQ
+    )
     ORDER BY
       CASE
         WHEN products.title ILIKE :prefixQ THEN 0
@@ -168,7 +171,7 @@ export const listProductSuggestions = asyncHandler(async (req, res) => {
 });
 
 export const getProduct = asyncHandler(async (req, res) => {
-  const cacheKey = `product:${req.params.slug}`;
+  const cacheKey = `product:v2:${req.params.slug}`;
   const cachedData = await apiCache.get(cacheKey);
   if (cachedData) {
     res.set("Cache-Control", PRODUCT_DETAIL_CACHE);
@@ -176,7 +179,7 @@ export const getProduct = asyncHandler(async (req, res) => {
     return res.json(cachedData);
   }
   
-  const product = mapProduct(await row("SELECT * FROM products WHERE slug = :slug", { slug: req.params.slug }));
+  const product = mapProduct(await row("SELECT * FROM products WHERE slug = :slug AND product_status = 'active'", { slug: req.params.slug }));
   if (!product) throw new ApiError(404, "Product not found");
   
   const responseData = { success: true, product };
@@ -184,6 +187,36 @@ export const getProduct = asyncHandler(async (req, res) => {
   res.set("Cache-Control", PRODUCT_DETAIL_CACHE);
   res.set("X-Grim-Cache", "MISS");
   res.json(responseData);
+});
+
+export const listAllProductsForAdmin = asyncHandler(async (req, res) => {
+  const { q, seller, status, ownership = "all", page = 1, limit = 100 } = req.query as any;
+  const clauses: string[] = [];
+  const params: Record<string, unknown> = { offset: (Number(page) - 1) * Number(limit), limit: Number(limit) };
+
+  if (q) {
+    clauses.push("(title ILIKE :likeQ OR brand ILIKE :likeQ OR sku ILIKE :likeQ OR seller_name ILIKE :likeQ)");
+    params.likeQ = `%${q}%`;
+  }
+  if (seller) {
+    clauses.push("(seller_id::text = :seller OR seller_name ILIKE :sellerLike)");
+    params.seller = String(seller);
+    params.sellerLike = `%${seller}%`;
+  }
+  if (status) {
+    clauses.push("product_status = :status");
+    params.status = status;
+  }
+  if (ownership === "admin") clauses.push("seller_id IS NULL");
+  if (ownership === "seller") clauses.push("seller_id IS NOT NULL");
+
+  const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
+  const [items, total] = await Promise.all([
+    rows(`SELECT * FROM products ${where} ORDER BY created_at DESC LIMIT :limit OFFSET :offset`, params),
+    row<{ total: number }>(`SELECT COUNT(*) AS total FROM products ${where}`, params)
+  ]);
+
+  res.json({ success: true, items: items.map(mapProduct), total: total?.total ?? 0, page: Number(page), pages: Math.ceil((total?.total ?? 0) / Number(limit)) });
 });
 
 export const createProduct = asyncHandler(async (req, res) => {
@@ -203,12 +236,12 @@ export const createProduct = asyncHandler(async (req, res) => {
       id, title, slug, description, short_description, brand, category_id, subcategory_id, gender, tags,
       price, sale_price, discount_percentage, stock, sku, colors, sizes, images, featured, trending,
       bestseller, seo_title, seo_description, meta_keywords, rating_distribution, variants, summary,
-      description_html, care_instructions, size_chart, delivery_info, return_policy
+      description_html, care_instructions, size_chart, delivery_info, return_policy, seller_id, seller_name, product_status, admin_note
     ) VALUES (
       :id, :title, :slug, :description, :shortDescription, :brand, :category, :subCategory, :gender, :tags,
       :price, :salePrice, :discountPercentage, :stock, :sku, :colors, :sizes, :images, :featured, :trending,
       :bestseller, :seoTitle, :seoDescription, :metaKeywords, :ratingDistribution, :variants, :summary,
-      :descriptionHtml, :careInstructions, :sizeChart, :deliveryInfo, :returnPolicy
+      :descriptionHtml, :careInstructions, :sizeChart, :deliveryInfo, :returnPolicy, NULL, NULL, 'active', ''
     )`,
     {
       id: productId,
@@ -252,10 +285,15 @@ export const updateProduct = asyncHandler(async (req, res) => {
       colors=:colors, sizes=:sizes, images=:images, featured=:featured, trending=:trending, bestseller=:bestseller,
       seo_title=:seoTitle, seo_description=:seoDescription, meta_keywords=:metaKeywords, variants=:variants,
       summary=:summary, description_html=:descriptionHtml, care_instructions=:careInstructions,
-      size_chart=:sizeChart, delivery_info=:deliveryInfo, return_policy=:returnPolicy WHERE id=:id`,
+      size_chart=:sizeChart, delivery_info=:deliveryInfo, return_policy=:returnPolicy,
+      seller_id=:sellerId, seller_name=:sellerName, product_status=:productStatus, admin_note=:adminNote WHERE id=:id`,
     {
       id: req.params.id,
       ...next,
+      sellerId: next.sellerId ?? null,
+      sellerName: next.sellerName ?? null,
+      productStatus: next.productStatus ?? "active",
+      adminNote: next.adminNote ?? "",
       subCategory: next.subCategory || null,
       tags: json(next.tags),
       colors: json(next.colors),
@@ -271,6 +309,20 @@ export const updateProduct = asyncHandler(async (req, res) => {
       metaKeywords: json(next.metaKeywords)
     }
   );
+  const product = mapProduct(await row("SELECT * FROM products WHERE id = :id", { id: req.params.id }));
+  if (!product) throw new ApiError(404, "Product not found");
+  res.json({ success: true, product });
+});
+
+export const moderateProduct = asyncHandler(async (req, res) => {
+  const status = String(req.body.status ?? "").trim();
+  if (!["active", "rejected", "inactive", "pending_review"].includes(status)) throw new ApiError(400, "Invalid product status");
+  await apiCache.clear();
+  await execute("UPDATE products SET product_status = :status, admin_note = :adminNote, updated_at = CURRENT_TIMESTAMP WHERE id = :id", {
+    id: req.params.id,
+    status,
+    adminNote: String(req.body.adminNote ?? "")
+  });
   const product = mapProduct(await row("SELECT * FROM products WHERE id = :id", { id: req.params.id }));
   if (!product) throw new ApiError(404, "Product not found");
   res.json({ success: true, product });
@@ -294,7 +346,7 @@ export const createCategory = asyncHandler(async (req, res) => {
 });
 
 export const listCategories = asyncHandler(async (_req, res) => {
-  const cacheKey = "categories";
+  const cacheKey = "categories:v2";
   const cachedData = await apiCache.get(cacheKey);
   if (cachedData) {
     res.set("Cache-Control", PUBLIC_CATALOG_CACHE);
@@ -303,7 +355,7 @@ export const listCategories = asyncHandler(async (_req, res) => {
   }
 
   const categories = await rows(`SELECT categories.*, COUNT(products.id) AS product_count
-    FROM categories LEFT JOIN products ON products.category_id = categories.id
+    FROM categories LEFT JOIN products ON products.category_id = categories.id AND products.product_status = 'active'
     GROUP BY categories.id ORDER BY categories.name ASC`);
   
   const responseData = { success: true, categories };

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ComponentType } from "react";
 import toast from "react-hot-toast";
-import { Bell, Edit3, Heart, Loader2, MapPin, Package, RefreshCcw, Save, Truck, UserRound, X, ChevronRight } from "lucide-react";
+import { Bell, Copy, Edit3, Heart, Loader2, MapPin, Package, RefreshCcw, Save, Truck, UserRound, X, ChevronRight } from "lucide-react";
 import { api } from "@/lib/api";
 import { formatMoney } from "@/lib/utils";
 import { useAuth } from "@/store/auth";
@@ -42,7 +42,7 @@ type OrderStatus = "placed" | "confirmed" | "packed" | "shipped" | "delivered" |
 type Order = {
   id: string;
   orderId: string;
-  products: Array<{ title: string; quantity: number; size?: string; color?: string; sku?: string; image?: string }>;
+  products: Array<{ title: string; quantity: number; size?: string; color?: string; sku?: string; image?: string; sellerName?: string; salePrice?: number }>;
   orderStatus: OrderStatus;
   trackingStatus: string;
   totalAmount: number;
@@ -508,6 +508,16 @@ function OrderCard({ order }: { order: Order }) {
     }
   }
 
+  async function copyAwb() {
+    if (!awbNumber) return;
+    try {
+      await navigator.clipboard.writeText(String(awbNumber));
+      toast.success("AWB copied");
+    } catch {
+      toast.error("Unable to copy AWB");
+    }
+  }
+
   return (
     <article className="rounded-md border border-neutral-200 dark:border-white/10 bg-white dark:bg-black/10 hover:shadow-md transition-all duration-200 p-5">
       {/* Card Header */}
@@ -566,6 +576,9 @@ function OrderCard({ order }: { order: Order }) {
                   <span>Qty: <strong className="text-neutral-700 dark:text-white/80">{item.quantity}</strong></span>
                 </p>
                 {item.sku && <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-white/30">SKU: {item.sku}</p>}
+                <p className="mt-1 text-[10px] font-black uppercase tracking-wider text-[var(--accent)]">
+                  Sold by {item.sellerName || "The Grim Store"}
+                </p>
               </div>
             </div>
           ))}
@@ -595,6 +608,11 @@ function OrderCard({ order }: { order: Order }) {
             <span className="text-[var(--accent)] text-base">{formatMoney(order.totalAmount)}</span>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2">
+            {awbNumber && (
+              <button onClick={copyAwb} className="inline-flex items-center justify-center gap-2 rounded-md border border-neutral-200 px-3 py-2 text-center text-[11px] font-black text-neutral-700 hover:border-[var(--accent)] hover:text-[var(--accent)] dark:border-white/10 dark:text-white/70">
+                <Copy size={13} /> AWB
+              </button>
+            )}
             {labelUrl && (
               <a href={labelUrl} target="_blank" rel="noreferrer" className="rounded-md border border-neutral-200 px-3 py-2 text-center text-[11px] font-black text-neutral-700 hover:border-[var(--accent)] hover:text-[var(--accent)] dark:border-white/10 dark:text-white/70">
                 Label
@@ -643,7 +661,7 @@ function OrderCard({ order }: { order: Order }) {
   );
 }
 
-function getStepDate(order: Order, stepKey: OrderStatus) {
+function getStepDate(order: Order, stepKey: string) {
   const baseDate = order.createdAt ? new Date(order.createdAt) : new Date();
   
   const formatDate = (date: Date) => {
@@ -683,10 +701,13 @@ function TrackingTimeline({ order }: { order: Order }) {
     { key: "confirmed", label: "Order Confirmed" },
     { key: "packed", label: "Packed" },
     { key: "shipped", label: "Shipped" },
+    { key: "out_for_delivery", label: "Out For Delivery" },
     { key: "delivered", label: order.orderStatus === "delivered" ? "Delivered" : "Expected Delivery" }
   ];
 
-  const currentIndex = steps.findIndex((step) => step.key === order.orderStatus);
+  const normalizedTracking = String(order.trackingStatus ?? "").toLowerCase();
+  const effectiveStatus = normalizedTracking.includes("out for delivery") ? "out_for_delivery" : order.orderStatus;
+  const currentIndex = Math.max(0, steps.findIndex((step) => step.key === effectiveStatus));
   const isCancelled = order.orderStatus === "cancelled";
   const isRefunded = order.orderStatus === "refunded";
 

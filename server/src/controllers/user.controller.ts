@@ -52,7 +52,7 @@ export const listWishlistProducts = asyncHandler(async (req, res) => {
 
   const placeholders = ids.map((_, i) => `:id${i}`).join(", ");
   const params = ids.reduce((acc, id, i) => ({ ...acc, [`id${i}`]: id }), {});
-  const dbProducts = await rows(`SELECT * FROM products WHERE id IN (${placeholders})`, params);
+  const dbProducts = await rows(`SELECT * FROM products WHERE id IN (${placeholders}) AND product_status = 'active'`, params);
 
   const products = dbProducts.map(mapProduct).filter(Boolean);
   res.json({ success: true, products });
@@ -60,7 +60,7 @@ export const listWishlistProducts = asyncHandler(async (req, res) => {
 
 export const addToCart = asyncHandler(async (req, res) => {
   const { productId, quantity = 1, size, color } = req.body;
-  const product = mapProduct(await row("SELECT * FROM products WHERE id = :productId", { productId }));
+  const product = mapProduct(await row("SELECT * FROM products WHERE id = :productId AND product_status = 'active'", { productId }));
   if (!product) throw new ApiError(404, "Product not found");
   const existing = req.user!.cart.find((item: any) => item.product === productId && item.size === size && item.color === color);
   if (existing) existing.quantity += quantity;

@@ -63,6 +63,8 @@ export function ProductCardFigma({ product }: { product: any }) {
       title: product.title,
       image: image || "",
       brand: product.brand,
+      sellerId: product.sellerId ?? null,
+      sellerName: product.sellerName ?? "The Grim Store",
       price,
       salePrice,
       quantity: 1,
@@ -139,6 +141,9 @@ export function ProductCardFigma({ product }: { product: any }) {
               {product.brand}
             </span>
           )}
+          <p className="mt-0.5 truncate text-[8px] font-bold uppercase tracking-wide text-neutral-500 dark:text-white/45">
+            Sold by {product.sellerName || "The Grim Store"}
+          </p>
 
           {/* Title - font-weight: 600, clamped to 2 lines max with height reservation */}
           <Link 

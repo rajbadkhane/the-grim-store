@@ -7,10 +7,12 @@ import {
   deleteProduct,
   deleteSubCategory,
   getProduct,
+  listAllProductsForAdmin,
   listCategories,
   listProductSuggestions,
   listProducts,
   listSubCategories,
+  moderateProduct,
   updateCategory,
   updateProduct,
   updateSubCategory
@@ -26,11 +28,13 @@ export const productRoutes = Router();
 productRoutes.get("/", validate(productQuerySchema), listProducts);
 productRoutes.get("/categories", listCategories);
 productRoutes.get("/suggestions", validate(productSuggestionQuerySchema), listProductSuggestions);
+productRoutes.get("/admin/all", requireAuth, requireAdmin, listAllProductsForAdmin);
 productRoutes.get("/bulk-import/template", requireAuth, requireAdmin, getImportTemplate);
 productRoutes.post("/bulk-import", requireAuth, requireAdmin, excelUpload.single("file"), bulkImportProducts);
 productRoutes.get("/subcategories", listSubCategories);
 productRoutes.get("/:slug", getProduct);
 productRoutes.post("/", requireAuth, requireAdmin, validate(productSchema), createProduct);
+productRoutes.patch("/:id/moderation", requireAuth, requireAdmin, moderateProduct);
 productRoutes.patch("/:id", requireAuth, requireAdmin, updateProduct);
 productRoutes.delete("/:id", requireAuth, requireAdmin, deleteProduct);
 productRoutes.post("/categories", requireAuth, requireAdmin, createCategory);

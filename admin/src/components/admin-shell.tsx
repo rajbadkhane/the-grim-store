@@ -40,7 +40,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     async function verifyAdmin() {
       setChecking(true);
       try {
-        const { data } = await api.get("/auth/me");
+        const { data } = await api.get(`/auth/me?admin_check=${Date.now()}`, {
+          timeout: 8000,
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache"
+          }
+        });
         const user = data?.user;
         if (cancelled) return;
 
@@ -52,12 +58,20 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
         setAdmin(null);
         await api.post("/auth/logout").catch(() => null);
-        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
+        const loginPath = `/login?redirect=${encodeURIComponent(pathname)}`;
+        router.replace(loginPath);
+        window.setTimeout(() => {
+          if (!cancelled && window.location.pathname !== "/login") window.location.replace(loginPath);
+        }, 250);
       } catch {
         if (cancelled) return;
         setAdmin(null);
         await api.post("/auth/logout").catch(() => null);
-        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
+        const loginPath = `/login?redirect=${encodeURIComponent(pathname)}`;
+        router.replace(loginPath);
+        window.setTimeout(() => {
+          if (!cancelled && window.location.pathname !== "/login") window.location.replace(loginPath);
+        }, 250);
       } finally {
         if (!cancelled) setChecking(false);
       }

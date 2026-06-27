@@ -21,6 +21,9 @@ type CouponRow = {
   active: boolean | number | string;
 };
 
+const PREPAID_ATTEMPT_EXPIRY_MINUTES = 30;
+const VISIBLE_ORDER_SQL = `(COALESCE(payment_info ->> 'method', '') <> 'razorpay' OR payment_status IN ('paid', 'refunded'))`;
+
 export const checkout = asyncHandler(async (req, res) => {
   const { addressId, shippingAddress, couponCode, paymentMethod } = req.body;
   const paymentChannel = paymentMethod === "cod" ? "cod" : req.body.paymentChannel ?? "upi";
@@ -85,6 +88,7 @@ export const checkout = asyncHandler(async (req, res) => {
     method: paymentMethod,
     channel: paymentChannel,
     label: paymentLabel,
+    checkoutAttemptAt: new Date().toISOString(),
     couponCode: quote?.coupon.code ?? null,
     couponId: quote?.coupon.id ?? null
   };
@@ -125,6 +129,10 @@ export const checkout = asyncHandler(async (req, res) => {
   if (paymentMethod !== "razorpay") {
     try {
       order.paymentInfo = await reserveInventoryAndCountCoupon(order);
+      order.paymentInfo = {
+        ...order.paymentInfo,
+        orderConfirmedAt: new Date().toISOString()
+      };
       await execute("UPDATE orders SET payment_info = :paymentInfo WHERE id = :id", {
         id: order.id,
         paymentInfo: json(order.paymentInfo)
@@ -142,10 +150,10 @@ export const checkout = asyncHandler(async (req, res) => {
       req.user!.cart = [];
       await saveUserState(req.user!);
     }
+    await emailService.sendOrderConfirmation(req.user!.email, order.orderId);
+    await publishEvent("order.created", { orderId: order.orderId, totalAmount });
   }
 
-  await emailService.sendOrderConfirmation(req.user!.email, order.orderId);
-  await publishEvent("order.created", { orderId: order.orderId, totalAmount });
   res.status(201).json({ success: true, order, razorpayKeyId: env.razorpayKeyId || null });
 });
 
@@ -211,7 +219,7 @@ async function resolveCheckoutProducts(items: any[] = []) {
       await row(`SELECT * FROM products WHERE ${slug ? "slug = :slug" : "id = :productId"}`, { slug, productId })
     );
 
-    if (!product) throw new ApiError(404, `Product not found: ${item.title ?? slug ?? productId}`);
+    if (!product || product.productStatus !== "active") throw new ApiError(404, `Product not found: ${item.title ?? slug ?? productId}`);
 
     const sku = item.sku ?? item.variantKey;
     const variant = Array.isArray(product.variants) && sku ? product.variants.find((entry: any) => entry.sku === sku) : null;
@@ -226,6 +234,8 @@ async function resolveCheckoutProducts(items: any[] = []) {
         product: product.id,
         slug: product.slug,
         title: product.title,
+        sellerId: product.sellerId ?? null,
+        sellerName: product.sellerName ?? "The Grim Store",
         image: variant.images?.[0]?.url ?? variant.images?.[0] ?? product.images?.[0]?.url ?? product.images?.[0] ?? "",
         price: Number(variant.price),
         salePrice: Number(variant.salePrice),
@@ -245,6 +255,8 @@ async function resolveCheckoutProducts(items: any[] = []) {
       product: product.id,
       slug: product.slug,
       title: product.title,
+      sellerId: product.sellerId ?? null,
+      sellerName: product.sellerName ?? "The Grim Store",
       image: product.images?.[0]?.url ?? product.images?.[0] ?? item.image ?? "",
       price: Number(product.price),
       salePrice: Number(product.salePrice),
@@ -541,13 +553,17 @@ async function bookShipmentOnce(order: any, paymentMethod: string, userEmail: st
 }
 
 export const listMyOrders = asyncHandler(async (req, res) => {
-  const orders = (await rows("SELECT * FROM orders WHERE user_id = :userId ORDER BY created_at DESC", { userId: req.user!.id })).map(mapOrder);
+  await expireUnpaidPrepaidAttempts();
+  const orders = (
+    await rows(`SELECT * FROM orders WHERE user_id = :userId AND ${VISIBLE_ORDER_SQL} ORDER BY created_at DESC`, { userId: req.user!.id })
+  ).map(mapOrder);
   res.json({ success: true, orders });
 });
 
 export const listOrders = asyncHandler(async (_req, res) => {
+  await expireUnpaidPrepaidAttempts();
   const orders = await rows(`SELECT orders.*, users.name AS user_name, users.email AS user_email, users.phone AS user_phone
-    FROM orders LEFT JOIN users ON users.id = orders.user_id ORDER BY orders.created_at DESC`);
+    FROM orders LEFT JOIN users ON users.id = orders.user_id WHERE ${VISIBLE_ORDER_SQL} ORDER BY orders.created_at DESC`);
   const mapped = orders.map((item: any) => ({ ...mapOrder(item), user: { id: item.user_id, name: item.user_name, email: item.user_email, phone: item.user_phone } }));
   res.json({ success: true, orders: mapped });
 });
@@ -649,6 +665,10 @@ export const verifyPayment = asyncHandler(async (req, res) => {
   const orderRow = await row("SELECT * FROM orders WHERE payment_info ->> 'razorpayOrderId' = :razorpayOrderId", { razorpayOrderId });
   if (!orderRow) throw new ApiError(404, "Order not found");
   if (req.user?.role !== "admin" && orderRow.user_id !== req.user?.id) throw new ApiError(403, "Order access denied");
+  if (orderRow.payment_status === "pending" && isExpiredPrepaidAttempt(orderRow)) {
+    await expireUnpaidPrepaidAttempts(orderRow.id);
+    throw new ApiError(400, "Payment window expired. Please place the order again.");
+  }
 
   const existingPaymentInfo = typeof orderRow.payment_info === "string" ? JSON.parse(orderRow.payment_info || "{}") : orderRow.payment_info ?? {};
   if (orderRow.payment_status === "paid") {
@@ -660,8 +680,14 @@ export const verifyPayment = asyncHandler(async (req, res) => {
     }
     throw new ApiError(409, "Order is already paid with a different payment");
   }
+  if (orderRow.payment_status !== "pending") throw new ApiError(409, "Order payment is not pending");
 
-  let paymentInfo = { ...existingPaymentInfo, razorpayPaymentId, razorpaySignature };
+  let paymentInfo = {
+    ...existingPaymentInfo,
+    razorpayPaymentId,
+    razorpaySignature,
+    orderConfirmedAt: existingPaymentInfo.orderConfirmedAt ?? new Date().toISOString()
+  };
   const pendingOrder = mapOrder(orderRow)!;
   pendingOrder.paymentInfo = paymentInfo;
   paymentInfo = await reserveInventoryAndCountCoupon(pendingOrder);
@@ -678,6 +704,32 @@ export const verifyPayment = asyncHandler(async (req, res) => {
   }
 
   order = await bookShipmentOnce(order, "razorpay", userEmail);
+  if (!existingPaymentInfo.orderConfirmedAt) {
+    await emailService.sendOrderConfirmation(userEmail, order.orderId);
+    await publishEvent("order.created", { orderId: order.orderId, totalAmount: order.totalAmount });
+  }
 
   res.json({ success: true, order });
 });
+
+function isExpiredPrepaidAttempt(orderRow: any) {
+  const createdAt = new Date(orderRow.created_at).getTime();
+  if (!Number.isFinite(createdAt)) return false;
+  return Date.now() - createdAt > PREPAID_ATTEMPT_EXPIRY_MINUTES * 60 * 1000;
+}
+
+async function expireUnpaidPrepaidAttempts(orderId?: string) {
+  const extraWhere = orderId ? "AND id = :orderId" : "";
+  await execute(
+    `UPDATE orders
+     SET payment_status = 'failed',
+         order_status = 'cancelled',
+         tracking_status = 'Payment not completed',
+         updated_at = CURRENT_TIMESTAMP
+     WHERE payment_status = 'pending'
+       AND COALESCE(payment_info ->> 'method', '') = 'razorpay'
+       AND created_at < NOW() - (:expiryMinutes::text || ' minutes')::interval
+       ${extraWhere}`,
+    { expiryMinutes: PREPAID_ATTEMPT_EXPIRY_MINUTES, orderId: orderId ?? null }
+  );
+}

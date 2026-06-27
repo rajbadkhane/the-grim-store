@@ -9,6 +9,8 @@ type CartItem = {
   title: string;
   image: string;
   brand?: string;
+  sellerId?: string | null;
+  sellerName?: string | null;
   price?: number;
   salePrice: number;
   quantity: number;

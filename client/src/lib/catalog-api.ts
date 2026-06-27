@@ -41,6 +41,9 @@ export type StoreProduct = {
   shortDescription?: string;
   category?: string;
   tags: string[];
+  sellerId?: string | null;
+  sellerName?: string | null;
+  productStatus?: string;
 };
 
 export type StoreProductVariant = {
@@ -223,7 +226,10 @@ export function normalizeProduct(product: any): StoreProduct {
     description: product.description ?? "",
     shortDescription: product.shortDescription ?? product.short_description ?? "",
     category: product.category,
-    tags
+    tags,
+    sellerId: product.sellerId ?? product.seller_id ?? null,
+    sellerName: product.sellerName ?? product.seller_name ?? "The Grim Store",
+    productStatus: product.productStatus ?? product.product_status ?? "active"
   };
 }
 

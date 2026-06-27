@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import postgres from "postgres";
 import { env } from "./env.js";
 
@@ -35,6 +36,17 @@ const defaultAdminUsers = [
   }
 ];
 
+const demoSeller = {
+  businessName: "Demo Seller",
+  ownerName: "Demo Seller",
+  email: "demo.seller@thegrimstore.com",
+  phone: "9999999999",
+  city: "Bhopal",
+  pincode: "462001",
+  category: "Electronic Items",
+  passwordHash: "$2b$12$neSMSQS/Jgzmtliu6QTQ9OiMDr4k/JxTudXlVZ2JqlyoBYachYlna"
+};
+
 export async function connectDatabase() {
   try {
     const result = await sql`SELECT NOW()`;
@@ -58,7 +70,7 @@ async function initializeSqlSchema() {
         name VARCHAR(160) DEFAULT '',
         email VARCHAR(190) NOT NULL UNIQUE,
         phone VARCHAR(32) DEFAULT '',
-        role VARCHAR(20) NOT NULL DEFAULT 'customer' CHECK (role IN ('customer', 'admin')),
+        role VARCHAR(20) NOT NULL DEFAULT 'customer' CHECK (role IN ('customer', 'seller', 'admin')),
         avatar TEXT,
         wishlist JSONB DEFAULT '[]'::jsonb,
         cart JSONB DEFAULT '[]'::jsonb,
@@ -73,6 +85,8 @@ async function initializeSqlSchema() {
       )
     `;
 
+    await sql`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check`;
+    await sql`ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('customer', 'seller', 'admin'))`;
     await sql`CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
 
@@ -154,15 +168,28 @@ async function initializeSqlSchema() {
         size_chart JSONB DEFAULT '[]'::jsonb,
         delivery_info JSONB DEFAULT '{}'::jsonb,
         return_policy TEXT,
+        seller_id UUID REFERENCES users(id),
+        seller_name VARCHAR(180),
+        product_status VARCHAR(30) NOT NULL DEFAULT 'active' CHECK (product_status IN ('draft', 'pending_review', 'active', 'rejected', 'inactive')),
+        admin_note TEXT DEFAULT '',
         created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `;
 
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS seller_id UUID REFERENCES users(id)`;
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS seller_name VARCHAR(180)`;
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS product_status VARCHAR(30) NOT NULL DEFAULT 'active'`;
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS admin_note TEXT DEFAULT ''`;
+    await sql`ALTER TABLE products DROP CONSTRAINT IF EXISTS products_product_status_check`;
+    await sql`ALTER TABLE products ADD CONSTRAINT products_product_status_check CHECK (product_status IN ('draft', 'pending_review', 'active', 'rejected', 'inactive'))`;
+    await sql`UPDATE products SET product_status = 'active' WHERE product_status IS NULL`;
     await sql`CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_products_brand ON products(brand)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_products_gender ON products(gender)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_products_flags ON products(featured, trending, bestseller)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_products_seller ON products(seller_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_products_status ON products(product_status)`;
 
     await sql`
       CREATE TABLE IF NOT EXISTS orders (
@@ -271,7 +298,34 @@ async function initializeSqlSchema() {
     await sql`CREATE INDEX IF NOT EXISTS idx_seller_requests_status ON seller_requests(status)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_seller_requests_created ON seller_requests(created_at DESC)`;
 
+    await sql`ALTER TABLE seller_requests ADD COLUMN IF NOT EXISTS seller_user_id UUID REFERENCES users(id)`;
+    await sql`ALTER TABLE seller_requests ADD COLUMN IF NOT EXISTS seller_profile_id UUID`;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS seller_profiles (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL UNIQUE REFERENCES users(id),
+        request_id UUID REFERENCES seller_requests(id),
+        business_name VARCHAR(180) NOT NULL,
+        owner_name VARCHAR(160) NOT NULL,
+        email VARCHAR(190) NOT NULL UNIQUE,
+        phone VARCHAR(32) NOT NULL,
+        city VARCHAR(120) NOT NULL,
+        pincode VARCHAR(16) NOT NULL,
+        category VARCHAR(160) NOT NULL,
+        gst_number VARCHAR(80) DEFAULT '',
+        website TEXT DEFAULT '',
+        status VARCHAR(24) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_seller_profiles_status ON seller_profiles(status)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_seller_profiles_business ON seller_profiles(business_name)`;
+
     await ensureDefaultAdminUsers();
+    await ensureDemoSeller();
 
     console.log("[db] Schema initialized successfully");
   } catch (error: any) {
@@ -297,4 +351,77 @@ async function ensureDefaultAdminUsers() {
         updated_at = CURRENT_TIMESTAMP
     `;
   }
+}
+
+async function ensureDemoSeller() {
+  if (env.nodeEnv === "production" && process.env.DEMO_SELLER_ENABLED !== "true") return;
+
+  const userId = randomUUID();
+  const [user] = await sql`
+    INSERT INTO users (id, name, email, phone, role, email_verified, password_hash, wishlist, cart, addresses, is_blocked)
+    VALUES (${userId}, ${demoSeller.ownerName}, ${demoSeller.email}, ${demoSeller.phone}, 'seller', TRUE, ${demoSeller.passwordHash}, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, FALSE)
+    ON CONFLICT (email) DO UPDATE SET
+      name = EXCLUDED.name,
+      phone = EXCLUDED.phone,
+      role = CASE WHEN users.role = 'admin' THEN users.role ELSE 'seller' END,
+      email_verified = TRUE,
+      password_hash = EXCLUDED.password_hash,
+      is_blocked = FALSE,
+      updated_at = CURRENT_TIMESTAMP
+    RETURNING id
+  `;
+
+  const existingRequest = await sql`SELECT id FROM seller_requests WHERE LOWER(email) = LOWER(${demoSeller.email}) ORDER BY created_at DESC LIMIT 1`;
+  const requestId = existingRequest[0]?.id ?? randomUUID();
+  if (existingRequest.length) {
+    await sql`
+      UPDATE seller_requests SET
+        business_name = ${demoSeller.businessName},
+        owner_name = ${demoSeller.ownerName},
+        phone = ${demoSeller.phone},
+        city = ${demoSeller.city},
+        pincode = ${demoSeller.pincode},
+        category = ${demoSeller.category},
+        status = 'approved',
+        seller_user_id = ${user.id},
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${requestId}
+    `;
+  } else {
+    await sql`
+      INSERT INTO seller_requests (
+        id, business_name, owner_name, email, phone, city, pincode, category, status, seller_user_id
+      ) VALUES (
+        ${requestId}, ${demoSeller.businessName}, ${demoSeller.ownerName}, ${demoSeller.email}, ${demoSeller.phone},
+        ${demoSeller.city}, ${demoSeller.pincode}, ${demoSeller.category}, 'approved', ${user.id}
+      )
+    `;
+  }
+
+  const profileId = randomUUID();
+  const [profile] = await sql`
+    INSERT INTO seller_profiles (
+      id, user_id, request_id, business_name, owner_name, email, phone, city, pincode, category, status
+    ) VALUES (
+      ${profileId}, ${user.id}, ${requestId}, ${demoSeller.businessName}, ${demoSeller.ownerName}, ${demoSeller.email},
+      ${demoSeller.phone}, ${demoSeller.city}, ${demoSeller.pincode}, ${demoSeller.category}, 'active'
+    )
+    ON CONFLICT (email) DO UPDATE SET
+      user_id = EXCLUDED.user_id,
+      request_id = EXCLUDED.request_id,
+      business_name = EXCLUDED.business_name,
+      owner_name = EXCLUDED.owner_name,
+      phone = EXCLUDED.phone,
+      city = EXCLUDED.city,
+      pincode = EXCLUDED.pincode,
+      category = EXCLUDED.category,
+      status = 'active',
+      updated_at = CURRENT_TIMESTAMP
+    RETURNING id
+  `;
+
+  await sql`
+    UPDATE seller_requests SET seller_user_id = ${user.id}, seller_profile_id = ${profile.id}, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ${requestId}
+  `;
 }

@@ -6,7 +6,7 @@ export type SqlUser = {
   name: string;
   email: string;
   phone: string;
-  role: "customer" | "admin";
+  role: "customer" | "seller" | "admin";
   avatar: string;
   wishlist: string[];
   cart: any[];
@@ -132,6 +132,10 @@ export function mapProduct(db: any) {
     subCategory: db.subcategory_id,
     gender: db.gender,
     tags,
+    sellerId: db.seller_id ?? null,
+    sellerName: db.seller_name ?? null,
+    productStatus: db.product_status ?? "active",
+    adminNote: db.admin_note ?? "",
     brandMeta: brandMetaFromTags(db.brand, tags),
     price: Number(db.price),
     salePrice: Number(db.sale_price),
@@ -159,6 +163,27 @@ export function mapProduct(db: any) {
     seoTitle: db.seo_title,
     seoDescription: db.seo_description,
     metaKeywords: parseJson<string[]>(db.meta_keywords, []),
+    createdAt: db.created_at,
+    updatedAt: db.updated_at
+  };
+}
+
+export function mapSellerProfile(db: any) {
+  if (!db) return null;
+  return {
+    id: db.id,
+    userId: db.user_id,
+    requestId: db.request_id,
+    businessName: db.business_name,
+    ownerName: db.owner_name,
+    email: db.email,
+    phone: db.phone,
+    city: db.city,
+    pincode: db.pincode,
+    category: db.category,
+    gstNumber: db.gst_number ?? "",
+    website: db.website ?? "",
+    status: db.status ?? "active",
     createdAt: db.created_at,
     updatedAt: db.updated_at
   };

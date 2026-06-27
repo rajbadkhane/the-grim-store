@@ -278,7 +278,7 @@ function OrderMobileCard({
 
       <div className="mt-3 flex flex-wrap gap-1">
         <Badge tone={statusTone(order.orderStatus)}>{statusLabel(order.orderStatus)}</Badge>
-        <Badge tone="green">{order.paymentStatus}</Badge>
+        <Badge tone="green">{paymentStatusLabel(order)}</Badge>
       </div>
 
       <div className="mt-4 grid gap-3 text-sm">
@@ -312,6 +312,7 @@ function OrderMobileCard({
           </DetailBox>
           <DetailBox title="Payment & totals">
             <p>Payment method: <strong>{paymentMethod}</strong></p>
+            <p>Payment status: <strong>{paymentStatusLabel(order)}</strong></p>
             <p>Shipping: <strong>{money(order.shippingFee ?? 0)}</strong></p>
             <p>Discount: <strong>{money(order.discountAmount ?? 0)}</strong></p>
             <p>Total: <strong>{money(order.totalAmount)}</strong></p>
@@ -380,7 +381,7 @@ function OrderTableRows({
           <p className="font-black text-slate-950">{order.orderId}</p>
           <div className="mt-2 flex flex-wrap gap-1">
             <Badge tone={statusTone(order.orderStatus)}>{statusLabel(order.orderStatus)}</Badge>
-            <Badge tone="green">{order.paymentStatus}</Badge>
+            <Badge tone="green">{paymentStatusLabel(order)}</Badge>
           </div>
         </td>
         <td className="py-4">
@@ -398,7 +399,7 @@ function OrderTableRows({
         </td>
         <td className="py-4">
           <p className="font-black text-slate-950">{paymentMethod}</p>
-          <p className="mt-1 text-xs font-bold text-slate-500">{order.paymentStatus}</p>
+          <p className="mt-1 text-xs font-bold text-slate-500">{paymentStatusLabel(order)}</p>
         </td>
         <td className="py-4">
           <p className="font-black text-slate-950">{money(order.totalAmount)}</p>
@@ -472,7 +473,7 @@ function OrderTableRows({
                 </DetailBox>
                 <DetailBox title="Payment & totals">
                   <p>Payment method: <strong>{paymentMethod}</strong></p>
-                  <p>Payment status: <strong>{order.paymentStatus}</strong></p>
+                  <p>Payment status: <strong>{paymentStatusLabel(order)}</strong></p>
                   <p>Subtotal: <strong>{money(order.products.reduce((sum, item) => sum + item.salePrice * item.quantity, 0))}</strong></p>
                   <p>Shipping: <strong>{money(order.shippingFee ?? 0)}</strong></p>
                   <p>Discount: <strong>{money(order.discountAmount ?? 0)}</strong></p>
@@ -535,4 +536,11 @@ function formatDateTime(value: string) {
 
 function statusLabel(status: string) {
   return status.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function paymentStatusLabel(order: Order) {
+  const method = String(order.paymentInfo?.method ?? "").toLowerCase();
+  if (method === "cod" && order.paymentStatus === "pending") return "COD to collect";
+  if (method === "razorpay" && order.paymentStatus === "paid") return "Paid";
+  return statusLabel(order.paymentStatus);
 }
