@@ -1,6 +1,7 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://the-grim-store.onrender.com/api/v1";
 const FALLBACK_API_URL = "https://the-grim-store.onrender.com/api/v1";
 const CATALOG_REVALIDATE_SECONDS = 300;
+const PRIMARY_TIMEOUT_MS = 8000;
+const FALLBACK_TIMEOUT_MS = 10000;
 
 export type StoreCategory = {
   id: string;
@@ -142,12 +143,12 @@ export async function fetchProductReviews(productId: string): Promise<StoreRevie
 type NextFetchInit = RequestInit & { next?: { revalidate?: number } };
 
 async function fetchCatalog(path: string, init?: NextFetchInit) {
-  const timeoutMs = 1500; // 1.5 seconds connect timeout for local server
+  const apiUrl = getCatalogApiUrl();
   const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeoutMs);
+  const id = setTimeout(() => controller.abort(), PRIMARY_TIMEOUT_MS);
 
   try {
-    const res = await fetch(`${API_URL}${path}`, {
+    const res = await fetch(`${apiUrl}${path}`, {
       ...init,
       signal: controller.signal
     } as any);
@@ -155,12 +156,11 @@ async function fetchCatalog(path: string, init?: NextFetchInit) {
     return res;
   } catch (error) {
     clearTimeout(id);
-    console.warn(`[catalog-api] Local connection failed for ${path}:`, (error as any).message || error);
-    if (API_URL === FALLBACK_API_URL) throw error;
+    console.warn(`[catalog-api] Primary catalog connection failed for ${path}:`, (error as any).message || error);
+    if (apiUrl === FALLBACK_API_URL) throw error;
 
-    // Fallback to production API with a slightly longer timeout of 8 seconds
     const fallbackController = new AbortController();
-    const fallbackId = setTimeout(() => fallbackController.abort(), 8000);
+    const fallbackId = setTimeout(() => fallbackController.abort(), FALLBACK_TIMEOUT_MS);
     try {
       const res = await fetch(`${FALLBACK_API_URL}${path}`, {
         ...init,
@@ -173,6 +173,16 @@ async function fetchCatalog(path: string, init?: NextFetchInit) {
       throw fallbackError;
     }
   }
+}
+
+function getCatalogApiUrl() {
+  if (typeof window !== "undefined") return "/api/v1";
+  return normalizeApiUrl(process.env.API_PROXY_URL ?? process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? FALLBACK_API_URL);
+}
+
+function normalizeApiUrl(value: string) {
+  const url = value.replace(/\/$/, "");
+  return url.endsWith("/api/v1") ? url : `${url}/api/v1`;
 }
 
 export function normalizeProduct(product: any): StoreProduct {
